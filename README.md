@@ -90,6 +90,10 @@ MySQL services, then packages the raw benchmark output into a descriptive result
 - [Benchmark Reproducibility Policy](REPRODUCIBILITY.md)
 - [Benchmark Runbook](RUNBOOK.md)
 
+## Disclaimer
+
+This project is part of [CUBRID Lab](https://github.com/cubrid-lab), an independent open-source initiative for CUBRID developer tooling, and is not affiliated with, sponsored by, or endorsed by CUBRID Corporation or the official CUBRID project.
+
 ## License
 
 MIT
