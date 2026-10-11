@@ -2,12 +2,15 @@
 
 Times are milliseconds per operation; samples from all trials are pooled. `trial medians` is the min-max of the per-trial medians. Throughput is at the pooled median.
 
+Connect cases (`connect_close`, `connect_only`, `close_only`) come from `raw-connect/` (2026-10-11T03:02:37Z to 2026-10-11T03:02:43Z), a re-measurement of those cases only; every other case comes from `raw/`.
+
 
 ## pycubrid-main
 
 | Operation | n | median | p95 | IQR | stdev | trial medians | throughput |
 |---|---:|---:|---:|---:|---:|---|---:|
-| connect + close | 1000 | 1.923 | 4.414 | 0.429 | 1.646 | 1.881-2.001 | 520 ops/s |
+| connect + close | 1000 | 1.498 | 3.085 | 0.308 | 1.364 | 1.476-1.556 | 668 ops/s |
+| connect only | 1000 | 1.399 | 2.890 | 0.285 | 1.266 | 1.383-1.459 | 715 ops/s |
 | SELECT by PK (execute + fetchone) | 5000 | 0.601 | 1.057 | 0.139 | 0.343 | 0.572-0.614 | 1,665 ops/s |
 | INSERT 1 row + commit | 1500 | 34.462 | 41.941 | 8.290 | 17.000 | 33.859-41.145 | 29 ops/s |
 | UPDATE 1 row + commit | 1500 | 33.827 | 83.436 | 8.321 | 15.479 | 33.745-33.959 | 30 ops/s |
@@ -30,7 +33,8 @@ Times are milliseconds per operation; samples from all trials are pooled. `trial
 
 | Operation | n | median | p95 | IQR | stdev | trial medians | throughput |
 |---|---:|---:|---:|---:|---:|---|---:|
-| connect + close | 1000 | 1.914 | 8.592 | 0.473 | 2.391 | 1.832-1.979 | 522 ops/s |
+| connect + close | 1000 | 1.489 | 3.655 | 0.300 | 1.217 | 1.462-1.514 | 671 ops/s |
+| connect only | 1000 | 1.394 | 3.437 | 0.277 | 1.130 | 1.376-1.419 | 717 ops/s |
 | SELECT by PK (execute + fetchone) | 5000 | 0.602 | 0.994 | 0.140 | 0.284 | 0.579-0.625 | 1,661 ops/s |
 | INSERT 1 row + commit | 1500 | 33.883 | 41.960 | 8.305 | 11.806 | 33.512-41.229 | 30 ops/s |
 | UPDATE 1 row + commit | 1500 | 33.887 | 83.455 | 8.324 | 17.525 | 33.732-41.203 | 30 ops/s |
@@ -53,7 +57,8 @@ Times are milliseconds per operation; samples from all trials are pooled. `trial
 
 | Operation | n | median | p95 | IQR | stdev | trial medians | throughput |
 |---|---:|---:|---:|---:|---:|---|---:|
-| connect + close | 1000 | 1.008 | 1.724 | 0.180 | 0.438 | 0.986-1.148 | 993 ops/s |
+| connect + close | 1000 | 1.004 | 1.455 | 0.178 | 0.184 | 0.977-1.105 | 996 ops/s |
+| connect only | 1000 | 0.928 | 1.346 | 0.168 | 0.171 | 0.906-1.035 | 1,078 ops/s |
 | SELECT by PK (execute + fetchone) | 5000 | 0.546 | 0.859 | 0.121 | 0.149 | 0.533-0.562 | 1,831 ops/s |
 | INSERT 1 row + commit | 1500 | 33.520 | 41.832 | 8.204 | 13.096 | 33.471-33.588 | 30 ops/s |
 | UPDATE 1 row + commit | 1500 | 33.555 | 83.400 | 8.306 | 15.501 | 33.515-33.686 | 30 ops/s |
@@ -70,28 +75,29 @@ Times are milliseconds per operation; samples from all trials are pooled. `trial
 
 ## pycubrid main vs 1.10.0
 
-Ratio = main median / 1.10.0 median (time; >1 is slower). Regression = ratio > 1.05 and pooled IQRs do not overlap.
+Ratio = main median / 1.10.0 median (time; >1 is slower). Regression = ratio > 1.05 and pooled IQRs do not overlap. `min detectable` is the smallest uniform slowdown the rule could flag given the observed spread, max(5%, q3/q1 - 1), for main / 1.10.0; a slowdown below it is reported as `no change`. `trial medians` is the min-max of the per-trial medians of main / 1.10.0.
 
-| Operation | main median | 1.10.0 median | ratio | bootstrap 95% CI | Mann-Whitney p | IQRs overlap | verdict |
-|---|---:|---:|---:|---|---:|---|---|
-| connect + close | 1.923 | 1.914 | 1.005 | 0.990-1.021 | 0.903 | yes | no change |
-| SELECT by PK (execute + fetchone) | 0.601 | 0.602 | 0.998 | 0.991-1.006 | 0.0176 | yes | no change |
-| INSERT 1 row + commit | 34.462 | 33.883 | 1.017 | 0.966-1.217 | 0.43 | yes | no change |
-| UPDATE 1 row + commit | 33.827 | 33.887 | 0.998 | 0.860-1.001 | 0.111 | yes | no change |
-| DELETE 1 row + commit | 41.239 | 41.320 | 0.998 | 0.822-1.000 | 0.0898 | yes | no change |
-| INSERT execute only | 4.862 | 4.354 | 1.117 | 0.757-1.603 | 0.135 | yes | no change |
-| UPDATE execute only | 4.809 | 4.551 | 1.057 | 0.813-1.448 | 0.815 | yes | no change |
-| DELETE execute only | 4.093 | 4.472 | 0.915 | 0.636-1.251 | 0.317 | yes | no change |
-| executemany 100 rows + commit | 124.589 | 124.624 | 1.000 | 0.875-1.134 | 0.595 | yes | no change |
-| executemany 1,000 rows + commit | 359.720 | 358.300 | 1.004 | 0.954-1.046 | 0.643 | yes | no change |
-| executemany 10,000 rows + commit | 3,017.945 | 2,997.538 | 1.007 | 1.004-1.010 | 0.00427 | yes | no change |
-| fetchone loop, 10,000 rows | 51.196 | 50.557 | 1.013 | 0.993-1.021 | 0.407 | yes | no change |
-| fetchmany(100) loop, 10,000 rows | 48.407 | 48.892 | 0.990 | 0.972-1.008 | 0.0594 | yes | no change |
-| fetchall, 10,000 rows | 49.691 | 49.611 | 1.002 | 0.989-1.016 | 0.876 | yes | no change |
-| fetchmany(100), fetch_size=1000 | 48.987 | 49.172 | 0.996 | 0.982-1.013 | 0.315 | yes | no change |
-| fetchall, fetch_size=1000 | 48.912 | 49.190 | 0.994 | 0.978-1.011 | 0.104 | yes | no change |
-| fetchmany(100), fetch_size=10000 | 49.453 | 49.889 | 0.991 | 0.975-1.009 | 0.0318 | yes | no change |
-| fetchall, fetch_size=10000 | 48.078 | 48.374 | 0.994 | 0.978-1.015 | 0.431 | yes | no change |
+| Operation | main median | 1.10.0 median | ratio | bootstrap 95% CI | Mann-Whitney p | IQRs overlap | min detectable | trial medians main / 1.10.0 | trial medians overlap | verdict |
+|---|---:|---:|---:|---|---:|---|---:|---|---|---|
+| connect + close | 1.498 | 1.489 | 1.006 | 0.992-1.018 | 0.702 | yes | 22% / 22% | 1.476-1.556 / 1.462-1.514 | yes | no change |
+| connect only | 1.399 | 1.394 | 1.003 | 0.990-1.017 | 0.908 | yes | 22% / 21% | 1.383-1.459 / 1.376-1.419 | yes | no change |
+| SELECT by PK (execute + fetchone) | 0.601 | 0.602 | 0.998 | 0.991-1.006 | 0.0176 | yes | 25% / 25% | 0.572-0.614 / 0.579-0.625 | yes | no change |
+| INSERT 1 row + commit | 34.462 | 33.883 | 1.017 | 0.966-1.217 | 0.43 | yes | 25% / 25% | 33.859-41.145 / 33.512-41.229 | yes | no change |
+| UPDATE 1 row + commit | 33.827 | 33.887 | 0.998 | 0.860-1.001 | 0.111 | yes | 25% / 25% | 33.745-33.959 / 33.732-41.203 | yes | no change |
+| DELETE 1 row + commit | 41.239 | 41.320 | 0.998 | 0.822-1.000 | 0.0898 | yes | 25% / 25% | 33.827-41.283 / 41.143-41.607 | yes | no change |
+| INSERT execute only | 4.862 | 4.354 | 1.117 | 0.757-1.603 | 0.135 | yes | 298% / 307% | 4.210-6.577 / 1.945-6.534 | yes | no change |
+| UPDATE execute only | 4.809 | 4.551 | 1.057 | 0.813-1.448 | 0.815 | yes | 270% / 278% | 3.367-5.529 / 4.193-5.410 | yes | no change |
+| DELETE execute only | 4.093 | 4.472 | 0.915 | 0.636-1.251 | 0.317 | yes | 267% / 271% | 2.399-5.189 / 3.664-5.263 | yes | no change |
+| executemany 100 rows + commit | 124.589 | 124.624 | 1.000 | 0.875-1.134 | 0.595 | yes | 159% / 172% | 116.889-138.488 / 108.963-166.283 | yes | no change |
+| executemany 1,000 rows + commit | 359.720 | 358.300 | 1.004 | 0.954-1.046 | 0.643 | yes | 18% / 18% | 342.027-370.119 / 349.564-379.250 | yes | no change |
+| executemany 10,000 rows + commit | 3,017.945 | 2,997.538 | 1.007 | 1.004-1.010 | 0.00427 | yes | 5% / 5% | 3,012.168-3,024.171 / 2,981.221-3,006.956 | no | no change |
+| fetchone loop, 10,000 rows | 51.196 | 50.557 | 1.013 | 0.993-1.021 | 0.407 | yes | 6% / 7% | 49.472-52.294 / 50.018-51.961 | yes | no change |
+| fetchmany(100) loop, 10,000 rows | 48.407 | 48.892 | 0.990 | 0.972-1.008 | 0.0594 | yes | 7% / 7% | 47.500-49.278 / 48.405-50.711 | yes | no change |
+| fetchall, 10,000 rows | 49.691 | 49.611 | 1.002 | 0.989-1.016 | 0.876 | yes | 7% / 6% | 48.736-51.096 / 48.807-49.837 | yes | no change |
+| fetchmany(100), fetch_size=1000 | 48.987 | 49.172 | 0.996 | 0.982-1.013 | 0.315 | yes | 7% / 5% | 47.835-49.620 / 48.855-49.428 | yes | no change |
+| fetchall, fetch_size=1000 | 48.912 | 49.190 | 0.994 | 0.978-1.011 | 0.104 | yes | 7% / 8% | 48.198-49.719 / 48.195-49.544 | yes | no change |
+| fetchmany(100), fetch_size=10000 | 49.453 | 49.889 | 0.991 | 0.975-1.009 | 0.0318 | yes | 7% / 6% | 47.646-50.635 / 48.546-50.823 | yes | no change |
+| fetchall, fetch_size=10000 | 48.078 | 48.374 | 0.994 | 0.978-1.015 | 0.431 | yes | 7% / 7% | 47.507-49.209 / 47.889-49.604 | yes | no change |
 
 ## pycubrid main vs CUBRIDdb
 
@@ -99,7 +105,8 @@ Ratio = pycubrid main median / CUBRIDdb median (time; >1 means pycubrid is slowe
 
 | Operation | pycubrid main | CUBRIDdb | ratio | bootstrap 95% CI | Mann-Whitney p |
 |---|---:|---:|---:|---|---:|
-| connect + close | 1.923 | 1.008 | 1.909 | 1.886-1.937 | 5.61e-281 |
+| connect + close | 1.498 | 1.004 | 1.491 | 1.472-1.512 | 3.85e-270 |
+| connect only | 1.399 | 0.928 | 1.507 | 1.488-1.529 | 5.84e-275 |
 | SELECT by PK (execute + fetchone) | 0.601 | 0.546 | 1.100 | 1.091-1.108 | 1.67e-159 |
 | INSERT 1 row + commit | 34.462 | 33.520 | 1.028 | 1.010-1.229 | 7.64e-20 |
 | UPDATE 1 row + commit | 33.827 | 33.555 | 1.008 | 1.005-1.010 | 3.65e-05 |
@@ -136,14 +143,14 @@ Ratio = pycubrid main median / CUBRIDdb median (time; >1 means pycubrid is slowe
 
 main vs 1.10.0 throughput ratio (>1 is faster):
 
-| Case | ratio | Mann-Whitney p | IQRs overlap | verdict |
-|---|---:|---:|---|---|
-| conc_sync-threads_1 | 0.964 | 0.684 | yes | no regression |
-| conc_sync-threads_8 | 1.029 | 0.0457 | yes | no regression |
-| conc_sync-threads_32 | 0.995 | 0.684 | yes | no regression |
-| conc_async-tasks_1 | 1.023 | 0.322 | yes | no regression |
-| conc_async-tasks_8 | 0.984 | 0.628 | yes | no regression |
-| conc_async-tasks_32 | 0.991 | 0.0712 | yes | no regression |
+| Case | ratio | Mann-Whitney p | IQRs overlap | min detectable | trial medians overlap | verdict |
+|---|---:|---:|---|---:|---|---|
+| conc_sync-threads_1 | 0.964 | 0.684 | yes | 12% / 16% | yes | no regression |
+| conc_sync-threads_8 | 1.029 | 0.0457 | yes | 8% / 8% | yes | no regression |
+| conc_sync-threads_32 | 0.995 | 0.684 | yes | 5% / 5% | yes | no regression |
+| conc_async-tasks_1 | 1.023 | 0.322 | yes | 9% / 14% | yes | no regression |
+| conc_async-tasks_8 | 0.984 | 0.628 | yes | 7% / 6% | yes | no regression |
+| conc_async-tasks_32 | 0.991 | 0.0712 | yes | 5% / 5% | yes | no regression |
 
 ## Peak Python-heap memory (tracemalloc), median over trials
 

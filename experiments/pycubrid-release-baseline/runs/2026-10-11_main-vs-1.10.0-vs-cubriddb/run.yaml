@@ -39,3 +39,14 @@ artifacts:
   derived_dir: derived/
 
 notes: "pycubrid-only continuity run of scripts/phase_decomposed_bench.py (single run each) in raw/phase_decomposed_*.json."
+
+connect_rerun:
+  date: "2026-10-11T12:02:37+09:00"
+  reason: "the first run's pycubrid connect() also called the autocommit setter after connect(autocommit=False), adding SET_DB_PARAMETER + COMMIT round trips inside the timed connect region; the call was removed"
+  cases: [connect_close, connect_only, close_only]
+  drivers: [pycubrid-main, pycubrid-1.10.0, cubriddb]
+  protocol: "5 trials per driver, driver order rotated every trial (run.sh with CASES=connect)"
+  server: "newly created container bench797-114, same image cubrid/cubrid:11.4 sha256:1248b77ad39888df9e064655937188ab99fe056ed7e35b57d06155a015dc1791, port 33511, testdb; before the measurement it served one --quick smoke run of each mode (tables created and dropped)"
+  load: "1-min loadavg 0.89-1.06 (raw-connect/loadavg.log)"
+  raw_dir: raw-connect/
+  note: "derived/summary.* take the connect cases from raw-connect/; the pre-fix connect samples remain in raw/ and are not reported. All other cases come from raw/ and were not re-run."

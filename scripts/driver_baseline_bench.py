@@ -141,7 +141,10 @@ class PycubridDriver(Driver):
             host=self.host, port=self.port, database=self.db, user=self.user,
             password=self.password, **kw,
         )
-        conn.autocommit = False
+        # connect(autocommit=False) already leaves the session in manual-commit mode and sends
+        # nothing for it. The ``autocommit`` setter would add SET_DB_PARAMETER + COMMIT round
+        # trips inside the timed connect region, so it is not called here.
+        check(conn.autocommit is False, "pycubrid autocommit not off")
         return conn
 
     async def aconnect(self) -> Any:
@@ -151,7 +154,7 @@ class PycubridDriver(Driver):
             host=self.host, port=self.port, database=self.db, user=self.user,
             password=self.password, autocommit=False,
         )
-        await conn.set_autocommit(False)
+        check(conn.autocommit is False, "pycubrid.aio autocommit not off")
         return conn
 
     def version_info(self) -> dict[str, Any]:
@@ -535,13 +538,19 @@ def bench_threads(drv: Driver, conc: int, per_worker: int, rounds: int,
             ths = [threading.Thread(target=work, args=(w,)) for w in range(conc)]
             for t in ths:
                 t.start()
-            barrier.wait()
+            try:
+                barrier.wait()
+            except threading.BrokenBarrierError:
+                pass  # a worker failed; join every thread, then raise its error below
             t0 = time.perf_counter_ns()
             for t in ths:
                 t.join()
             t1 = time.perf_counter_ns()
             if errors:
-                raise errors[0]
+                # workers released by barrier.abort() report BrokenBarrierError; raise the cause
+                raise next((e for e in errors
+                            if not isinstance(e, threading.BrokenBarrierError)), errors[0])
+            check(not barrier.broken, "thread barrier broken without a worker error")
             check(sum(len(x) for x in lats) == conc * per_worker, "thread count")
             if rnd >= warmup_rounds:
                 wall.append(t1 - t0)
@@ -586,7 +595,14 @@ async def _bench_async(drv: PycubridDriver, conc: int, per_worker: int, rounds: 
             await asyncio.sleep(0)
             t0 = time.perf_counter_ns()
             start.set()
-            await asyncio.gather(*tasks)
+            try:
+                await asyncio.gather(*tasks)
+            except BaseException:
+                # stop the other workers before their connections are closed below
+                for task in tasks:
+                    task.cancel()
+                await asyncio.gather(*tasks, return_exceptions=True)
+                raise
             t1 = time.perf_counter_ns()
             check(sum(len(x) for x in lats) == conc * per_worker, "async count")
             if rnd >= warmup_rounds:
@@ -651,6 +667,8 @@ def main() -> None:
     ap.add_argument("--trial", type=int, default=1)
     ap.add_argument("--driver-commit", default="", help="source commit of the driver build")
     ap.add_argument("--quick", action="store_true", help="tiny iteration counts (smoke test)")
+    ap.add_argument("--cases", choices=["all", "connect"], default="all",
+                    help="'connect' runs only the connect/close cases (re-measurement)")
     ap.add_argument("--output", required=True)
     args = ap.parse_args()
 
@@ -665,60 +683,61 @@ def main() -> None:
 
     log("connect/close")
     res.update(bench_connect(drv, it(200, 5), it(20, 2)))
-
-    conn = drv.connect()
-    try:
-        log("seed")
-        reset_tables(conn)
-        log("select_pk")
-        res.update(bench_select_pk(conn, it(1000, 10), it(100, 2)))
-        log("insert")
-        res.update(bench_insert(conn, it(300, 5), it(30, 2)))
-        log("update")
-        res.update(bench_update(conn, it(300, 5), it(30, 2)))
-        log("delete")
-        res.update(bench_delete(conn, it(300, 5), it(30, 2)))
-        verify_full_table(conn)
-        for size, n in ((100, 50), (1000, 20), (10000, 10)):
-            log(f"executemany {size}")
-            res.update(bench_executemany(conn, size, it(n, 2), it(3, 1)))
-        for mode in ("fetchone", "fetchmany", "fetchall"):
-            log(f"{mode}")
-            res.update(bench_fetch(conn, mode, it(30, 2), it(3, 1)))
-        verify_full_table(conn)
-    finally:
-        conn.close()
-
-    if args.driver == "pycubrid":
-        for fs in (1000, 10000):
-            log(f"fetch_size={fs}")
-            c = drv.connect(fetch_size=fs)
-            try:
-                for mode in ("fetchmany", "fetchall"):
-                    res.update(bench_fetch(c, mode, it(30, 2), it(3, 1), tag=f"_fs{fs}"))
-            finally:
-                c.close()
-
     conc_res: list[dict[str, Any]] = []
-    for conc in (1, 8, 32):
-        log(f"threads c={conc}")
-        conc_res.append(bench_threads(drv, conc, it(200, 5), it(5, 1), 1))
-        if args.driver == "pycubrid":
-            log(f"async c={conc}")
-            conc_res.append(asyncio.run(_bench_async(drv, conc, it(200, 5), it(5, 1), 1)))
+    mem: dict[str, Any] = {}
+    if args.cases == "all":
+        conn = drv.connect()
+        try:
+            log("seed")
+            reset_tables(conn)
+            log("select_pk")
+            res.update(bench_select_pk(conn, it(1000, 10), it(100, 2)))
+            log("insert")
+            res.update(bench_insert(conn, it(300, 5), it(30, 2)))
+            log("update")
+            res.update(bench_update(conn, it(300, 5), it(30, 2)))
+            log("delete")
+            res.update(bench_delete(conn, it(300, 5), it(30, 2)))
+            verify_full_table(conn)
+            for size, n in ((100, 50), (1000, 20), (10000, 10)):
+                log(f"executemany {size}")
+                res.update(bench_executemany(conn, size, it(n, 2), it(3, 1)))
+            for mode in ("fetchone", "fetchmany", "fetchall"):
+                log(f"{mode}")
+                res.update(bench_fetch(conn, mode, it(30, 2), it(3, 1)))
+            verify_full_table(conn)
+        finally:
+            conn.close()
 
-    log("memory")
-    conn = drv.connect()
-    try:
-        mem = memory_pass(conn, drv, it(3, 1))
-        verify_full_table(conn)
-        cur = conn.cursor()
-        for t in (TABLE, BATCH_TABLE):
-            cur.execute(f"DROP TABLE IF EXISTS {t}")
-        conn.commit()
-        cur.close()
-    finally:
-        conn.close()
+        if args.driver == "pycubrid":
+            for fs in (1000, 10000):
+                log(f"fetch_size={fs}")
+                c = drv.connect(fetch_size=fs)
+                try:
+                    for mode in ("fetchmany", "fetchall"):
+                        res.update(bench_fetch(c, mode, it(30, 2), it(3, 1), tag=f"_fs{fs}"))
+                finally:
+                    c.close()
+
+        for conc in (1, 8, 32):
+            log(f"threads c={conc}")
+            conc_res.append(bench_threads(drv, conc, it(200, 5), it(5, 1), 1))
+            if args.driver == "pycubrid":
+                log(f"async c={conc}")
+                conc_res.append(asyncio.run(_bench_async(drv, conc, it(200, 5), it(5, 1), 1)))
+
+        log("memory")
+        conn = drv.connect()
+        try:
+            mem = memory_pass(conn, drv, it(3, 1))
+            verify_full_table(conn)
+            cur = conn.cursor()
+            for t in (TABLE, BATCH_TABLE):
+                cur.execute(f"DROP TABLE IF EXISTS {t}")
+            conn.commit()
+            cur.close()
+        finally:
+            conn.close()
 
     out = {
         "metadata": {
@@ -727,8 +746,11 @@ def main() -> None:
             "trial": args.trial,
             "driver": drv.version_info() | {"commit": args.driver_commit},
             "server": {"host": args.host, "port": args.port, "db": args.db},
-            "transaction_mode": "autocommit=False on every connection; explicit commit per "
-                                "write op (single-row DML timed as execute+commit)",
+            "transaction_mode": "autocommit=False on every connection (pycubrid: "
+                                "connect(autocommit=False), no setter call; CUBRIDdb: "
+                                "client-side setter); explicit commit per write op "
+                                "(single-row DML timed as execute+commit)",
+            "cases": args.cases,
             "seed_rows": SEED_ROWS,
             "timer": "time.perf_counter_ns()",
             "quick": q,

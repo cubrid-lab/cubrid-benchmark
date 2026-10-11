@@ -197,150 +197,150 @@
   "connect_close": {
    "pycubrid-main": {
     "n": 1000,
-    "median": 1.9232339999999999,
-    "p95": 4.4135448499999965,
-    "q1": 1.7835275000000002,
-    "q3": 2.21206525,
-    "iqr": 0.42853775000000005,
-    "stdev": 1.6461805993729093,
-    "mean": 2.368722886,
-    "throughput_at_median": 519.9575298689604,
+    "median": 1.497893,
+    "p95": 3.0850346499999937,
+    "q1": 1.38194,
+    "q3": 1.6904065,
+    "iqr": 0.3084665,
+    "stdev": 1.3642342002897718,
+    "mean": 1.838055298,
+    "throughput_at_median": 667.6044283536942,
     "throughput_unit": "ops/s",
     "trial_median_range": [
-     1.880515,
-     2.0014675000000004
+     1.476422,
+     1.556196
     ]
    },
    "pycubrid-1.10.0": {
     "n": 1000,
-    "median": 1.9138885,
-    "p95": 8.592060899999993,
-    "q1": 1.77075525,
-    "q3": 2.2440397499999998,
-    "iqr": 0.4732844999999999,
-    "stdev": 2.3909503477150396,
-    "mean": 2.730330981,
-    "throughput_at_median": 522.4964777206195,
+    "median": 1.489282,
+    "p95": 3.6546017499999954,
+    "q1": 1.3837454999999999,
+    "q3": 1.683485,
+    "iqr": 0.29973950000000005,
+    "stdev": 1.2171515994495457,
+    "mean": 1.825503792,
+    "throughput_at_median": 671.4645043719054,
     "throughput_unit": "ops/s",
     "trial_median_range": [
-     1.8318865,
-     1.9786160000000002
+     1.461854,
+     1.514022
     ]
    },
    "cubriddb": {
     "n": 1000,
-    "median": 1.0075185000000002,
-    "p95": 1.7238022499999999,
-    "q1": 0.94414575,
-    "q3": 1.1241175,
-    "iqr": 0.1799717500000001,
-    "stdev": 0.4380931683385621,
-    "mean": 1.138115802,
-    "throughput_at_median": 992.5376060092195,
+    "median": 1.00437,
+    "p95": 1.45530815,
+    "q1": 0.9434945,
+    "q3": 1.121776,
+    "iqr": 0.1782815000000001,
+    "stdev": 0.1840887543203939,
+    "mean": 1.063030417,
+    "throughput_at_median": 995.6490138096517,
     "throughput_unit": "ops/s",
     "trial_median_range": [
-     0.985959,
-     1.1480730000000001
+     0.9773335000000001,
+     1.1047980000000002
     ]
    }
   },
   "connect_only": {
    "pycubrid-main": {
     "n": 1000,
-    "median": 1.8367930000000001,
-    "p95": 4.229807249999999,
-    "q1": 1.69754125,
-    "q3": 2.096727,
-    "iqr": 0.39918575,
-    "stdev": 1.5578187865932176,
-    "mean": 2.25723649,
-    "throughput_at_median": 544.4271619066492,
+    "median": 1.398505,
+    "p95": 2.8898420999999965,
+    "q1": 1.2941272499999998,
+    "q3": 1.578773,
+    "iqr": 0.28464575000000014,
+    "stdev": 1.2659839889117581,
+    "mean": 1.714998733,
+    "throughput_at_median": 715.0492847719528,
     "throughput_unit": "ops/s",
     "trial_median_range": [
-     1.7951825000000001,
-     1.9242910000000002
+     1.3831205,
+     1.4589175
     ]
    },
    "pycubrid-1.10.0": {
     "n": 1000,
-    "median": 1.8302285,
-    "p95": 8.226770199999999,
-    "q1": 1.68921575,
-    "q3": 2.14453075,
-    "iqr": 0.4553149999999999,
-    "stdev": 2.2707416726582124,
-    "mean": 2.601622213,
-    "throughput_at_median": 546.3798645906782,
+    "median": 1.3944785,
+    "p95": 3.4370241499999965,
+    "q1": 1.29735925,
+    "q3": 1.57464,
+    "iqr": 0.2772807500000001,
+    "stdev": 1.1304316787789241,
+    "mean": 1.705235984,
+    "throughput_at_median": 717.1139605235936,
     "throughput_unit": "ops/s",
     "trial_median_range": [
-     1.7475045,
-     1.8784105
+     1.375834,
+     1.419477
     ]
    },
    "cubriddb": {
     "n": 1000,
-    "median": 0.934015,
-    "p95": 1.6208109999999993,
-    "q1": 0.8743375,
-    "q3": 1.04481775,
-    "iqr": 0.17048025,
-    "stdev": 0.40552895031428843,
-    "mean": 1.054409847,
-    "throughput_at_median": 1070.6466170243518,
+    "median": 0.9277139999999999,
+    "p95": 1.3458758499999999,
+    "q1": 0.8721815,
+    "q3": 1.0405435,
+    "iqr": 0.168362,
+    "stdev": 0.17119897404959492,
+    "mean": 0.983382042,
+    "throughput_at_median": 1077.9184101996952,
     "throughput_unit": "ops/s",
     "trial_median_range": [
-     0.913491,
-     1.049632
+     0.9055835,
+     1.035494
     ]
    }
   },
   "close_only": {
    "pycubrid-main": {
     "n": 1000,
-    "median": 0.08556549999999999,
-    "p95": 0.23653169999999987,
-    "q1": 0.07210875,
-    "q3": 0.1098335,
-    "iqr": 0.03772475,
-    "stdev": 0.09319623181304776,
-    "mean": 0.111486396,
-    "throughput_at_median": 11686.953269717353,
+    "median": 0.0967385,
+    "p95": 0.23442184999999996,
+    "q1": 0.0754945,
+    "q3": 0.12507175,
+    "iqr": 0.04957725,
+    "stdev": 0.10269762716319558,
+    "mean": 0.123056565,
+    "throughput_at_median": 10337.146017356068,
     "throughput_unit": "ops/s",
     "trial_median_range": [
-     0.07724,
-     0.08923500000000001
+     0.09381600000000001,
+     0.103562
     ]
    },
    "pycubrid-1.10.0": {
     "n": 1000,
-    "median": 0.084703,
-    "p95": 0.4193133,
-    "q1": 0.0720875,
-    "q3": 0.1166905,
-    "iqr": 0.044603000000000004,
-    "stdev": 0.12641609161822795,
-    "mean": 0.128708768,
-    "throughput_at_median": 11805.957286046538,
+    "median": 0.0951635,
+    "p95": 0.25803424999999985,
+    "q1": 0.07398125000000001,
+    "q3": 0.1200165,
+    "iqr": 0.046035249999999986,
+    "stdev": 0.09265447729575774,
+    "mean": 0.120267808,
+    "throughput_at_median": 10508.2305715952,
     "throughput_unit": "ops/s",
     "trial_median_range": [
-     0.076229,
-     0.09042149999999999
+     0.0863695,
+     0.0990455
     ]
    },
    "cubriddb": {
     "n": 1000,
-    "median": 0.07085949999999999,
-    "p95": 0.13621709999999998,
-    "q1": 0.06711400000000001,
-    "q3": 0.08537700000000001,
-    "iqr": 0.018263,
-    "stdev": 0.03634868094480737,
-    "mean": 0.083705955,
-    "throughput_at_median": 14112.433759764042,
+    "median": 0.0719215,
+    "p95": 0.11771364999999984,
+    "q1": 0.0677975,
+    "q3": 0.08482775,
+    "iqr": 0.017030249999999997,
+    "stdev": 0.019002072869972127,
+    "mean": 0.079648375,
+    "throughput_at_median": 13904.04816362284,
     "throughput_unit": "ops/s",
     "trial_median_range": [
-     0.06847900000000001,
-     0.0813485
+     0.068973,
+     0.0766095
     ]
    }
   },
@@ -1522,37 +1522,82 @@
  "comparisons": {
   "main_vs_1.10.0": {
    "connect_close": {
-    "ratio": 1.0048829908325378,
+    "ratio": 1.0057819808471464,
     "ci95": [
-     0.9899972134193282,
-     1.0210153551994057
+     0.9919213872949227,
+     1.0184087348991202
     ],
-    "p_mw": 0.9034453060366903,
+    "p_mw": 0.7017338151583455,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.22321265756834596,
+     "1.10.0": 0.21661461591022335
+    },
+    "trial_median_range": {
+     "main": [
+      1.476422,
+      1.556196
+     ],
+     "1.10.0": [
+      1.461854,
+      1.514022
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "connect_only": {
-    "ratio": 1.0035867106211056,
+    "ratio": 1.0028874593620483,
     "ci95": [
-     0.9905620538347057,
-     1.0218375728745306
+     0.9901163248470417,
+     1.0174419243126993
     ],
-    "p_mw": 0.9266372373289277,
+    "p_mw": 0.9075560563360867,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.21995190194781866,
+     "1.10.0": 0.21372703821243033
+    },
+    "trial_median_range": {
+     "main": [
+      1.3831205,
+      1.4589175
+     ],
+     "1.10.0": [
+      1.375834,
+      1.419477
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "close_only": {
-    "ratio": 1.010182638159215,
+    "ratio": 1.0165504631502624,
     "ci95": [
-     0.9611761323247736,
-     1.061447598147385
+     0.9686801452269721,
+     1.0631030446994154
     ],
-    "p_mw": 0.42864211849882167,
+    "p_mw": 0.13392072755563675,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.656700156965077,
+     "1.10.0": 0.6222556390977441
+    },
+    "trial_median_range": {
+     "main": [
+      0.09381600000000001,
+      0.103562
+     ],
+     "1.10.0": [
+      0.0863695,
+      0.0990455
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "select_pk": {
     "ratio": 0.997887915855498,
@@ -1563,7 +1608,22 @@
     "p_mw": 0.017637206864423313,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.2536993355821786,
+     "1.10.0": 0.25261658879307713
+    },
+    "trial_median_range": {
+     "main": [
+      0.571755,
+      0.6140635
+     ],
+     "1.10.0": [
+      0.57918,
+      0.6253934999999999
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "insert_commit": {
     "ratio": 1.0170904070353588,
@@ -1574,7 +1634,22 @@
     "p_mw": 0.4301094584502986,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.2479070887586523,
+     "1.10.0": 0.24838896728690663
+    },
+    "trial_median_range": {
+     "main": [
+      33.8594585,
+      41.144733
+     ],
+     "1.10.0": [
+      33.5122015,
+      41.229183
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "insert_execute_only": {
     "ratio": 1.1166339086231456,
@@ -1585,7 +1660,22 @@
     "p_mw": 0.13512853472104858,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 2.977041017512237,
+     "1.10.0": 3.066734637937775
+    },
+    "trial_median_range": {
+     "main": [
+      4.2096555,
+      6.576637
+     ],
+     "1.10.0": [
+      1.9450064999999999,
+      6.5344185
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "update_commit": {
     "ratio": 0.9982251490808226,
@@ -1596,7 +1686,22 @@
     "p_mw": 0.11069386128391392,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.2489495520600047,
+     "1.10.0": 0.24893053711684843
+    },
+    "trial_median_range": {
+     "main": [
+      33.7448605,
+      33.958548500000006
+     ],
+     "1.10.0": [
+      33.7316215,
+      41.202656000000005
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "update_execute_only": {
     "ratio": 1.0566452188585,
@@ -1607,7 +1712,22 @@
     "p_mw": 0.8152868137501041,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 2.7034601280082904,
+     "1.10.0": 2.7812880189468037
+    },
+    "trial_median_range": {
+     "main": [
+      3.3674795,
+      5.529007
+     ],
+     "1.10.0": [
+      4.1926235,
+      5.410197999999999
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "delete_commit": {
     "ratio": 0.998037222871961,
@@ -1618,7 +1738,22 @@
     "p_mw": 0.08982901350219274,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.25260121044485273,
+     "1.10.0": 0.25466114018154307
+    },
+    "trial_median_range": {
+     "main": [
+      33.8273945,
+      41.282551
+     ],
+     "1.10.0": [
+      41.142746,
+      41.6069265
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "delete_execute_only": {
     "ratio": 0.9152479115038468,
@@ -1629,7 +1764,22 @@
     "p_mw": 0.3165365890787788,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 2.665539409715516,
+     "1.10.0": 2.713050505703176
+    },
+    "trial_median_range": {
+     "main": [
+      2.3987865,
+      5.1891245
+     ],
+     "1.10.0": [
+      3.6637635,
+      5.2628094999999995
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "executemany_100": {
     "ratio": 0.999716988441995,
@@ -1640,7 +1790,22 @@
     "p_mw": 0.5946699967894301,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 1.587549736483227,
+     "1.10.0": 1.7181182587433903
+    },
+    "trial_median_range": {
+     "main": [
+      116.8892445,
+      138.48823099999998
+     ],
+     "1.10.0": [
+      108.9625855,
+      166.2826805
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "executemany_1000": {
     "ratio": 1.0039632538067256,
@@ -1651,7 +1816,22 @@
     "p_mw": 0.643348458724508,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.18282330330915686,
+     "1.10.0": 0.17684436689618743
+    },
+    "trial_median_range": {
+     "main": [
+      342.0273625,
+      370.11879650000003
+     ],
+     "1.10.0": [
+      349.564104,
+      379.24999349999996
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "executemany_10000": {
     "ratio": 1.0068079114663822,
@@ -1662,7 +1842,22 @@
     "p_mw": 0.004270083245982961,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.05,
+     "1.10.0": 0.05
+    },
+    "trial_median_range": {
+     "main": [
+      3012.167871,
+      3024.170521
+     ],
+     "1.10.0": [
+      2981.221267,
+      3006.955555
+     ]
+    },
+    "trial_medians_overlap": false
    },
    "fetchone_10000": {
     "ratio": 1.0126390969267722,
@@ -1673,7 +1868,22 @@
     "p_mw": 0.4073194018582588,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.06288675719117442,
+     "1.10.0": 0.06508119668226309
+    },
+    "trial_median_range": {
+     "main": [
+      49.47224,
+      52.29391
+     ],
+     "1.10.0": [
+      50.0180265,
+      51.961346500000005
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "fetchmany_10000": {
     "ratio": 0.990087037550471,
@@ -1684,7 +1894,22 @@
     "p_mw": 0.05935875823001408,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.07352152066475859,
+     "1.10.0": 0.07099548901849517
+    },
+    "trial_median_range": {
+     "main": [
+      47.4997015,
+      49.2778105
+     ],
+     "1.10.0": [
+      48.405265,
+      50.711070500000005
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "fetchall_10000": {
     "ratio": 1.0016193099878965,
@@ -1695,7 +1920,22 @@
     "p_mw": 0.875712845283828,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.06504501065568968,
+     "1.10.0": 0.059409828751811666
+    },
+    "trial_median_range": {
+     "main": [
+      48.735797000000005,
+      51.096182999999996
+     ],
+     "1.10.0": [
+      48.807147,
+      49.8370185
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "fetchmany_10000_fs1000": {
     "ratio": 0.9962426182575336,
@@ -1706,7 +1946,22 @@
     "p_mw": 0.31522077622373473,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.07200294795251083,
+     "1.10.0": 0.05462919473162042
+    },
+    "trial_median_range": {
+     "main": [
+      47.834911000000005,
+      49.6201985
+     ],
+     "1.10.0": [
+      48.855202,
+      49.4277395
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "fetchall_10000_fs1000": {
     "ratio": 0.9943415545416009,
@@ -1717,7 +1972,22 @@
     "p_mw": 0.10424187436388402,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.06726855058249148,
+     "1.10.0": 0.08294665359910991
+    },
+    "trial_median_range": {
+     "main": [
+      48.197544,
+      49.719187500000004
+     ],
+     "1.10.0": [
+      48.195102000000006,
+      49.5438815
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "fetchmany_10000_fs10000": {
     "ratio": 0.9912615031697437,
@@ -1728,7 +1998,22 @@
     "p_mw": 0.03183903869219491,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.07090774255710186,
+     "1.10.0": 0.06221505331431332
+    },
+    "trial_median_range": {
+     "main": [
+      47.646402,
+      50.635493999999994
+     ],
+     "1.10.0": [
+      48.54612,
+      50.82273
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "fetchall_10000_fs10000": {
     "ratio": 0.9938632309980008,
@@ -1739,71 +2024,176 @@
     "p_mw": 0.431073789341724,
     "iqr_overlap": true,
     "regression": false,
-    "improvement": false
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.067238528061351,
+     "1.10.0": 0.06505820283513608
+    },
+    "trial_median_range": {
+     "main": [
+      47.506752,
+      49.2093115
+     ],
+     "1.10.0": [
+      47.8891945,
+      49.604411
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "conc_sync-threads_1": {
     "throughput_ratio": 0.9635330973048905,
     "iqr_overlap": true,
     "p_mw": 0.6836702770203351,
-    "regression": false
+    "regression": false,
+    "min_detectable_slowdown": {
+     "main": 0.11573772021331097,
+     "1.10.0": 0.15519319364813622
+    },
+    "trial_median_range": {
+     "main": [
+      1473.6926555608597,
+      1640.9351623853026
+     ],
+     "1.10.0": [
+      1482.7644901361948,
+      1627.486263975245
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "conc_sync-threads_8": {
     "throughput_ratio": 1.0289984949681734,
     "iqr_overlap": true,
     "p_mw": 0.04566317848485908,
-    "regression": false
+    "regression": false,
+    "min_detectable_slowdown": {
+     "main": 0.07667868923590548,
+     "1.10.0": 0.07896965142268875
+    },
+    "trial_median_range": {
+     "main": [
+      5252.059170735899,
+      5412.393427013519
+     ],
+     "1.10.0": [
+      4994.199674071038,
+      5306.592194747795
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "conc_sync-threads_32": {
     "throughput_ratio": 0.9951047716598633,
     "iqr_overlap": true,
     "p_mw": 0.6836702770203351,
-    "regression": false
+    "regression": false,
+    "min_detectable_slowdown": {
+     "main": 0.05,
+     "1.10.0": 0.05
+    },
+    "trial_median_range": {
+     "main": [
+      5042.084153236945,
+      5200.364363204086
+     ],
+     "1.10.0": [
+      5076.064610069744,
+      5278.564130791562
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "conc_async-tasks_1": {
     "throughput_ratio": 1.02311011984199,
     "iqr_overlap": true,
     "p_mw": 0.3223963931070318,
-    "regression": false
+    "regression": false,
+    "min_detectable_slowdown": {
+     "main": 0.09006935781674075,
+     "1.10.0": 0.14396487478501485
+    },
+    "trial_median_range": {
+     "main": [
+      1341.4776588365555,
+      1433.7317671524697
+     ],
+     "1.10.0": [
+      1249.5274053066744,
+      1408.1173473178537
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "conc_async-tasks_8": {
     "throughput_ratio": 0.9840548263417297,
     "iqr_overlap": true,
     "p_mw": 0.6276258050283593,
-    "regression": false
+    "regression": false,
+    "min_detectable_slowdown": {
+     "main": 0.0667877831349577,
+     "1.10.0": 0.06131405583314742
+    },
+    "trial_median_range": {
+     "main": [
+      5190.7814122854215,
+      5863.381625023905
+     ],
+     "1.10.0": [
+      5534.541592944843,
+      5843.492918382323
+     ]
+    },
+    "trial_medians_overlap": true
    },
    "conc_async-tasks_32": {
     "throughput_ratio": 0.9910164571975053,
     "iqr_overlap": true,
     "p_mw": 0.07115843333450314,
-    "regression": false
+    "regression": false,
+    "min_detectable_slowdown": {
+     "main": 0.05,
+     "1.10.0": 0.05
+    },
+    "trial_median_range": {
+     "main": [
+      5672.717177353503,
+      5733.639106276207
+     ],
+     "1.10.0": [
+      5684.5609370503435,
+      5779.752412529163
+     ]
+    },
+    "trial_medians_overlap": true
    }
   },
   "main_vs_cubriddb": {
    "connect_close": {
-    "ratio": 1.9088820701555351,
+    "ratio": 1.4913756882423808,
     "ci95": [
-     1.885654468946877,
-     1.9367540819087903
+     1.471561428188216,
+     1.5119509663623405
     ],
-    "p_mw": 5.611667388542066e-281,
+    "p_mw": 3.846515392889271e-270,
     "iqr_overlap": false
    },
    "connect_only": {
-    "ratio": 1.9665562116240103,
+    "ratio": 1.5074742862563248,
     "ci95": [
-     1.9441360684081133,
-     1.9949454078697848
+     1.4876045971764542,
+     1.5290435098819508
     ],
-    "p_mw": 9.880585752902814e-284,
+    "p_mw": 5.842489360852826e-275,
     "iqr_overlap": false
    },
    "close_only": {
-    "ratio": 1.2075374508710899,
+    "ratio": 1.3450567632766282,
     "ci95": [
-     1.1680577478670482,
-     1.250674168513102
+     1.301511944058336,
+     1.3869634926370167
     ],
-    "p_mw": 6.316092085156401e-59,
+    "p_mw": 2.00440766466366e-106,
     "iqr_overlap": true
    },
    "select_pk": {
@@ -1922,6 +2312,56 @@
     ],
     "p_mw": 1.561046593473924e-46,
     "iqr_overlap": false
+   }
+  }
+ },
+ "connect_rerun": {
+  "source": "raw-connect/",
+  "keys": [
+   "connect_close",
+   "connect_only",
+   "close_only"
+  ],
+  "trials": {
+   "cubriddb": 5,
+   "pycubrid-1.10.0": 5,
+   "pycubrid-main": 5
+  },
+  "timestamps_utc": [
+   "2026-10-11T03:02:37Z",
+   "2026-10-11T03:02:37Z",
+   "2026-10-11T03:02:38Z",
+   "2026-10-11T03:02:38Z",
+   "2026-10-11T03:02:39Z",
+   "2026-10-11T03:02:39Z",
+   "2026-10-11T03:02:39Z",
+   "2026-10-11T03:02:40Z",
+   "2026-10-11T03:02:40Z",
+   "2026-10-11T03:02:41Z",
+   "2026-10-11T03:02:42Z",
+   "2026-10-11T03:02:42Z",
+   "2026-10-11T03:02:43Z",
+   "2026-10-11T03:02:43Z",
+   "2026-10-11T03:02:43Z"
+  ],
+  "driver": {
+   "cubriddb": {
+    "driver": "CUBRIDdb",
+    "version": "11.3.0.1",
+    "module_path": "/tmp/claude-1000/-data-GitHub-pycubrid/0a1784df-1111-416b-a8a3-bccbbb2734e8/scratchpad/bench797/venv-cubriddb/lib/python3.12/site-packages/CUBRIDdb/__init__.py",
+    "commit": "c63ab9c51353e5c80e02dd2c1a19d4640acb29f5 (cci-src 7d1eb8f40f04089b8218d08e36e2c24a2de11b24)"
+   },
+   "pycubrid-1.10.0": {
+    "driver": "pycubrid",
+    "version": "1.10.0",
+    "module_path": "/tmp/claude-1000/-data-GitHub-pycubrid/0a1784df-1111-416b-a8a3-bccbbb2734e8/scratchpad/bench797/venv-v1100/lib/python3.12/site-packages/pycubrid/__init__.py",
+    "commit": "pypi:1.10.0"
+   },
+   "pycubrid-main": {
+    "driver": "pycubrid",
+    "version": "1.10.0",
+    "module_path": "/tmp/claude-1000/-data-GitHub-pycubrid/0a1784df-1111-416b-a8a3-bccbbb2734e8/scratchpad/bench797/venv-main/lib/python3.12/site-packages/pycubrid/__init__.py",
+    "commit": "2228d663b6e2c9462c648b9dd941720219c464ae"
    }
   }
  },

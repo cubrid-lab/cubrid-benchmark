@@ -288,6 +288,7 @@ def main() -> None:
     parser.add_argument("--warmup", type=int, default=50)
     parser.add_argument("--row-count", type=int, default=10_000)
     parser.add_argument("--output", type=str, default="phase_decomposed.json")
+    parser.add_argument("--driver-commit", default="", help="source commit of the driver build")
     args = parser.parse_args()
 
     print(f"Phase-decomposed benchmark: {args.iterations} iterations, "
@@ -327,6 +328,7 @@ def main() -> None:
         "metadata": {
             "tool": "phase_decomposed_bench.py",
             "pycubrid_version": pycubrid.__version__,
+            "driver_commit": args.driver_commit,
             "python_version": f"{platform.python_implementation()} {platform.python_version()}",
             "iterations": args.iterations,
             "warmup": args.warmup,

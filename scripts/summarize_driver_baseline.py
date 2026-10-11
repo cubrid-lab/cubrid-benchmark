@@ -11,6 +11,15 @@ A regression is flagged when main is more than 5% slower at the median AND the p
 interquartile ranges of the two distributions do not overlap. A bootstrap 95% CI of the
 median ratio and a Mann-Whitney U p-value are reported alongside.
 
+Each main-vs-1.10.0 row also reports the rule's minimum detectable slowdown: the smallest
+uniform slowdown of a distribution with the observed spread that the rule could flag, i.e.
+max(5%, q3/q1 - 1) of the pooled samples (for throughput, max(5%, 1 - q1/q3)). It is computed
+for each of the two versions; the larger value is the conservative one. Per-trial medians are
+compared too: the min-max range of each version's trial medians and whether they overlap.
+
+If ``<run-dir>/raw-connect/`` exists (``run.sh`` with ``CASES=connect``), the connect/close
+cases are taken from it instead of ``raw/``.
+
 Usage: python scripts/summarize_driver_baseline.py <run-dir>
 """
 
@@ -79,9 +88,13 @@ def boot_ratio_ci(a: list[float], b: list[float], seed: int = 797) -> tuple[floa
     return pct(rs, 2.5), pct(rs, 97.5)
 
 
-def load(run_dir: Path) -> dict[str, list[dict[str, Any]]]:
+CONNECT_KEYS = ("connect_close", "connect_only", "close_only")
+RERUN_DIR = "raw-connect"
+
+
+def load(run_dir: Path, sub: str = "raw") -> dict[str, list[dict[str, Any]]]:
     by: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    for f in sorted((run_dir / "raw").glob("*_t*.json")):
+    for f in sorted((run_dir / sub).glob("*_t*.json")):
         d = json.loads(f.read_text())
         if d["metadata"].get("quick"):
             continue
@@ -136,6 +149,16 @@ def fmt(v: float, nd: int = 3) -> str:
     return f"{v:,.{nd}f}"
 
 
+def mde(d: dict[str, float], higher_is_better: bool = False) -> float:
+    """Smallest uniform slowdown (fraction) the >5% + non-overlapping-IQR rule can flag."""
+    spread = 1 - d["q1"] / d["q3"] if higher_is_better else d["q3"] / d["q1"] - 1
+    return max(THRESH, spread)
+
+
+def ranges_overlap(a: list[float], b: list[float]) -> bool:
+    return not (a[0] > b[1] or b[0] > a[1])
+
+
 def compare(a: list[float], b: list[float], da: dict[str, float],
             db: dict[str, float]) -> dict[str, Any]:
     ratio = da["median"] / db["median"]
@@ -148,6 +171,7 @@ def compare(a: list[float], b: list[float], da: dict[str, float],
 def main() -> None:
     run_dir = Path(sys.argv[1])
     by = load(run_dir)
+    rerun = load(run_dir, RERUN_DIR)
     labels = [x for x in (MAIN, REL, CDB) if x in by]
     keys: list[str] = []
     for d in by[MAIN]:
@@ -157,6 +181,14 @@ def main() -> None:
 
     summary: dict[str, Any] = {"labels": {}, "metrics": {}, "concurrency": {}, "memory": {},
                                "comparisons": {"main_vs_1.10.0": {}, "main_vs_cubriddb": {}}}
+    if rerun:
+        summary["connect_rerun"] = {
+            "source": f"{RERUN_DIR}/", "keys": list(CONNECT_KEYS),
+            "trials": {lab: len(v) for lab, v in rerun.items()},
+            "timestamps_utc": sorted(d["metadata"]["environment"]["timestamp_utc"]
+                                     for v in rerun.values() for d in v),
+            "driver": {lab: v[0]["metadata"]["driver"] for lab, v in rerun.items()},
+        }
     for lab in labels:
         md = by[lab][0]["metadata"]
         summary["labels"][lab] = {
@@ -171,7 +203,8 @@ def main() -> None:
     for k in keys:
         summary["metrics"][k] = {}
         for lab in labels:
-            s, tm = metric_samples(by[lab], k)
+            src = rerun if rerun and k in CONNECT_KEYS else by
+            s, tm = metric_samples(src.get(lab, []), k)
             if not s:
                 continue
             pooled[(lab, k)] = s
@@ -186,6 +219,11 @@ def main() -> None:
             c = compare(pooled[(MAIN, k)], pooled[(REL, k)], m[MAIN], m[REL])
             c["regression"] = c["ratio"] > 1 + THRESH and not c["iqr_overlap"]
             c["improvement"] = c["ratio"] < 1 - THRESH and not c["iqr_overlap"]
+            c["min_detectable_slowdown"] = {"main": mde(m[MAIN]), "1.10.0": mde(m[REL])}
+            c["trial_median_range"] = {"main": m[MAIN]["trial_median_range"],
+                                       "1.10.0": m[REL]["trial_median_range"]}
+            c["trial_medians_overlap"] = ranges_overlap(m[MAIN]["trial_median_range"],
+                                                        m[REL]["trial_median_range"])
             summary["comparisons"]["main_vs_1.10.0"][k] = c
         if MAIN in m and CDB in m:
             summary["comparisons"]["main_vs_cubriddb"][k] = compare(
@@ -211,7 +249,12 @@ def main() -> None:
                 summary["comparisons"]["main_vs_1.10.0"][f"conc_{mode}_{c}"] = {
                     "throughput_ratio": ra, "iqr_overlap": overlap,
                     "p_mw": mann_whitney_p(a["throughput_samples"], b["throughput_samples"]),
-                    "regression": ra < 1 - THRESH and not overlap}
+                    "regression": ra < 1 - THRESH and not overlap,
+                    "min_detectable_slowdown": {"main": mde(da, True), "1.10.0": mde(db, True)},
+                    "trial_median_range": {"main": a["trial_median_qps"],
+                                           "1.10.0": b["trial_median_qps"]},
+                    "trial_medians_overlap": ranges_overlap(a["trial_median_qps"],
+                                                            b["trial_median_qps"])}
 
     for lab in labels:
         mem: dict[str, list[int]] = defaultdict(list)
@@ -239,6 +282,7 @@ def main() -> None:
 
 LABEL_ROWS = [
     ("connect_close", "connect + close"),
+    ("connect_only", "connect only"),
     ("select_pk", "SELECT by PK (execute + fetchone)"),
     ("insert_commit", "INSERT 1 row + commit"),
     ("update_commit", "UPDATE 1 row + commit"),
@@ -267,6 +311,11 @@ def render(s: dict[str, Any], keys: list[str], phase: dict[str, Any]) -> str:
     L.append("Times are milliseconds per operation; samples from all trials are pooled. "
              "`trial medians` is the min-max of the per-trial medians. Throughput is at the "
              "pooled median.\n")
+    if "connect_rerun" in s:
+        r = s["connect_rerun"]
+        L.append(f"Connect cases ({', '.join(f'`{k}`' for k in r['keys'])}) come from "
+                 f"`{r['source']}` ({r['timestamps_utc'][0]} to {r['timestamps_utc'][-1]}), "
+                 "a re-measurement of those cases only; every other case comes from `raw/`.\n")
     for lab in (MAIN, REL, CDB):
         if lab not in s["labels"]:
             continue
@@ -283,18 +332,27 @@ def render(s: dict[str, Any], keys: list[str], phase: dict[str, Any]) -> str:
                      f"{d['throughput_at_median']:,.0f} {d['throughput_unit']} |")
     L.append("\n## pycubrid main vs 1.10.0\n")
     L.append("Ratio = main median / 1.10.0 median (time; >1 is slower). Regression = ratio > "
-             "1.05 and pooled IQRs do not overlap.\n")
+             "1.05 and pooled IQRs do not overlap. `min detectable` is the smallest uniform "
+             "slowdown the rule could flag given the observed spread, max(5%, q3/q1 - 1), for "
+             "main / 1.10.0; a slowdown below it is reported as `no change`. `trial medians` "
+             "is the min-max of the per-trial medians of main / 1.10.0.\n")
     L.append("| Operation | main median | 1.10.0 median | ratio | bootstrap 95% CI | "
-             "Mann-Whitney p | IQRs overlap | verdict |")
-    L.append("|---|---:|---:|---:|---|---:|---|---|")
+             "Mann-Whitney p | IQRs overlap | min detectable | trial medians main / 1.10.0 "
+             "| trial medians overlap | verdict |")
+    L.append("|---|---:|---:|---:|---|---:|---|---:|---|---|---|")
     for k, name in LABEL_ROWS:
         c = cmpr.get(k)
         if not c:
             continue
         v = "REGRESSION" if c["regression"] else ("faster" if c["improvement"] else "no change")
+        md, tr = c["min_detectable_slowdown"], c["trial_median_range"]
         L.append(f"| {name} | {fmt(m[k][MAIN]['median'])} | {fmt(m[k][REL]['median'])} | "
                  f"{c['ratio']:.3f} | {c['ci95'][0]:.3f}-{c['ci95'][1]:.3f} | "
-                 f"{c['p_mw']:.3g} | {'yes' if c['iqr_overlap'] else 'no'} | {v} |")
+                 f"{c['p_mw']:.3g} | {'yes' if c['iqr_overlap'] else 'no'} | "
+                 f"{md['main']:.0%} / {md['1.10.0']:.0%} | "
+                 f"{fmt(tr['main'][0])}-{fmt(tr['main'][1])} / "
+                 f"{fmt(tr['1.10.0'][0])}-{fmt(tr['1.10.0'][1])} | "
+                 f"{'yes' if c['trial_medians_overlap'] else 'no'} | {v} |")
     L.append("\n## pycubrid main vs CUBRIDdb\n")
     L.append("Ratio = pycubrid main median / CUBRIDdb median (time; >1 means pycubrid is "
              "slower).\n")
@@ -320,12 +378,16 @@ def render(s: dict[str, Any], keys: list[str], phase: dict[str, Any]) -> str:
                  f"{v['query_p50_ms_median_of_trials']:.3f} | "
                  f"{v['query_p95_ms_median_of_trials']:.3f} |")
     L.append("\nmain vs 1.10.0 throughput ratio (>1 is faster):\n")
-    L.append("| Case | ratio | Mann-Whitney p | IQRs overlap | verdict |")
-    L.append("|---|---:|---:|---|---|")
+    L.append("| Case | ratio | Mann-Whitney p | IQRs overlap | min detectable | "
+             "trial medians overlap | verdict |")
+    L.append("|---|---:|---:|---|---:|---|---|")
     for k, c in cmpr.items():
         if k.startswith("conc_"):
+            md = c["min_detectable_slowdown"]
             L.append(f"| {k} | {c['throughput_ratio']:.3f} | {c['p_mw']:.3g} | "
                      f"{'yes' if c['iqr_overlap'] else 'no'} | "
+                     f"{md['main']:.0%} / {md['1.10.0']:.0%} | "
+                     f"{'yes' if c['trial_medians_overlap'] else 'no'} | "
                      f"{'REGRESSION' if c['regression'] else 'no regression'} |")
     L.append("\n## Peak Python-heap memory (tracemalloc), median over trials\n")
     L.append("CUBRIDdb allocates rows and buffers in C (CCI); tracemalloc does not see that "
