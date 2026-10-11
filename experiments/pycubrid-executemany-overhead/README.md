@@ -28,6 +28,9 @@
 See [`runs/2026-10-11_executemany-vs-cubriddb/derived/summary.md`](runs/2026-10-11_executemany-vs-cubriddb/derived/summary.md)
 for all tables. The prose report that accompanied the run is [`REPORT.md`](REPORT.md) in this directory.
 
+Follow-up: the prepared batch paths, including `EXECUTE_ARRAY`, were measured on CUBRID 10.2-11.4 in
+[pycubrid-prepared-batch](../pycubrid-prepared-batch/README.md) (pycubrid#836).
+
 ## Methodology
 
 Same server, schema, data shape, `autocommit=False` and timed explicit commit as pycubrid-release-baseline. Every measured iteration

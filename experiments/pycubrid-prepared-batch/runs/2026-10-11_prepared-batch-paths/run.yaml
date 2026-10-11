@@ -1,0 +1,39 @@
+run_id: "2026-10-11_prepared-batch-paths"
+date: "2026-10-11T22:46:00+09:00"
+label: "prepared-batch-paths"
+role: investigation
+compares_to: "pycubrid-executemany-overhead/2026-10-11_executemany-vs-cubriddb"
+tracking_issue: "https://github.com/cubrid-lab/pycubrid/issues/836"
+environment:
+  host:
+    cpu: "Intel Core i5-9400F @ 2.90GHz"
+    cores: 6
+    memory_gb: 31.3
+    os: "Ubuntu 22.04.5 LTS"
+    kernel: "5.15.0-198-generic"
+    load: "shared machine, 7 logged-in users; 1-min loadavg 1.3-7.8 at trial starts (raw/loadavg.log). Medians pooled over trials are reported."
+  software:
+    python: "CPython 3.12.13 (venv holding only pycubrid, python -I)"
+    cubrid_servers:
+      "11.4": "11.4.6.1963, cubrid/cubrid:11.4 sha256:1248b77ad39888df9e064655937188ab99fe056ed7e35b57d06155a015dc1791, CAS protocol 12"
+      "11.2": "11.2.9.0866, cubrid/cubrid:11.2 sha256:bbf8622a60496060cfb96095f01df27e9b2236de6d254998ecbcf05fdbe8345d, CAS protocol 11"
+      "11.0": "11.0.16.0419, cubrid/cubrid:11.0 sha256:b875e6b3296e5735819edff426b7cc783a089035f5b897cac6220d890f4f80a2, CAS protocol 10"
+      "10.2": "10.2.18.9024, cubrid/cubrid:10.2 sha256:fee7c63b57159bed0827588b5678c611beec6dac07633cf3e13729247456b02f, CAS protocol 10"
+    docker: "29.2.1 (host ports 33810/33811/33812/33814 -> 33000 via docker-proxy); only the measured container running"
+  drivers:
+    pycubrid: "main f8d906df0eb0ad0099e1e0342bf702937ae7ec2c (reports 1.10.0), unmodified"
+  harness: "cubrid-benchmark aec7768 + scripts/prepared_batch_bench.py and scripts/summarize_prepared_batch.py from this experiment; schema, data, iteration counts and verification imported from scripts/executemany_overhead_bench.py"
+  database:
+    name: testdb
+    host: localhost
+    autocommit: false
+    broker: "default BROKER1 of each image (SQL_LOG=ON, statement pooling on)"
+protocol:
+  trials: "5 on 11.4; 3 on 11.2, 11.0 and 10.2"
+  verification: "every measured iteration verified"
+artifacts:
+  raw_dir: raw/
+  derived_dir: derived/
+deviations:
+  - "CUBRIDdb was not measured in this run; ratios to CUBRIDdb are only available through the prepared loop, which the previous run measured at 0.99-1.31x of CUBRIDdb on 11.4."
+  - "The EXECUTE_ARRAY path is a harness-side prototype (ExecuteArrayPacket) sent through pycubrid's internal Connection._send_and_receive; it is not a driver feature."

@@ -1,0 +1,26 @@
+id: pycubrid-prepared-batch
+title: "Prepared-statement batch paths for pycubrid executemany(): EXECUTE_BATCH vs prepared loop vs EXECUTE_ARRAY"
+status: completed
+question: "Is a prepared-statement batch path (one PREPARE plus one execute per row, or one PREPARE plus one EXECUTE_ARRAY request with all rows' bound values) faster than pycubrid's literal EXECUTE_BATCH executemany() for INSERT, UPDATE, DELETE and MERGE on CUBRID 10.2, 11.0, 11.2 and 11.4, and are its transaction, error, rowcount and type semantics the same?"
+system_under_test: "pycubrid main f8d906d (reports 1.10.0) on CUBRID 10.2.18, 11.0.16, 11.2.9 and 11.4.6; EXECUTE_ARRAY request and reply built by the harness (scripts/prepared_batch_bench.py), the driver is not modified"
+tracking_issue: "https://github.com/cubrid-lab/pycubrid/issues/836"
+follows: "pycubrid-executemany-overhead (pycubrid#822)"
+workload:
+  name: "executemany-overhead (reused)"
+  schema: "b822_seed / b822_ins / b822_upd / b822_del / b822_mrg (id INT PK, name VARCHAR(100), email VARCHAR(200), age INT), from scripts/executemany_overhead_bench.py"
+  dataset: "10,000 deterministic rows (i, 'user_i', 'user_i@example.com', 20 + i % 50); batches of the first 100 / 1,000 / 10,000 ids"
+protocol:
+  measurement: "time.perf_counter_ns(); statement phase and commit timed separately; variant order rotated every trial; medians pooled over every measured iteration of every trial"
+  iterations: "20 / 10 / 5 per trial for 100 / 1,000 / 10,000 rows (3 / 2 / 1 warm-ups)"
+  trials: "5 on CUBRID 11.4, 3 on 11.2, 11.0 and 10.2; one server running at a time"
+  verification: "after every iteration COUNT/SUM(id)/SUM(age) of the whole table are compared with values computed in Python; EXECUTE_ARRAY also checks that every row reported success"
+  transaction_mode: "autocommit=False, explicit commit per batch, commit timed"
+  semantics: "untimed probes per path and version, autocommit on and off: duplicate key and conversion error in row 3, rollback and commit afterwards, per-row counts for UPDATE/DELETE, NULLs, bool/bigint/float/Decimal/date/datetime/bytes values, SET(INT), CLOB, AUTO_INCREMENT and lastrowid"
+paths:
+  - "executemany: pycubrid Cursor.executemany (EXECUTE_BATCH FC20 with N client-rendered literal SQL strings)"
+  - "native_prepared: pycubrid.compat.native cursor, PREPARE (FC2) once, EXECUTE (FC3) with bound values per row"
+  - "execute_array: PREPARE (FC2), one EXECUTE_ARRAY (FC21) with every row's bound values, CLOSE_REQ (FC6), all inside the timed statement phase"
+metrics: [median_ms, stmt_median_ms, commit_median_ms, per_trial_median_range]
+repro:
+  setup: "one container per version, e.g. docker run -d --name pyc836-114 -e CUBRID_DB=testdb -p 33814:33000 cubrid/cubrid:11.4"
+  run: "PY_MAIN=... MAIN_SHA=... experiments/pycubrid-prepared-batch/run.sh experiments/pycubrid-prepared-batch/runs/<run-id>"
