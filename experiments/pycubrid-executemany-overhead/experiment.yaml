@@ -1,0 +1,25 @@
+id: pycubrid-executemany-overhead
+title: "pycubrid executemany() overhead against CUBRIDdb (INSERT/UPDATE/DELETE/MERGE batches)"
+status: active
+question: "Why is pycubrid's single-round-trip executemany() (EXECUTE_BATCH with literal SQL) 1.15-1.40x slower than CUBRIDdb's per-row prepared execution for INSERT, and how large are client rendering, packet handling and server wait? Does the same hold for UPDATE, DELETE and MERGE?"
+system_under_test: "pycubrid main d727224 (1.10.0; driver code identical to 2228d66 used in pycubrid-release-baseline) vs CUBRIDdb (cubrid-python v11.3.0.51, c63ab9c) on CUBRID 11.4.6"
+tracking_issue: "https://github.com/cubrid-lab/pycubrid/issues/822"
+workload:
+  name: "executemany-overhead"
+  schema: "b822_seed / b822_ins / b822_upd / b822_del / b822_mrg (id INT PK, name VARCHAR(100), email VARCHAR(200), age INT)"
+  dataset: "10,000 deterministic rows (i, 'user_i', 'user_i@example.com', 20 + i % 50); batches of the first 100 / 1,000 / 10,000 ids"
+protocol:
+  measurement: "time.perf_counter_ns(); statement phase and commit timed separately; 5 trials per driver, driver order alternated, variant order rotated; medians pooled over trials"
+  iterations: "20 / 10 / 5 per trial for 100 / 1,000 / 10,000 rows (3 / 2 / 1 warm-ups)"
+  metrics: [median_ms, iqr_ms, per_trial_median_range, phase_split_ms, tracemalloc_peak_bytes, cprofile, broker_sql_log_span]
+  verification: "after every iteration COUNT/SUM(id)/SUM(age) of the whole table are compared with values computed in Python; failure aborts the run"
+  transaction_mode: "autocommit=False, explicit commit per batch, commit timed"
+paths:
+  - "pycubrid executemany (EXECUTE_BATCH, N literal SQL strings)"
+  - "pycubrid cursor.execute per row (PREPARE_AND_EXECUTE with client-rendered literals)"
+  - "pycubrid executemany_batch with pre-rendered SQL"
+  - "pycubrid.compat.native prepared cursor (FC2 once, FC3 per row)"
+  - "CUBRIDdb executemany and per-row execute"
+repro:
+  setup: "docker run -d --name inv822-114 -e CUBRID_DB=testdb -p 33531:33000 cubrid/cubrid:11.4"
+  run: "experiments/pycubrid-executemany-overhead/run.sh experiments/pycubrid-executemany-overhead/runs/<run-id> 5"
