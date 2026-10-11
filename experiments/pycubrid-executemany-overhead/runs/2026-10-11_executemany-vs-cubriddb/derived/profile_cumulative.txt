@@ -1,0 +1,38 @@
+         2490411 function calls (2430408 primitive calls) in 9.397 seconds
+
+   Ordered by: cumulative time
+   List reduced from 78 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        3    0.007    0.002    9.397    3.132 cursor.py:278(executemany)
+        3    0.000    0.000    8.551    2.850 cursor.py:352(_executemany_batch)
+        6    0.000    0.000    8.549    1.425 connection.py:906(_send_and_receive_locked)
+        3    0.000    0.000    8.547    2.849 connection.py:865(_send_and_receive)
+       12    0.000    0.000    8.357    0.696 connection.py:1102(_recv_exact)
+       12    8.357    0.696    8.357    0.696 {method 'recv_into' of '_socket.socket' objects}
+    30000    0.020    0.000    0.836    0.000 _cursor_common.py:550(_bind_parameters)
+    30000    0.121    0.000    0.813    0.000 _cursor_common.py:461(bind_parameters)
+    30000    0.322    0.000    0.347    0.000 _cursor_common.py:104(split_on_placeholders)
+   120000    0.109    0.000    0.219    0.000 _cursor_common.py:336(format_parameter)
+        3    0.006    0.002    0.103    0.034 protocol.py:1897(write)
+    30000    0.027    0.000    0.096    0.000 packet.py:297(_write_null_terminated_string)
+        3    0.034    0.011    0.088    0.029 protocol.py:1908(parse)
+   630000    0.065    0.000    0.087    0.000 {built-in method builtins.issubclass}
+120018/60018    0.024    0.000    0.081    0.000 {built-in method builtins.isinstance}
+    30000    0.010    0.000    0.064    0.000 typing.py:1221(__instancecheck__)
+    60000    0.045    0.000    0.060    0.000 _cursor_common.py:223(escape_string)
+   420000    0.057    0.000    0.057    0.000 {method 'append' of 'list' objects}
+    30000    0.014    0.000    0.054    0.000 typing.py:1492(__subclasscheck__)
+    60009    0.015    0.000    0.023    0.000 packet.py:449(_parse_int)
+    60000    0.014    0.000    0.023    0.000 packet.py:443(_parse_short)
+    30000    0.007    0.000    0.022    0.000 <frozen abc>:121(__subclasscheck__)
+    30000    0.007    0.000    0.019    0.000 packet.py:285(_encode)
+    30009    0.010    0.000    0.019    0.000 packet.py:265(_write_int)
+    30009    0.010    0.000    0.018    0.000 packet.py:259(_write_byte)
+   120009    0.017    0.000    0.017    0.000 {method 'unpack_from' of '_struct.Struct' objects}
+    30000    0.012    0.000    0.015    0.000 {built-in method _abc._abc_subclasscheck}
+    90018    0.012    0.000    0.012    0.000 {method 'extend' of 'bytearray' objects}
+   120018    0.012    0.000    0.012    0.000 {built-in method builtins.len}
+    30000    0.007    0.000    0.012    0.000 packet.py:27(_encode_text)
+
+

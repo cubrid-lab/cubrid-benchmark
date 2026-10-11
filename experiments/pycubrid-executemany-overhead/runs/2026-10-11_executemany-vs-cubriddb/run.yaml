@@ -1,0 +1,37 @@
+run_id: "2026-10-11_executemany-vs-cubriddb"
+date: "2026-10-11T19:39:00+09:00"
+label: "executemany-vs-cubriddb"
+role: investigation
+compares_to: "pycubrid-release-baseline/2026-10-11_main-vs-1.10.0-vs-cubriddb"
+tracking_issue: "https://github.com/cubrid-lab/pycubrid/issues/822"
+environment:
+  host:
+    cpu: "Intel Core i5-9400F @ 2.90GHz"
+    cores: 6
+    memory_gb: 31.3
+    os: "Ubuntu 22.04.5 LTS"
+    kernel: "5.15.0-198-generic"
+    load: "shared machine, 7 logged-in users; 1-min loadavg 1.6-14.0 during the run (raw/loadavg.log); a foreign pip install ran at ~90% CPU throughout. Results are noisy; medians pooled over 5 trials are reported."
+  software:
+    python: "CPython 3.12.13 (uv-managed, one venv per driver, python -I)"
+    cubrid_server: "CUBRID 11.4.6 (11.4.6.1963-0e7d3c1), image cubrid/cubrid:11.4 sha256:1248b77ad39888df9e064655937188ab99fe056ed7e35b57d06155a015dc1791"
+    docker: "29.2.1 (port 33531 -> 33000 via docker-proxy)"
+  drivers:
+    pycubrid: "main d72722467c81cb690f002c921dc2e468110192fe (reports 1.10.0); package code identical to 2228d663 used in the baseline"
+    cubriddb: "CUBRID/cubrid-python v11.3.0.51 c63ab9c51353e5c80e02dd2c1a19d4640acb29f5, cci-src 7d1eb8f40f04089b8218d08e36e2c24a2de11b24, GCC 11.4.0, build_cci.sh 'sh build.sh' changed to 'bash build.sh' (dash lacks typeset)"
+  harness: "cubrid-benchmark 27e9783 + scripts/executemany_overhead_bench.py, scripts/summarize_executemany_overhead.py, scripts/loop_requests_probe.py from this experiment"
+  database:
+    name: testdb
+    host: localhost
+    port: 33531
+    autocommit: false
+    broker: "default BROKER1, MAX_NUM_APPL_SERVER=40, SQL_LOG=ON (OFF only in the sqllogoff_* sensitivity files)"
+protocol:
+  trials: 5 per driver for compare and phases; 3 for the sensitivity runs and cProfile
+  verification: "every measured iteration verified"
+artifacts:
+  raw_dir: raw/
+  derived_dir: derived/
+deviations:
+  - "First launch aborted at the DELETE 10,000 verification (SUM() of an empty table is NULL, harness bug), was fixed and the whole run restarted; no partial data reused."
+  - "run.sh step 5 (broker SQL-log slices) was first run with a one-shot log dump that lost the INSERT slices to broker log rotation (~10 MB per CAS); step 5 was re-run with per-run slicing (current run.sh) on the same server after the other steps; raw/sqllog_slices.txt.gz and raw/serverlog_*.json come from that re-run."
