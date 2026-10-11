@@ -1,0 +1,2726 @@
+{
+ "labels": {
+  "pycubrid-main": {
+   "trials": 5,
+   "driver": {
+    "driver": "pycubrid",
+    "version": "1.10.0",
+    "module_path": "/tmp/claude-1000/-data-GitHub-pycubrid/0a1784df-1111-416b-a8a3-bccbbb2734e8/scratchpad/bench797/venv-main/lib/python3.12/site-packages/pycubrid/__init__.py",
+    "commit": "2228d663b6e2c9462c648b9dd941720219c464ae"
+   },
+   "environment": {
+    "python": "CPython 3.12.13",
+    "python_executable": "/tmp/claude-1000/-data-GitHub-pycubrid/0a1784df-1111-416b-a8a3-bccbbb2734e8/scratchpad/bench797/venv-main/bin/python",
+    "os": "Linux-5.15.0-198-generic-x86_64-with-glibc2.35",
+    "kernel": "5.15.0-198-generic",
+    "cpu": "Intel(R) Core(TM) i5-9400F CPU @ 2.90GHz",
+    "cpu_count": 6,
+    "loadavg_at_start": [
+     5.29052734375,
+     2.08056640625,
+     1.1611328125
+    ],
+    "timestamp_utc": "2026-10-11T02:04:48Z"
+   },
+   "elapsed_s": [
+    156.1,
+    155.9,
+    154.3,
+    156.2,
+    157.0
+   ],
+   "ru_maxrss_kb": [
+    40148,
+    40136,
+    40216,
+    40196,
+    40212
+   ],
+   "loadavg_at_start": [
+    [
+     5.29052734375,
+     2.08056640625,
+     1.1611328125
+    ],
+    [
+     3.50048828125,
+     2.42822265625,
+     1.826171875
+    ],
+    [
+     3.11767578125,
+     2.51025390625,
+     2.0166015625
+    ],
+    [
+     4.3203125,
+     3.1181640625,
+     2.36962890625
+    ],
+    [
+     4.439453125,
+     2.9443359375,
+     2.5625
+    ]
+   ]
+  },
+  "pycubrid-1.10.0": {
+   "trials": 5,
+   "driver": {
+    "driver": "pycubrid",
+    "version": "1.10.0",
+    "module_path": "/tmp/claude-1000/-data-GitHub-pycubrid/0a1784df-1111-416b-a8a3-bccbbb2734e8/scratchpad/bench797/venv-v1100/lib/python3.12/site-packages/pycubrid/__init__.py",
+    "commit": "pypi:1.10.0"
+   },
+   "environment": {
+    "python": "CPython 3.12.13",
+    "python_executable": "/tmp/claude-1000/-data-GitHub-pycubrid/0a1784df-1111-416b-a8a3-bccbbb2734e8/scratchpad/bench797/venv-v1100/bin/python",
+    "os": "Linux-5.15.0-198-generic-x86_64-with-glibc2.35",
+    "kernel": "5.15.0-198-generic",
+    "cpu": "Intel(R) Core(TM) i5-9400F CPU @ 2.90GHz",
+    "cpu_count": 6,
+    "loadavg_at_start": [
+     3.7763671875,
+     2.45068359375,
+     1.42822265625
+    ],
+    "timestamp_utc": "2026-10-11T02:07:24Z"
+   },
+   "elapsed_s": [
+    156.6,
+    156.0,
+    155.8,
+    156.7,
+    155.8
+   ],
+   "ru_maxrss_kb": [
+    40388,
+    40176,
+    40196,
+    40012,
+    40136
+   ],
+   "loadavg_at_start": [
+    [
+     3.7763671875,
+     2.45068359375,
+     1.42822265625
+    ],
+    [
+     2.8486328125,
+     2.265625,
+     1.611328125
+    ],
+    [
+     4.494140625,
+     2.8740234375,
+     2.19775390625
+    ],
+    [
+     4.26513671875,
+     3.216796875,
+     2.4990234375
+    ],
+    [
+     3.64404296875,
+     2.8369140625,
+     2.4892578125
+    ]
+   ]
+  },
+  "cubriddb": {
+   "trials": 5,
+   "driver": {
+    "driver": "CUBRIDdb",
+    "version": "11.3.0.1",
+    "module_path": "/tmp/claude-1000/-data-GitHub-pycubrid/0a1784df-1111-416b-a8a3-bccbbb2734e8/scratchpad/bench797/venv-cubriddb/lib/python3.12/site-packages/CUBRIDdb/__init__.py",
+    "commit": "c63ab9c51353e5c80e02dd2c1a19d4640acb29f5 (cci-src 7d1eb8f40f04089b8218d08e36e2c24a2de11b24)"
+   },
+   "environment": {
+    "python": "CPython 3.12.13",
+    "python_executable": "/tmp/claude-1000/-data-GitHub-pycubrid/0a1784df-1111-416b-a8a3-bccbbb2734e8/scratchpad/bench797/venv-cubriddb/bin/python",
+    "os": "Linux-5.15.0-198-generic-x86_64-with-glibc2.35",
+    "kernel": "5.15.0-198-generic",
+    "cpu": "Intel(R) Core(TM) i5-9400F CPU @ 2.90GHz",
+    "cpu_count": 6,
+    "loadavg_at_start": [
+     1.525390625,
+     2.08203125,
+     1.45068359375
+    ],
+    "timestamp_utc": "2026-10-11T02:10:01Z"
+   },
+   "elapsed_s": [
+    156.5,
+    156.6,
+    156.7,
+    154.8,
+    157.2
+   ],
+   "ru_maxrss_kb": [
+    38164,
+    38140,
+    38288,
+    38272,
+    38308
+   ],
+   "loadavg_at_start": [
+    [
+     1.525390625,
+     2.08203125,
+     1.45068359375
+    ],
+    [
+     1.68212890625,
+     2.0009765625,
+     1.6201171875
+    ],
+    [
+     2.19775390625,
+     2.3447265625,
+     1.89501953125
+    ],
+    [
+     1.91162109375,
+     2.666015625,
+     2.40234375
+    ],
+    [
+     2.0224609375,
+     2.46728515625,
+     2.40185546875
+    ]
+   ]
+  }
+ },
+ "metrics": {
+  "connect_close": {
+   "pycubrid-main": {
+    "n": 1000,
+    "median": 1.497893,
+    "p95": 3.0850346499999937,
+    "q1": 1.38194,
+    "q3": 1.6904065,
+    "iqr": 0.3084665,
+    "stdev": 1.3642342002897718,
+    "mean": 1.838055298,
+    "throughput_at_median": 667.6044283536942,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     1.476422,
+     1.556196
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 1000,
+    "median": 1.489282,
+    "p95": 3.6546017499999954,
+    "q1": 1.3837454999999999,
+    "q3": 1.683485,
+    "iqr": 0.29973950000000005,
+    "stdev": 1.2171515994495457,
+    "mean": 1.825503792,
+    "throughput_at_median": 671.4645043719054,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     1.461854,
+     1.514022
+    ]
+   },
+   "cubriddb": {
+    "n": 1000,
+    "median": 1.00437,
+    "p95": 1.45530815,
+    "q1": 0.9434945,
+    "q3": 1.121776,
+    "iqr": 0.1782815000000001,
+    "stdev": 0.1840887543203939,
+    "mean": 1.063030417,
+    "throughput_at_median": 995.6490138096517,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     0.9773335000000001,
+     1.1047980000000002
+    ]
+   }
+  },
+  "connect_only": {
+   "pycubrid-main": {
+    "n": 1000,
+    "median": 1.398505,
+    "p95": 2.8898420999999965,
+    "q1": 1.2941272499999998,
+    "q3": 1.578773,
+    "iqr": 0.28464575000000014,
+    "stdev": 1.2659839889117581,
+    "mean": 1.714998733,
+    "throughput_at_median": 715.0492847719528,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     1.3831205,
+     1.4589175
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 1000,
+    "median": 1.3944785,
+    "p95": 3.4370241499999965,
+    "q1": 1.29735925,
+    "q3": 1.57464,
+    "iqr": 0.2772807500000001,
+    "stdev": 1.1304316787789241,
+    "mean": 1.705235984,
+    "throughput_at_median": 717.1139605235936,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     1.375834,
+     1.419477
+    ]
+   },
+   "cubriddb": {
+    "n": 1000,
+    "median": 0.9277139999999999,
+    "p95": 1.3458758499999999,
+    "q1": 0.8721815,
+    "q3": 1.0405435,
+    "iqr": 0.168362,
+    "stdev": 0.17119897404959492,
+    "mean": 0.983382042,
+    "throughput_at_median": 1077.9184101996952,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     0.9055835,
+     1.035494
+    ]
+   }
+  },
+  "close_only": {
+   "pycubrid-main": {
+    "n": 1000,
+    "median": 0.0967385,
+    "p95": 0.23442184999999996,
+    "q1": 0.0754945,
+    "q3": 0.12507175,
+    "iqr": 0.04957725,
+    "stdev": 0.10269762716319558,
+    "mean": 0.123056565,
+    "throughput_at_median": 10337.146017356068,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     0.09381600000000001,
+     0.103562
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 1000,
+    "median": 0.0951635,
+    "p95": 0.25803424999999985,
+    "q1": 0.07398125000000001,
+    "q3": 0.1200165,
+    "iqr": 0.046035249999999986,
+    "stdev": 0.09265447729575774,
+    "mean": 0.120267808,
+    "throughput_at_median": 10508.2305715952,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     0.0863695,
+     0.0990455
+    ]
+   },
+   "cubriddb": {
+    "n": 1000,
+    "median": 0.0719215,
+    "p95": 0.11771364999999984,
+    "q1": 0.0677975,
+    "q3": 0.08482775,
+    "iqr": 0.017030249999999997,
+    "stdev": 0.019002072869972127,
+    "mean": 0.079648375,
+    "throughput_at_median": 13904.04816362284,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     0.068973,
+     0.0766095
+    ]
+   }
+  },
+  "select_pk": {
+   "pycubrid-main": {
+    "n": 5000,
+    "median": 0.6007405,
+    "p95": 1.0571069000000002,
+    "q1": 0.54954125,
+    "q3": 0.6889595,
+    "iqr": 0.13941824999999997,
+    "stdev": 0.3428533959301293,
+    "mean": 0.6824639154,
+    "throughput_at_median": 1664.612257705282,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     0.571755,
+     0.6140635
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 5000,
+    "median": 0.602012,
+    "p95": 0.9942440500000003,
+    "q1": 0.552819,
+    "q3": 0.6924702500000001,
+    "iqr": 0.13965125000000012,
+    "stdev": 0.2841182807730527,
+    "mean": 0.6698371374,
+    "throughput_at_median": 1661.096456549039,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     0.57918,
+     0.6253934999999999
+    ]
+   },
+   "cubriddb": {
+    "n": 5000,
+    "median": 0.546063,
+    "p95": 0.8590252,
+    "q1": 0.507854,
+    "q3": 0.6291832500000001,
+    "iqr": 0.12132925000000006,
+    "stdev": 0.1485107479809132,
+    "mean": 0.5975113386,
+    "throughput_at_median": 1831.2905287485146,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     0.5330895,
+     0.5622484999999999
+    ]
+   }
+  },
+  "insert_commit": {
+   "pycubrid-main": {
+    "n": 1500,
+    "median": 34.4623265,
+    "p95": 41.9409368,
+    "q1": 33.44148625,
+    "q3": 41.73186775,
+    "iqr": 8.290381500000002,
+    "stdev": 16.9997722817482,
+    "mean": 38.813669962666665,
+    "throughput_at_median": 29.017193601250337,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     33.8594585,
+     41.144733
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 1500,
+    "median": 33.883247999999995,
+    "p95": 41.95998145,
+    "q1": 33.433562249999994,
+    "q3": 41.73809025,
+    "iqr": 8.304528000000005,
+    "stdev": 11.805960813355384,
+    "mean": 38.46019696533333,
+    "throughput_at_median": 29.513109250919513,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     33.5122015,
+     41.229183
+    ]
+   },
+   "cubriddb": {
+    "n": 1500,
+    "median": 33.520264,
+    "p95": 41.83175775,
+    "q1": 33.40833275,
+    "q3": 41.61260825,
+    "iqr": 8.204275500000001,
+    "stdev": 13.095594106972655,
+    "mean": 37.29919596133333,
+    "throughput_at_median": 29.832700601642046,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     33.471033,
+     33.5876655
+    ]
+   }
+  },
+  "insert_execute_only": {
+   "pycubrid-main": {
+    "n": 1500,
+    "median": 4.861704,
+    "p95": 7.5479468,
+    "q1": 1.82273975,
+    "q3": 7.24911075,
+    "iqr": 5.426371,
+    "stdev": 2.6324931495120936,
+    "mean": 4.597983386,
+    "throughput_at_median": 205.68919868424734,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     4.2096555,
+     6.576637
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 1500,
+    "median": 4.353892500000001,
+    "p95": 7.53393895,
+    "q1": 1.77942825,
+    "q3": 7.236462499999999,
+    "iqr": 5.4570342499999995,
+    "stdev": 2.661373083259695,
+    "mean": 4.515146233333334,
+    "throughput_at_median": 229.67953388835392,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     1.9450064999999999,
+     6.5344185
+    ]
+   },
+   "cubriddb": {
+    "n": 1500,
+    "median": 4.9884319999999995,
+    "p95": 5.8760299499999995,
+    "q1": 1.51773525,
+    "q3": 5.6610865,
+    "iqr": 4.143351249999999,
+    "stdev": 2.0085318978779085,
+    "mean": 3.7372364693333333,
+    "throughput_at_median": 200.46379303155786,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     4.5188725,
+     5.294921
+    ]
+   }
+  },
+  "update_commit": {
+   "pycubrid-main": {
+    "n": 1500,
+    "median": 33.826927,
+    "p95": 83.4360812,
+    "q1": 33.426156750000004,
+    "q3": 41.747583500000005,
+    "iqr": 8.32142675,
+    "stdev": 15.478734562854529,
+    "mean": 41.450330628,
+    "throughput_at_median": 29.5622478506546,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     33.7448605,
+     33.958548500000006
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 1500,
+    "median": 33.887071500000005,
+    "p95": 83.45534839999999,
+    "q1": 33.43717025,
+    "q3": 41.76070300000001,
+    "iqr": 8.323532750000005,
+    "stdev": 17.524698259539587,
+    "mean": 42.14119998266667,
+    "throughput_at_median": 29.509779267883914,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     33.7316215,
+     41.202656000000005
+    ]
+   },
+   "cubriddb": {
+    "n": 1500,
+    "median": 33.5553855,
+    "p95": 83.39980100000001,
+    "q1": 33.413812,
+    "q3": 41.719404499999996,
+    "iqr": 8.305592499999996,
+    "stdev": 15.501309282233542,
+    "mean": 40.915853893333335,
+    "throughput_at_median": 29.80147553363677,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     33.515292,
+     33.6862875
+    ]
+   }
+  },
+  "update_execute_only": {
+   "pycubrid-main": {
+    "n": 1500,
+    "median": 4.808925,
+    "p95": 6.0853521,
+    "q1": 1.58548325,
+    "q3": 5.871774,
+    "iqr": 4.28629075,
+    "stdev": 2.075714737091134,
+    "mean": 3.825121724666667,
+    "throughput_at_median": 207.94668247061452,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     3.3674795,
+     5.529007
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 1500,
+    "median": 4.5511254999999995,
+    "p95": 6.1050678,
+    "q1": 1.55329625,
+    "q3": 5.873460499999999,
+    "iqr": 4.3201642499999995,
+    "stdev": 2.08883299366855,
+    "mean": 3.800423396,
+    "throughput_at_median": 219.72586781006152,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     4.1926235,
+     5.410197999999999
+    ]
+   },
+   "cubriddb": {
+    "n": 1500,
+    "median": 4.7708425000000005,
+    "p95": 5.526999050000001,
+    "q1": 1.50037275,
+    "q3": 5.30704275,
+    "iqr": 3.80667,
+    "stdev": 1.8477553835826575,
+    "mean": 3.5631327386666665,
+    "throughput_at_median": 209.60658416202168,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     4.350217,
+     4.931119000000001
+    ]
+   }
+  },
+  "delete_commit": {
+   "pycubrid-main": {
+    "n": 1500,
+    "median": 41.238923,
+    "p95": 83.7604251,
+    "q1": 33.4433245,
+    "q3": 41.89114875,
+    "iqr": 8.447824249999996,
+    "stdev": 19.993697492195256,
+    "mean": 46.714667305333336,
+    "throughput_at_median": 24.248935890008575,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     33.8273945,
+     41.282551
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 1500,
+    "median": 41.320025,
+    "p95": 83.85896295,
+    "q1": 33.45700975,
+    "q3": 41.97721,
+    "iqr": 8.520200250000002,
+    "stdev": 20.4828629327064,
+    "mean": 47.72967740266667,
+    "throughput_at_median": 24.201340633264376,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     41.142746,
+     41.6069265
+    ]
+   },
+   "cubriddb": {
+    "n": 1500,
+    "median": 33.797199,
+    "p95": 83.79575475,
+    "q1": 33.42009025,
+    "q3": 41.940383499999996,
+    "iqr": 8.520293249999995,
+    "stdev": 21.444016338387545,
+    "mean": 47.44361679666667,
+    "throughput_at_median": 29.588250789658634,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     33.665178499999996,
+     41.324858500000005
+    ]
+   }
+  },
+  "delete_execute_only": {
+   "pycubrid-main": {
+    "n": 1500,
+    "median": 4.092877,
+    "p95": 6.0722286500000004,
+    "q1": 1.58563375,
+    "q3": 5.812203,
+    "iqr": 4.226569250000001,
+    "stdev": 2.060959627278117,
+    "mean": 3.7375004146666666,
+    "throughput_at_median": 244.32691234063472,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     2.3987865,
+     5.1891245
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 1500,
+    "median": 4.471878,
+    "p95": 6.10825665,
+    "q1": 1.578594,
+    "q3": 5.86139925,
+    "iqr": 4.28280525,
+    "stdev": 2.0770806569211526,
+    "mean": 3.7877360153333335,
+    "throughput_at_median": 223.6196962439494,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     3.6637635,
+     5.2628094999999995
+    ]
+   },
+   "cubriddb": {
+    "n": 1500,
+    "median": 4.4589015,
+    "p95": 5.493631799999999,
+    "q1": 1.4621885000000001,
+    "q3": 5.298128999999999,
+    "iqr": 3.8359404999999995,
+    "stdev": 1.8652383457926236,
+    "mean": 3.4666205026666668,
+    "throughput_at_median": 224.2704845576876,
+    "throughput_unit": "ops/s",
+    "trial_median_range": [
+     3.1313945,
+     4.8724495
+    ]
+   }
+  },
+  "executemany_100": {
+   "pycubrid-main": {
+    "n": 250,
+    "median": 124.5886155,
+    "p95": 258.1364122,
+    "q1": 67.518093,
+    "q3": 174.70642375,
+    "iqr": 107.18833075,
+    "stdev": 64.28560049393819,
+    "mean": 132.500927312,
+    "throughput_at_median": 802.6415543561442,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     116.8892445,
+     138.48823099999998
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 250,
+    "median": 124.6238855,
+    "p95": 257.94709035,
+    "q1": 67.34401424999999,
+    "q3": 183.04899475000002,
+    "iqr": 115.70498050000003,
+    "stdev": 67.30487930458648,
+    "mean": 137.79097586,
+    "throughput_at_median": 802.4143975193263,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     108.9625855,
+     166.2826805
+    ]
+   },
+   "cubriddb": {
+    "n": 250,
+    "median": 108.7132315,
+    "p95": 183.08471055,
+    "q1": 58.838878750000006,
+    "q3": 148.49557900000002,
+    "iqr": 89.65670025000001,
+    "stdev": 48.12870899476464,
+    "mean": 109.639481464,
+    "throughput_at_median": 919.8512326441147,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     91.9023485,
+     112.684042
+    ]
+   }
+  },
+  "executemany_1000": {
+   "pycubrid-main": {
+    "n": 100,
+    "median": 359.719568,
+    "p95": 457.83019189999993,
+    "q1": 330.99678025,
+    "q3": 391.51070500000003,
+    "iqr": 60.51392475000006,
+    "stdev": 46.64565989405711,
+    "mean": 367.53196227,
+    "throughput_at_median": 2779.9432918255925,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     342.0273625,
+     370.11879650000003
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 100,
+    "median": 358.299536,
+    "p95": 484.01882575,
+    "q1": 325.97637975000004,
+    "q3": 383.62346625,
+    "iqr": 57.64708649999994,
+    "stdev": 52.26100865750412,
+    "mean": 367.59553155,
+    "throughput_at_median": 2790.9609126594014,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     349.564104,
+     379.24999349999996
+    ]
+   },
+   "cubriddb": {
+    "n": 100,
+    "median": 266.132548,
+    "p95": 391.92670735,
+    "q1": 239.9724515,
+    "q3": 308.11969425,
+    "iqr": 68.14724275,
+    "stdev": 55.83638099253119,
+    "mean": 282.76014342,
+    "throughput_at_median": 3757.52611815072,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     241.90026799999998,
+     287.2398405
+    ]
+   }
+  },
+  "executemany_10000": {
+   "pycubrid-main": {
+    "n": 50,
+    "median": 3017.944704,
+    "p95": 3098.1679605500003,
+    "q1": 2998.9174295,
+    "q3": 3030.5918085,
+    "iqr": 31.674379000000044,
+    "stdev": 43.349871980499756,
+    "mean": 3018.05638798,
+    "throughput_at_median": 3313.5133280427394,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     3012.167871,
+     3024.170521
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 50,
+    "median": 2997.5377325,
+    "p95": 3061.4964196,
+    "q1": 2982.8083787500004,
+    "q3": 3013.95120125,
+    "iqr": 31.14282249999951,
+    "stdev": 33.476219294080266,
+    "mean": 3003.35657042,
+    "throughput_at_median": 3336.071433422732,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     2981.221267,
+     3006.955555
+    ]
+   },
+   "cubriddb": {
+    "n": 50,
+    "median": 2150.0178615,
+    "p95": 2302.46135565,
+    "q1": 2103.93614475,
+    "q3": 2239.11155625,
+    "iqr": 135.17541149999988,
+    "stdev": 82.05325668057131,
+    "mean": 2167.25698566,
+    "throughput_at_median": 4651.12415067255,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     2107.043939,
+     2201.211666
+    ]
+   }
+  },
+  "fetchone_10000": {
+   "pycubrid-main": {
+    "n": 150,
+    "median": 51.1956885,
+    "p95": 54.394736200000004,
+    "q1": 49.464174,
+    "q3": 52.5748155,
+    "iqr": 3.1106415,
+    "stdev": 2.2728846642696174,
+    "mean": 51.18326322,
+    "throughput_at_median": 195328.9484523682,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     49.47224,
+     52.29391
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 150,
+    "median": 50.5566975,
+    "p95": 54.184198900000005,
+    "q1": 49.303246,
+    "q3": 52.51196025,
+    "iqr": 3.20871425,
+    "stdev": 2.205670163237556,
+    "mean": 50.9698877,
+    "throughput_at_median": 197797.7299644622,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     50.0180265,
+     51.961346500000005
+    ]
+   },
+   "cubriddb": {
+    "n": 150,
+    "median": 40.551344,
+    "p95": 46.69000535000001,
+    "q1": 39.0548945,
+    "q3": 41.93089275,
+    "iqr": 2.875998249999995,
+    "stdev": 3.6656687390758793,
+    "mean": 41.01882030666667,
+    "throughput_at_median": 246600.95113000445,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     39.4421605,
+     41.2996755
+    ]
+   }
+  },
+  "fetchmany_10000": {
+   "pycubrid-main": {
+    "n": 150,
+    "median": 48.4072795,
+    "p95": 52.3764891,
+    "q1": 47.0215145,
+    "q3": 50.47860775,
+    "iqr": 3.45709325,
+    "stdev": 2.15212623295528,
+    "mean": 48.87061184,
+    "throughput_at_median": 206580.49994319552,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     47.4997015,
+     49.2778105
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 150,
+    "median": 48.8919435,
+    "p95": 53.257448950000004,
+    "q1": 47.557222249999995,
+    "q3": 50.9335705,
+    "iqr": 3.3763482500000066,
+    "stdev": 2.7311383957198907,
+    "mean": 49.496147380000004,
+    "throughput_at_median": 204532.6752044537,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     48.405265,
+     50.711070500000005
+    ]
+   },
+   "cubriddb": {
+    "n": 150,
+    "median": 40.707566,
+    "p95": 46.0523453,
+    "q1": 38.95835275,
+    "q3": 42.2417075,
+    "iqr": 3.2833547499999938,
+    "stdev": 4.092047818206352,
+    "mean": 41.27784432666667,
+    "throughput_at_median": 245654.57929860018,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     39.782791,
+     41.2517705
+    ]
+   }
+  },
+  "fetchall_10000": {
+   "pycubrid-main": {
+    "n": 150,
+    "median": 49.690972,
+    "p95": 53.2219454,
+    "q1": 47.998301,
+    "q3": 51.120351,
+    "iqr": 3.1220500000000015,
+    "stdev": 2.2905374588381466,
+    "mean": 49.65777528,
+    "throughput_at_median": 201243.7993766755,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     48.735797000000005,
+     51.096182999999996
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 150,
+    "median": 49.610637,
+    "p95": 53.1017807,
+    "q1": 48.029822,
+    "q3": 50.8832655,
+    "iqr": 2.8534434999999974,
+    "stdev": 2.2237957016321674,
+    "mean": 49.679864026666664,
+    "throughput_at_median": 201569.67547100838,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     48.807147,
+     49.8370185
+    ]
+   },
+   "cubriddb": {
+    "n": 150,
+    "median": 39.4210785,
+    "p95": 45.593970350000006,
+    "q1": 38.11320075,
+    "q3": 41.02906275,
+    "iqr": 2.915862000000004,
+    "stdev": 3.130887034205463,
+    "mean": 40.032656026666665,
+    "throughput_at_median": 253671.39562150743,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     38.80818,
+     41.0655575
+    ]
+   }
+  },
+  "fetchmany_10000_fs1000": {
+   "pycubrid-main": {
+    "n": 150,
+    "median": 48.9869835,
+    "p95": 53.28259095000001,
+    "q1": 47.34133249999999,
+    "q3": 50.750048,
+    "iqr": 3.4087155000000067,
+    "stdev": 2.423046732172844,
+    "mean": 49.31947308,
+    "throughput_at_median": 204135.8598861267,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     47.834911000000005,
+     49.6201985
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 150,
+    "median": 49.1717405,
+    "p95": 52.63435805,
+    "q1": 48.0050825,
+    "q3": 50.627561500000006,
+    "iqr": 2.6224790000000056,
+    "stdev": 1.883322326988272,
+    "mean": 49.406088866666664,
+    "throughput_at_median": 203368.84353320787,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     48.855202,
+     49.4277395
+    ]
+   }
+  },
+  "fetchall_10000_fs1000": {
+   "pycubrid-main": {
+    "n": 150,
+    "median": 48.911673,
+    "p95": 52.14687155,
+    "q1": 47.13486425,
+    "q3": 50.30555825,
+    "iqr": 3.1706939999999975,
+    "stdev": 2.2288983283178725,
+    "mean": 48.88991776666667,
+    "throughput_at_median": 204450.1728656879,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     48.197544,
+     49.719187500000004
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 150,
+    "median": 49.190011999999996,
+    "p95": 53.04007595,
+    "q1": 47.240914249999996,
+    "q3": 51.15939,
+    "iqr": 3.918475750000006,
+    "stdev": 2.459354971584047,
+    "mean": 49.39114740666667,
+    "throughput_at_median": 203293.30271356713,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     48.195102000000006,
+     49.5438815
+    ]
+   }
+  },
+  "fetchmany_10000_fs10000": {
+   "pycubrid-main": {
+    "n": 150,
+    "median": 49.4531735,
+    "p95": 52.79481375,
+    "q1": 47.5341215,
+    "q3": 50.904658749999996,
+    "iqr": 3.370537249999998,
+    "stdev": 2.6395169527734677,
+    "mean": 49.516471386666666,
+    "throughput_at_median": 202211.4920491402,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     47.646402,
+     50.635493999999994
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 150,
+    "median": 49.889129499999996,
+    "p95": 53.58587445,
+    "q1": 48.337441500000004,
+    "q3": 51.344758000000006,
+    "iqr": 3.0073165000000017,
+    "stdev": 2.8234087003139545,
+    "mean": 50.09297727333333,
+    "throughput_at_median": 200444.46756682737,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     48.54612,
+     50.82273
+    ]
+   }
+  },
+  "fetchall_10000_fs10000": {
+   "pycubrid-main": {
+    "n": 150,
+    "median": 48.0775345,
+    "p95": 52.09414765,
+    "q1": 46.784850750000004,
+    "q3": 49.930595249999996,
+    "iqr": 3.145744499999992,
+    "stdev": 2.0391711498114398,
+    "mean": 48.513417933333336,
+    "throughput_at_median": 207997.35477284095,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     47.506752,
+     49.2093115
+    ]
+   },
+   "pycubrid-1.10.0": {
+    "n": 150,
+    "median": 48.374397,
+    "p95": 52.1032453,
+    "q1": 47.093754,
+    "q3": 50.157588999999994,
+    "iqr": 3.0638349999999974,
+    "stdev": 2.013422748776231,
+    "mean": 48.670044153333336,
+    "throughput_at_median": 206720.92305357315,
+    "throughput_unit": "rows/s",
+    "trial_median_range": [
+     47.8891945,
+     49.604411
+    ]
+   }
+  }
+ },
+ "concurrency": {
+  "pycubrid-main|sync-threads|1": {
+   "throughput_qps": {
+    "n": 25,
+    "median": 1510.456364528041,
+    "p95": 1722.2918827301514,
+    "q1": 1419.8934152748143,
+    "q3": 1605.7378537251818,
+    "iqr": 185.84443845036753,
+    "stdev": 237.69638621461542,
+    "mean": 1475.2539254797236
+   },
+   "trial_median_qps": [
+    1473.6926555608597,
+    1640.9351623853026
+   ],
+   "query_p50_ms_median_of_trials": 0.60822,
+   "query_p95_ms_median_of_trials": 0.99653
+  },
+  "pycubrid-main|sync-threads|8": {
+   "throughput_qps": {
+    "n": 25,
+    "median": 5335.632368393668,
+    "p95": 5802.45318273689,
+    "q1": 5142.089395854053,
+    "q3": 5569.122401819922,
+    "iqr": 427.03300596586905,
+    "stdev": 280.34377212020854,
+    "mean": 5365.6459396538785
+   },
+   "trial_median_qps": [
+    5252.059170735899,
+    5412.393427013519
+   ],
+   "query_p50_ms_median_of_trials": 1.31,
+   "query_p95_ms_median_of_trials": 2.36342
+  },
+  "pycubrid-main|sync-threads|32": {
+   "throughput_qps": {
+    "n": 25,
+    "median": 5172.555723461923,
+    "p95": 5304.0877445820015,
+    "q1": 5042.084153236945,
+    "q3": 5241.484910676879,
+    "iqr": 199.40075743993384,
+    "stdev": 123.89640276922351,
+    "mean": 5151.524073848404
+   },
+   "trial_median_qps": [
+    5042.084153236945,
+    5200.364363204086
+   ],
+   "query_p50_ms_median_of_trials": 5.09105,
+   "query_p95_ms_median_of_trials": 12.9898
+  },
+  "pycubrid-main|async-tasks|1": {
+   "throughput_qps": {
+    "n": 25,
+    "median": 1413.7111433009998,
+    "p95": 1504.0628889762916,
+    "q1": 1325.089158624038,
+    "q3": 1456.2529243379038,
+    "iqr": 131.1637657138658,
+    "stdev": 96.60719556148712,
+    "mean": 1389.487239552566
+   },
+   "trial_median_qps": [
+    1341.4776588365555,
+    1433.7317671524697
+   ],
+   "query_p50_ms_median_of_trials": 0.67259,
+   "query_p95_ms_median_of_trials": 1.02452
+  },
+  "pycubrid-main|async-tasks|8": {
+   "throughput_qps": {
+    "n": 25,
+    "median": 5671.844054717938,
+    "p95": 6012.523527889644,
+    "q1": 5471.779364614313,
+    "q3": 5863.381625023905,
+    "iqr": 391.6022604095924,
+    "stdev": 285.8398509254635,
+    "mean": 5642.1628299382055
+   },
+   "trial_median_qps": [
+    5190.7814122854215,
+    5863.381625023905
+   ],
+   "query_p50_ms_median_of_trials": 1.29135,
+   "query_p95_ms_median_of_trials": 1.77464
+  },
+  "pycubrid-main|async-tasks|32": {
+   "throughput_qps": {
+    "n": 25,
+    "median": 5692.629335991488,
+    "p95": 5912.563678928031,
+    "q1": 5666.5192238364625,
+    "q3": 5734.799707281487,
+    "iqr": 68.2804834450244,
+    "stdev": 90.78776819459604,
+    "mean": 5717.502583479792
+   },
+   "trial_median_qps": [
+    5672.717177353503,
+    5733.639106276207
+   ],
+   "query_p50_ms_median_of_trials": 5.13117,
+   "query_p95_ms_median_of_trials": 8.8494
+  },
+  "pycubrid-1.10.0|sync-threads|1": {
+   "throughput_qps": {
+    "n": 25,
+    "median": 1567.622709331891,
+    "p95": 1745.4873649910953,
+    "q1": 1389.956858380034,
+    "q3": 1645.2955254732099,
+    "iqr": 255.3386670931759,
+    "stdev": 245.11144846310387,
+    "mean": 1493.789387354957
+   },
+   "trial_median_qps": [
+    1482.7644901361948,
+    1627.486263975245
+   ],
+   "query_p50_ms_median_of_trials": 0.6125,
+   "query_p95_ms_median_of_trials": 1.0001
+  },
+  "pycubrid-1.10.0|sync-threads|8": {
+   "throughput_qps": {
+    "n": 25,
+    "median": 5185.267417284898,
+    "p95": 5645.817798675231,
+    "q1": 4969.195753649548,
+    "q3": 5395.257345564476,
+    "iqr": 426.0615919149277,
+    "stdev": 274.75629964583237,
+    "mean": 5197.077787345163
+   },
+   "trial_median_qps": [
+    4994.199674071038,
+    5306.592194747795
+   ],
+   "query_p50_ms_median_of_trials": 1.31947,
+   "query_p95_ms_median_of_trials": 2.46918
+  },
+  "pycubrid-1.10.0|sync-threads|32": {
+   "throughput_qps": {
+    "n": 25,
+    "median": 5198.001125885419,
+    "p95": 5376.598998254123,
+    "q1": 5076.064610069744,
+    "q3": 5263.386306657403,
+    "iqr": 187.32169658765906,
+    "stdev": 133.32586514181114,
+    "mean": 5179.628200337244
+   },
+   "trial_median_qps": [
+    5076.064610069744,
+    5278.564130791562
+   ],
+   "query_p50_ms_median_of_trials": 5.07152,
+   "query_p95_ms_median_of_trials": 12.87324
+  },
+  "pycubrid-1.10.0|async-tasks|1": {
+   "throughput_qps": {
+    "n": 25,
+    "median": 1381.7780861353756,
+    "p95": 1513.0203124463424,
+    "q1": 1249.5274053066744,
+    "q3": 1459.668381005823,
+    "iqr": 210.1409756991486,
+    "stdev": 158.77011432221704,
+    "mean": 1336.6774020919997
+   },
+   "trial_median_qps": [
+    1249.5274053066744,
+    1408.1173473178537
+   ],
+   "query_p50_ms_median_of_trials": 0.68619,
+   "query_p95_ms_median_of_trials": 1.305
+  },
+  "pycubrid-1.10.0|async-tasks|8": {
+   "throughput_qps": {
+    "n": 25,
+    "median": 5763.748017784015,
+    "p95": 5985.442887959172,
+    "q1": 5534.541592944843,
+    "q3": 5896.052484153392,
+    "iqr": 361.51089120854886,
+    "stdev": 233.2188341234321,
+    "mean": 5699.788748652101
+   },
+   "trial_median_qps": [
+    5534.541592944843,
+    5843.492918382323
+   ],
+   "query_p50_ms_median_of_trials": 1.26803,
+   "query_p95_ms_median_of_trials": 1.79691
+  },
+  "pycubrid-1.10.0|async-tasks|32": {
+   "throughput_qps": {
+    "n": 25,
+    "median": 5744.232898099059,
+    "p95": 5942.224767525356,
+    "q1": 5684.5609370503435,
+    "q3": 5804.79408964573,
+    "iqr": 120.23315259538685,
+    "stdev": 96.31507067756766,
+    "mean": 5757.896505884559
+   },
+   "trial_median_qps": [
+    5684.5609370503435,
+    5779.752412529163
+   ],
+   "query_p50_ms_median_of_trials": 5.06772,
+   "query_p95_ms_median_of_trials": 8.89042
+  },
+  "cubriddb|sync-threads|1": {
+   "throughput_qps": {
+    "n": 25,
+    "median": 1724.9344641336706,
+    "p95": 1818.6829257769493,
+    "q1": 1682.7449865095175,
+    "q3": 1748.9990325499302,
+    "iqr": 66.25404604041273,
+    "stdev": 67.24279278161806,
+    "mean": 1722.6280336699037
+   },
+   "trial_median_qps": [
+    1660.4632865257588,
+    1747.7252460213842
+   ],
+   "query_p50_ms_median_of_trials": 0.54803,
+   "query_p95_ms_median_of_trials": 0.76629
+  },
+  "cubriddb|sync-threads|8": {
+   "throughput_qps": {
+    "n": 25,
+    "median": 980.8774219261297,
+    "p95": 1085.6492314703414,
+    "q1": 915.7924068287157,
+    "q3": 1038.192626755705,
+    "iqr": 122.4002199269894,
+    "stdev": 80.12480651245633,
+    "mean": 979.7328118397755
+   },
+   "trial_median_qps": [
+    915.7924068287157,
+    1020.3920810271056
+   ],
+   "query_p50_ms_median_of_trials": 0.66221,
+   "query_p95_ms_median_of_trials": 39.92742
+  },
+  "cubriddb|sync-threads|32": {
+   "throughput_qps": {
+    "n": 25,
+    "median": 955.8290740468437,
+    "p95": 976.4941883892936,
+    "q1": 946.6066000012362,
+    "q3": 962.0162935572276,
+    "iqr": 15.409693555991453,
+    "stdev": 16.908201402935948,
+    "mean": 956.3216393588986
+   },
+   "trial_median_qps": [
+    951.8284534985983,
+    961.4919294315968
+   ],
+   "query_p50_ms_median_of_trials": 0.65683,
+   "query_p95_ms_median_of_trials": 196.82383
+  }
+ },
+ "memory": {
+  "pycubrid-main": {
+   "executemany_100": {
+    "median_bytes": 42488,
+    "min": 42488,
+    "max": 42488,
+    "n": 15
+   },
+   "executemany_1000": {
+    "median_bytes": 373164,
+    "min": 373164,
+    "max": 373164,
+    "n": 15
+   },
+   "executemany_10000": {
+    "median_bytes": 3798004,
+    "min": 3798004,
+    "max": 3798004,
+    "n": 15
+   },
+   "fetchone_10000": {
+    "median_bytes": 133521,
+    "min": 133521,
+    "max": 133569,
+    "n": 15
+   },
+   "fetchmany_10000": {
+    "median_bytes": 134897,
+    "min": 134897,
+    "max": 134897,
+    "n": 15
+   },
+   "fetchall_10000": {
+    "median_bytes": 2249067,
+    "min": 2249067,
+    "max": 2249067,
+    "n": 15
+   }
+  },
+  "pycubrid-1.10.0": {
+   "executemany_100": {
+    "median_bytes": 42488,
+    "min": 42488,
+    "max": 42488,
+    "n": 15
+   },
+   "executemany_1000": {
+    "median_bytes": 373164,
+    "min": 373164,
+    "max": 373164,
+    "n": 15
+   },
+   "executemany_10000": {
+    "median_bytes": 3798004,
+    "min": 3798004,
+    "max": 3798004,
+    "n": 15
+   },
+   "fetchone_10000": {
+    "median_bytes": 133521,
+    "min": 133521,
+    "max": 133569,
+    "n": 15
+   },
+   "fetchmany_10000": {
+    "median_bytes": 134897,
+    "min": 134897,
+    "max": 134897,
+    "n": 15
+   },
+   "fetchall_10000": {
+    "median_bytes": 2249067,
+    "min": 2249067,
+    "max": 2249067,
+    "n": 15
+   }
+  },
+  "cubriddb": {
+   "executemany_100": {
+    "median_bytes": 1123,
+    "min": 1123,
+    "max": 1123,
+    "n": 15
+   },
+   "executemany_1000": {
+    "median_bytes": 1124,
+    "min": 1124,
+    "max": 1124,
+    "n": 15
+   },
+   "executemany_10000": {
+    "median_bytes": 1125,
+    "min": 1125,
+    "max": 1125,
+    "n": 15
+   },
+   "fetchone_10000": {
+    "median_bytes": 1628,
+    "min": 1628,
+    "max": 1628,
+    "n": 15
+   },
+   "fetchmany_10000": {
+    "median_bytes": 46236,
+    "min": 46236,
+    "max": 46236,
+    "n": 15
+   },
+   "fetchall_10000": {
+    "median_bytes": 2236022,
+    "min": 2236022,
+    "max": 2236022,
+    "n": 15
+   }
+  }
+ },
+ "comparisons": {
+  "main_vs_1.10.0": {
+   "connect_close": {
+    "ratio": 1.0057819808471464,
+    "ci95": [
+     0.9919213872949227,
+     1.0184087348991202
+    ],
+    "p_mw": 0.7017338151583455,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.22321265756834596,
+     "1.10.0": 0.21661461591022335
+    },
+    "trial_median_range": {
+     "main": [
+      1.476422,
+      1.556196
+     ],
+     "1.10.0": [
+      1.461854,
+      1.514022
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "connect_only": {
+    "ratio": 1.0028874593620483,
+    "ci95": [
+     0.9901163248470417,
+     1.0174419243126993
+    ],
+    "p_mw": 0.9075560563360867,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.21995190194781866,
+     "1.10.0": 0.21372703821243033
+    },
+    "trial_median_range": {
+     "main": [
+      1.3831205,
+      1.4589175
+     ],
+     "1.10.0": [
+      1.375834,
+      1.419477
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "close_only": {
+    "ratio": 1.0165504631502624,
+    "ci95": [
+     0.9686801452269721,
+     1.0631030446994154
+    ],
+    "p_mw": 0.13392072755563675,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.656700156965077,
+     "1.10.0": 0.6222556390977441
+    },
+    "trial_median_range": {
+     "main": [
+      0.09381600000000001,
+      0.103562
+     ],
+     "1.10.0": [
+      0.0863695,
+      0.0990455
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "select_pk": {
+    "ratio": 0.997887915855498,
+    "ci95": [
+     0.990569370590075,
+     1.006449561084078
+    ],
+    "p_mw": 0.017637206864423313,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.2536993355821786,
+     "1.10.0": 0.25261658879307713
+    },
+    "trial_median_range": {
+     "main": [
+      0.571755,
+      0.6140635
+     ],
+     "1.10.0": [
+      0.57918,
+      0.6253934999999999
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "insert_commit": {
+    "ratio": 1.0170904070353588,
+    "ci95": [
+     0.9656998930599487,
+     1.2165573663820297
+    ],
+    "p_mw": 0.4301094584502986,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.2479070887586523,
+     "1.10.0": 0.24838896728690663
+    },
+    "trial_median_range": {
+     "main": [
+      33.8594585,
+      41.144733
+     ],
+     "1.10.0": [
+      33.5122015,
+      41.229183
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "insert_execute_only": {
+    "ratio": 1.1166339086231456,
+    "ci95": [
+     0.757075240084183,
+     1.6026321438956346
+    ],
+    "p_mw": 0.13512853472104858,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 2.977041017512237,
+     "1.10.0": 3.066734637937775
+    },
+    "trial_median_range": {
+     "main": [
+      4.2096555,
+      6.576637
+     ],
+     "1.10.0": [
+      1.9450064999999999,
+      6.5344185
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "update_commit": {
+    "ratio": 0.9982251490808226,
+    "ci95": [
+     0.8600737878213524,
+     1.0010237583410997
+    ],
+    "p_mw": 0.11069386128391392,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.2489495520600047,
+     "1.10.0": 0.24893053711684843
+    },
+    "trial_median_range": {
+     "main": [
+      33.7448605,
+      33.958548500000006
+     ],
+     "1.10.0": [
+      33.7316215,
+      41.202656000000005
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "update_execute_only": {
+    "ratio": 1.0566452188585,
+    "ci95": [
+     0.8130739766224749,
+     1.4482347148445402
+    ],
+    "p_mw": 0.8152868137501041,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 2.7034601280082904,
+     "1.10.0": 2.7812880189468037
+    },
+    "trial_median_range": {
+     "main": [
+      3.3674795,
+      5.529007
+     ],
+     "1.10.0": [
+      4.1926235,
+      5.410197999999999
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "delete_commit": {
+    "ratio": 0.998037222871961,
+    "ci95": [
+     0.822012555406514,
+     1.0004127303059065
+    ],
+    "p_mw": 0.08982901350219274,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.25260121044485273,
+     "1.10.0": 0.25466114018154307
+    },
+    "trial_median_range": {
+     "main": [
+      33.8273945,
+      41.282551
+     ],
+     "1.10.0": [
+      41.142746,
+      41.6069265
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "delete_execute_only": {
+    "ratio": 0.9152479115038468,
+    "ci95": [
+     0.6363427997841337,
+     1.2511054835993964
+    ],
+    "p_mw": 0.3165365890787788,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 2.665539409715516,
+     "1.10.0": 2.713050505703176
+    },
+    "trial_median_range": {
+     "main": [
+      2.3987865,
+      5.1891245
+     ],
+     "1.10.0": [
+      3.6637635,
+      5.2628094999999995
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "executemany_100": {
+    "ratio": 0.999716988441995,
+    "ci95": [
+     0.8747061235276596,
+     1.1338178485178099
+    ],
+    "p_mw": 0.5946699967894301,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 1.587549736483227,
+     "1.10.0": 1.7181182587433903
+    },
+    "trial_median_range": {
+     "main": [
+      116.8892445,
+      138.48823099999998
+     ],
+     "1.10.0": [
+      108.9625855,
+      166.2826805
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "executemany_1000": {
+    "ratio": 1.0039632538067256,
+    "ci95": [
+     0.9542958336772531,
+     1.0455912154425882
+    ],
+    "p_mw": 0.643348458724508,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.18282330330915686,
+     "1.10.0": 0.17684436689618743
+    },
+    "trial_median_range": {
+     "main": [
+      342.0273625,
+      370.11879650000003
+     ],
+     "1.10.0": [
+      349.564104,
+      379.24999349999996
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "executemany_10000": {
+    "ratio": 1.0068079114663822,
+    "ci95": [
+     1.0036105629262395,
+     1.0099696723182687
+    ],
+    "p_mw": 0.004270083245982961,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.05,
+     "1.10.0": 0.05
+    },
+    "trial_median_range": {
+     "main": [
+      3012.167871,
+      3024.170521
+     ],
+     "1.10.0": [
+      2981.221267,
+      3006.955555
+     ]
+    },
+    "trial_medians_overlap": false
+   },
+   "fetchone_10000": {
+    "ratio": 1.0126390969267722,
+    "ci95": [
+     0.9933989230162527,
+     1.021452533683303
+    ],
+    "p_mw": 0.4073194018582588,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.06288675719117442,
+     "1.10.0": 0.06508119668226309
+    },
+    "trial_median_range": {
+     "main": [
+      49.47224,
+      52.29391
+     ],
+     "1.10.0": [
+      50.0180265,
+      51.961346500000005
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "fetchmany_10000": {
+    "ratio": 0.990087037550471,
+    "ci95": [
+     0.9720523525417996,
+     1.007904110177553
+    ],
+    "p_mw": 0.05935875823001408,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.07352152066475859,
+     "1.10.0": 0.07099548901849517
+    },
+    "trial_median_range": {
+     "main": [
+      47.4997015,
+      49.2778105
+     ],
+     "1.10.0": [
+      48.405265,
+      50.711070500000005
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "fetchall_10000": {
+    "ratio": 1.0016193099878965,
+    "ci95": [
+     0.9894256555059924,
+     1.016007461403013
+    ],
+    "p_mw": 0.875712845283828,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.06504501065568968,
+     "1.10.0": 0.059409828751811666
+    },
+    "trial_median_range": {
+     "main": [
+      48.735797000000005,
+      51.096182999999996
+     ],
+     "1.10.0": [
+      48.807147,
+      49.8370185
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "fetchmany_10000_fs1000": {
+    "ratio": 0.9962426182575336,
+    "ci95": [
+     0.9818523829833588,
+     1.0129626819799624
+    ],
+    "p_mw": 0.31522077622373473,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.07200294795251083,
+     "1.10.0": 0.05462919473162042
+    },
+    "trial_median_range": {
+     "main": [
+      47.834911000000005,
+      49.6201985
+     ],
+     "1.10.0": [
+      48.855202,
+      49.4277395
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "fetchall_10000_fs1000": {
+    "ratio": 0.9943415545416009,
+    "ci95": [
+     0.9783020260370915,
+     1.0105888430344039
+    ],
+    "p_mw": 0.10424187436388402,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.06726855058249148,
+     "1.10.0": 0.08294665359910991
+    },
+    "trial_median_range": {
+     "main": [
+      48.197544,
+      49.719187500000004
+     ],
+     "1.10.0": [
+      48.195102000000006,
+      49.5438815
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "fetchmany_10000_fs10000": {
+    "ratio": 0.9912615031697437,
+    "ci95": [
+     0.9753757008353069,
+     1.0090998141218188
+    ],
+    "p_mw": 0.03183903869219491,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.07090774255710186,
+     "1.10.0": 0.06221505331431332
+    },
+    "trial_median_range": {
+     "main": [
+      47.646402,
+      50.635493999999994
+     ],
+     "1.10.0": [
+      48.54612,
+      50.82273
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "fetchall_10000_fs10000": {
+    "ratio": 0.9938632309980008,
+    "ci95": [
+     0.9777530156675668,
+     1.0146609426796174
+    ],
+    "p_mw": 0.431073789341724,
+    "iqr_overlap": true,
+    "regression": false,
+    "improvement": false,
+    "min_detectable_slowdown": {
+     "main": 0.067238528061351,
+     "1.10.0": 0.06505820283513608
+    },
+    "trial_median_range": {
+     "main": [
+      47.506752,
+      49.2093115
+     ],
+     "1.10.0": [
+      47.8891945,
+      49.604411
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "conc_sync-threads_1": {
+    "throughput_ratio": 0.9635330973048905,
+    "iqr_overlap": true,
+    "p_mw": 0.6836702770203351,
+    "regression": false,
+    "min_detectable_slowdown": {
+     "main": 0.11573772021331097,
+     "1.10.0": 0.15519319364813622
+    },
+    "trial_median_range": {
+     "main": [
+      1473.6926555608597,
+      1640.9351623853026
+     ],
+     "1.10.0": [
+      1482.7644901361948,
+      1627.486263975245
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "conc_sync-threads_8": {
+    "throughput_ratio": 1.0289984949681734,
+    "iqr_overlap": true,
+    "p_mw": 0.04566317848485908,
+    "regression": false,
+    "min_detectable_slowdown": {
+     "main": 0.07667868923590548,
+     "1.10.0": 0.07896965142268875
+    },
+    "trial_median_range": {
+     "main": [
+      5252.059170735899,
+      5412.393427013519
+     ],
+     "1.10.0": [
+      4994.199674071038,
+      5306.592194747795
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "conc_sync-threads_32": {
+    "throughput_ratio": 0.9951047716598633,
+    "iqr_overlap": true,
+    "p_mw": 0.6836702770203351,
+    "regression": false,
+    "min_detectable_slowdown": {
+     "main": 0.05,
+     "1.10.0": 0.05
+    },
+    "trial_median_range": {
+     "main": [
+      5042.084153236945,
+      5200.364363204086
+     ],
+     "1.10.0": [
+      5076.064610069744,
+      5278.564130791562
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "conc_async-tasks_1": {
+    "throughput_ratio": 1.02311011984199,
+    "iqr_overlap": true,
+    "p_mw": 0.3223963931070318,
+    "regression": false,
+    "min_detectable_slowdown": {
+     "main": 0.09006935781674075,
+     "1.10.0": 0.14396487478501485
+    },
+    "trial_median_range": {
+     "main": [
+      1341.4776588365555,
+      1433.7317671524697
+     ],
+     "1.10.0": [
+      1249.5274053066744,
+      1408.1173473178537
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "conc_async-tasks_8": {
+    "throughput_ratio": 0.9840548263417297,
+    "iqr_overlap": true,
+    "p_mw": 0.6276258050283593,
+    "regression": false,
+    "min_detectable_slowdown": {
+     "main": 0.0667877831349577,
+     "1.10.0": 0.06131405583314742
+    },
+    "trial_median_range": {
+     "main": [
+      5190.7814122854215,
+      5863.381625023905
+     ],
+     "1.10.0": [
+      5534.541592944843,
+      5843.492918382323
+     ]
+    },
+    "trial_medians_overlap": true
+   },
+   "conc_async-tasks_32": {
+    "throughput_ratio": 0.9910164571975053,
+    "iqr_overlap": true,
+    "p_mw": 0.07115843333450314,
+    "regression": false,
+    "min_detectable_slowdown": {
+     "main": 0.05,
+     "1.10.0": 0.05
+    },
+    "trial_median_range": {
+     "main": [
+      5672.717177353503,
+      5733.639106276207
+     ],
+     "1.10.0": [
+      5684.5609370503435,
+      5779.752412529163
+     ]
+    },
+    "trial_medians_overlap": true
+   }
+  },
+  "main_vs_cubriddb": {
+   "connect_close": {
+    "ratio": 1.4913756882423808,
+    "ci95": [
+     1.471561428188216,
+     1.5119509663623405
+    ],
+    "p_mw": 3.846515392889271e-270,
+    "iqr_overlap": false
+   },
+   "connect_only": {
+    "ratio": 1.5074742862563248,
+    "ci95": [
+     1.4876045971764542,
+     1.5290435098819508
+    ],
+    "p_mw": 5.842489360852826e-275,
+    "iqr_overlap": false
+   },
+   "close_only": {
+    "ratio": 1.3450567632766282,
+    "ci95": [
+     1.301511944058336,
+     1.3869634926370167
+    ],
+    "p_mw": 2.00440766466366e-106,
+    "iqr_overlap": true
+   },
+   "select_pk": {
+    "ratio": 1.100130387885647,
+    "ci95": [
+     1.0911542047299263,
+     1.1081761250231645
+    ],
+    "p_mw": 1.667255461817243e-159,
+    "iqr_overlap": true
+   },
+   "insert_commit": {
+    "ratio": 1.0281042685105346,
+    "ci95": [
+     1.0103998899133761,
+     1.2292771221676462
+    ],
+    "p_mw": 7.641625524487963e-20,
+    "iqr_overlap": true
+   },
+   "insert_execute_only": {
+    "ratio": 0.9745956244366968,
+    "ci95": [
+     0.793657977065609,
+     1.2827351680626715
+    ],
+    "p_mw": 1.799108413693908e-56,
+    "iqr_overlap": true
+   },
+   "update_commit": {
+    "ratio": 1.008092337368617,
+    "ci95": [
+     1.0054911480760074,
+     1.0104203735814337
+    ],
+    "p_mw": 3.64555087538052e-05,
+    "iqr_overlap": true
+   },
+   "update_execute_only": {
+    "ratio": 1.0079823427413501,
+    "ci95": [
+     0.8019081873064638,
+     1.1797837622164518
+    ],
+    "p_mw": 3.185446055702244e-32,
+    "iqr_overlap": true
+   },
+   "delete_commit": {
+    "ratio": 1.2201875960194217,
+    "ci95": [
+     1.005221523346247,
+     1.2234408714083194
+    ],
+    "p_mw": 0.020916389621423257,
+    "iqr_overlap": true
+   },
+   "delete_execute_only": {
+    "ratio": 0.9179115080250146,
+    "ci95": [
+     0.6705883470501705,
+     1.288042601248725
+    ],
+    "p_mw": 3.8639644035169556e-35,
+    "iqr_overlap": true
+   },
+   "executemany_100": {
+    "ratio": 1.1460299154109865,
+    "ci95": [
+     0.9995836601328342,
+     1.273293849780852
+    ],
+    "p_mw": 2.0268813236692373e-05,
+    "iqr_overlap": true
+   },
+   "executemany_1000": {
+    "ratio": 1.3516556719698938,
+    "ci95": [
+     1.2495331590161545,
+     1.4891228305099788
+    ],
+    "p_mw": 1.474252124399796e-19,
+    "iqr_overlap": false
+   },
+   "executemany_10000": {
+    "ratio": 1.403683549816872,
+    "ci95": [
+     1.3728622964933124,
+     1.4195821427492081
+    ],
+    "p_mw": 7.066071930389029e-18,
+    "iqr_overlap": false
+   },
+   "fetchone_10000": {
+    "ratio": 1.2624905477855433,
+    "ci95": [
+     1.2435238154655313,
+     1.2774927744967395
+    ],
+    "p_mw": 1.2993329217610073e-47,
+    "iqr_overlap": false
+   },
+   "fetchmany_10000": {
+    "ratio": 1.1891469880562253,
+    "ci95": [
+     1.1670334367983697,
+     1.2150602140364688
+    ],
+    "p_mw": 1.5682167514420858e-43,
+    "iqr_overlap": false
+   },
+   "fetchall_10000": {
+    "ratio": 1.2605178217029247,
+    "ci95": [
+     1.2468987305409958,
+     1.278018232608977
+    ],
+    "p_mw": 1.561046593473924e-46,
+    "iqr_overlap": false
+   }
+  }
+ },
+ "connect_rerun": {
+  "source": "raw-connect/",
+  "keys": [
+   "connect_close",
+   "connect_only",
+   "close_only"
+  ],
+  "trials": {
+   "cubriddb": 5,
+   "pycubrid-1.10.0": 5,
+   "pycubrid-main": 5
+  },
+  "timestamps_utc": [
+   "2026-10-11T03:02:37Z",
+   "2026-10-11T03:02:37Z",
+   "2026-10-11T03:02:38Z",
+   "2026-10-11T03:02:38Z",
+   "2026-10-11T03:02:39Z",
+   "2026-10-11T03:02:39Z",
+   "2026-10-11T03:02:39Z",
+   "2026-10-11T03:02:40Z",
+   "2026-10-11T03:02:40Z",
+   "2026-10-11T03:02:41Z",
+   "2026-10-11T03:02:42Z",
+   "2026-10-11T03:02:42Z",
+   "2026-10-11T03:02:43Z",
+   "2026-10-11T03:02:43Z",
+   "2026-10-11T03:02:43Z"
+  ],
+  "driver": {
+   "cubriddb": {
+    "driver": "CUBRIDdb",
+    "version": "11.3.0.1",
+    "module_path": "/tmp/claude-1000/-data-GitHub-pycubrid/0a1784df-1111-416b-a8a3-bccbbb2734e8/scratchpad/bench797/venv-cubriddb/lib/python3.12/site-packages/CUBRIDdb/__init__.py",
+    "commit": "c63ab9c51353e5c80e02dd2c1a19d4640acb29f5 (cci-src 7d1eb8f40f04089b8218d08e36e2c24a2de11b24)"
+   },
+   "pycubrid-1.10.0": {
+    "driver": "pycubrid",
+    "version": "1.10.0",
+    "module_path": "/tmp/claude-1000/-data-GitHub-pycubrid/0a1784df-1111-416b-a8a3-bccbbb2734e8/scratchpad/bench797/venv-v1100/lib/python3.12/site-packages/pycubrid/__init__.py",
+    "commit": "pypi:1.10.0"
+   },
+   "pycubrid-main": {
+    "driver": "pycubrid",
+    "version": "1.10.0",
+    "module_path": "/tmp/claude-1000/-data-GitHub-pycubrid/0a1784df-1111-416b-a8a3-bccbbb2734e8/scratchpad/bench797/venv-main/lib/python3.12/site-packages/pycubrid/__init__.py",
+    "commit": "2228d663b6e2c9462c648b9dd941720219c464ae"
+   }
+  }
+ },
+ "phase_decomposed": {
+  "pycubrid-main": {
+   "connect": {
+    "mean_ms": 1.6526,
+    "stdev_ms": 0.2606,
+    "p50_ms": 1.6463,
+    "p95_ms": 2.1182,
+    "p99_ms": 2.2281,
+    "cv_pct": 15.77,
+    "min_ms": 1.1857,
+    "max_ms": 2.3887,
+    "count": 200
+   },
+   "insert_execute": {
+    "mean_ms": 4.7523,
+    "stdev_ms": 2.6227,
+    "p50_ms": 6.7395,
+    "p95_ms": 7.4534,
+    "p99_ms": 7.6317,
+    "cv_pct": 55.19,
+    "min_ms": 1.1824,
+    "max_ms": 7.7248,
+    "count": 200
+   },
+   "insert_commit": {
+    "mean_ms": 34.8933,
+    "stdev_ms": 11.6019,
+    "p50_ms": 33.9035,
+    "p95_ms": 39.6361,
+    "p99_ms": 84.3304,
+    "cv_pct": 33.25,
+    "min_ms": 25.5295,
+    "max_ms": 133.9161,
+    "count": 200
+   },
+   "insert_total": {
+    "mean_ms": 39.6456,
+    "stdev_ms": 12.0224,
+    "p50_ms": 41.1935,
+    "p95_ms": 42.0871,
+    "p99_ms": 91.4508,
+    "cv_pct": 30.32,
+    "min_ms": 32.8495,
+    "max_ms": 140.8663,
+    "count": 200
+   },
+   "select_pk_execute": {
+    "mean_ms": 0.5254,
+    "stdev_ms": 0.075,
+    "p50_ms": 0.5152,
+    "p95_ms": 0.664,
+    "p99_ms": 0.786,
+    "cv_pct": 14.28,
+    "min_ms": 0.4228,
+    "max_ms": 0.8257,
+    "count": 200
+   },
+   "select_pk_fetch": {
+    "mean_ms": 0.0008,
+    "stdev_ms": 0.0001,
+    "p50_ms": 0.0008,
+    "p95_ms": 0.001,
+    "p99_ms": 0.001,
+    "cv_pct": 12.33,
+    "min_ms": 0.0006,
+    "max_ms": 0.0011,
+    "count": 200
+   },
+   "select_pk_total": {
+    "mean_ms": 0.5262,
+    "stdev_ms": 0.0751,
+    "p50_ms": 0.516,
+    "p95_ms": 0.665,
+    "p99_ms": 0.7869,
+    "cv_pct": 14.27,
+    "min_ms": 0.4235,
+    "max_ms": 0.8266,
+    "count": 200
+   },
+   "select_full_execute": {
+    "mean_ms": 6.7429,
+    "stdev_ms": 0.1782,
+    "p50_ms": 6.7384,
+    "p95_ms": 7.0296,
+    "p99_ms": 7.2794,
+    "cv_pct": 2.64,
+    "min_ms": 6.2481,
+    "max_ms": 7.3847,
+    "count": 200
+   },
+   "select_full_fetch": {
+    "mean_ms": 40.0151,
+    "stdev_ms": 2.1257,
+    "p50_ms": 40.0502,
+    "p95_ms": 43.3855,
+    "p99_ms": 44.2795,
+    "cv_pct": 5.31,
+    "min_ms": 35.6286,
+    "max_ms": 45.7459,
+    "count": 200
+   },
+   "select_full_total": {
+    "mean_ms": 46.7581,
+    "stdev_ms": 2.2057,
+    "p50_ms": 46.7517,
+    "p95_ms": 50.2604,
+    "p99_ms": 51.0729,
+    "cv_pct": 4.72,
+    "min_ms": 42.3609,
+    "max_ms": 52.6017,
+    "count": 200
+   },
+   "update_execute": {
+    "mean_ms": 4.0037,
+    "stdev_ms": 2.0253,
+    "p50_ms": 5.4374,
+    "p95_ms": 5.9662,
+    "p99_ms": 6.1311,
+    "cv_pct": 50.59,
+    "min_ms": 1.0977,
+    "max_ms": 6.309,
+    "count": 200
+   },
+   "update_commit": {
+    "mean_ms": 33.0216,
+    "stdev_ms": 6.5829,
+    "p50_ms": 32.0967,
+    "p95_ms": 36.4451,
+    "p99_ms": 51.027,
+    "cv_pct": 19.94,
+    "min_ms": 23.4338,
+    "max_ms": 104.1827,
+    "count": 200
+   },
+   "update_total": {
+    "mean_ms": 37.0253,
+    "stdev_ms": 7.0045,
+    "p50_ms": 33.6023,
+    "p95_ms": 41.813,
+    "p99_ms": 52.8521,
+    "cv_pct": 18.92,
+    "min_ms": 24.9139,
+    "max_ms": 110.0854,
+    "count": 200
+   },
+   "delete_execute": {
+    "mean_ms": 3.8832,
+    "stdev_ms": 2.1267,
+    "p50_ms": 5.2543,
+    "p95_ms": 6.0838,
+    "p99_ms": 6.1929,
+    "cv_pct": 54.77,
+    "min_ms": 1.0273,
+    "max_ms": 6.3264,
+    "count": 200
+   },
+   "delete_commit": {
+    "mean_ms": 41.114,
+    "stdev_ms": 18.2606,
+    "p50_ms": 33.0018,
+    "p95_ms": 82.0993,
+    "p99_ms": 85.8801,
+    "cv_pct": 44.41,
+    "min_ms": 27.0494,
+    "max_ms": 98.7123,
+    "count": 200
+   },
+   "delete_total": {
+    "mean_ms": 44.9972,
+    "stdev_ms": 18.4568,
+    "p50_ms": 34.5049,
+    "p95_ms": 83.6319,
+    "p99_ms": 91.7285,
+    "cv_pct": 41.02,
+    "min_ms": 32.8529,
+    "max_ms": 100.1501,
+    "count": 200
+   }
+  },
+  "pycubrid-1.10.0": {
+   "connect": {
+    "mean_ms": 1.566,
+    "stdev_ms": 0.4151,
+    "p50_ms": 1.4651,
+    "p95_ms": 2.7351,
+    "p99_ms": 3.1832,
+    "cv_pct": 26.51,
+    "min_ms": 1.1317,
+    "max_ms": 3.5789,
+    "count": 200
+   },
+   "insert_execute": {
+    "mean_ms": 4.5881,
+    "stdev_ms": 2.6549,
+    "p50_ms": 5.0622,
+    "p95_ms": 7.5605,
+    "p99_ms": 7.6844,
+    "cv_pct": 57.86,
+    "min_ms": 1.1709,
+    "max_ms": 7.7305,
+    "count": 200
+   },
+   "insert_commit": {
+    "mean_ms": 33.9772,
+    "stdev_ms": 7.4354,
+    "p50_ms": 33.6283,
+    "p95_ms": 39.756,
+    "p99_ms": 73.8323,
+    "cv_pct": 21.88,
+    "min_ms": 26.0102,
+    "max_ms": 84.45,
+    "count": 200
+   },
+   "insert_total": {
+    "mean_ms": 38.5653,
+    "stdev_ms": 7.89,
+    "p50_ms": 41.1441,
+    "p95_ms": 41.9112,
+    "p99_ms": 75.5193,
+    "cv_pct": 20.46,
+    "min_ms": 32.9058,
+    "max_ms": 91.5592,
+    "count": 200
+   },
+   "select_pk_execute": {
+    "mean_ms": 1.0026,
+    "stdev_ms": 0.935,
+    "p50_ms": 0.5911,
+    "p95_ms": 3.5845,
+    "p99_ms": 3.6999,
+    "cv_pct": 93.26,
+    "min_ms": 0.4174,
+    "max_ms": 3.8485,
+    "count": 200
+   },
+   "select_pk_fetch": {
+    "mean_ms": 0.0012,
+    "stdev_ms": 0.0009,
+    "p50_ms": 0.0008,
+    "p95_ms": 0.0035,
+    "p99_ms": 0.0038,
+    "cv_pct": 74.74,
+    "min_ms": 0.0006,
+    "max_ms": 0.004,
+    "count": 200
+   },
+   "select_pk_total": {
+    "mean_ms": 1.0037,
+    "stdev_ms": 0.9358,
+    "p50_ms": 0.5919,
+    "p95_ms": 3.588,
+    "p99_ms": 3.7034,
+    "cv_pct": 93.24,
+    "min_ms": 0.4181,
+    "max_ms": 3.8519,
+    "count": 200
+   },
+   "select_full_execute": {
+    "mean_ms": 6.6785,
+    "stdev_ms": 0.1703,
+    "p50_ms": 6.6846,
+    "p95_ms": 6.9755,
+    "p99_ms": 7.0994,
+    "cv_pct": 2.55,
+    "min_ms": 6.2426,
+    "max_ms": 7.302,
+    "count": 200
+   },
+   "select_full_fetch": {
+    "mean_ms": 39.8138,
+    "stdev_ms": 1.9803,
+    "p50_ms": 39.8054,
+    "p95_ms": 42.9444,
+    "p99_ms": 44.5565,
+    "cv_pct": 4.97,
+    "min_ms": 36.5155,
+    "max_ms": 45.7558,
+    "count": 200
+   },
+   "select_full_total": {
+    "mean_ms": 46.4923,
+    "stdev_ms": 2.0369,
+    "p50_ms": 46.5179,
+    "p95_ms": 49.8228,
+    "p99_ms": 51.5426,
+    "cv_pct": 4.38,
+    "min_ms": 43.1709,
+    "max_ms": 52.6661,
+    "count": 200
+   },
+   "update_execute": {
+    "mean_ms": 3.9741,
+    "stdev_ms": 2.0651,
+    "p50_ms": 5.3932,
+    "p95_ms": 6.0764,
+    "p99_ms": 6.1387,
+    "cv_pct": 51.96,
+    "min_ms": 1.0275,
+    "max_ms": 6.2864,
+    "count": 200
+   },
+   "update_commit": {
+    "mean_ms": 33.7171,
+    "stdev_ms": 3.4479,
+    "p50_ms": 35.1826,
+    "p95_ms": 36.7434,
+    "p99_ms": 39.6547,
+    "cv_pct": 10.23,
+    "min_ms": 23.7458,
+    "max_ms": 60.7652,
+    "count": 200
+   },
+   "update_total": {
+    "mean_ms": 37.6912,
+    "stdev_ms": 4.6633,
+    "p50_ms": 41.2124,
+    "p95_ms": 41.8155,
+    "p99_ms": 42.1466,
+    "cv_pct": 12.37,
+    "min_ms": 25.0837,
+    "max_ms": 66.7488,
+    "count": 200
+   },
+   "delete_execute": {
+    "mean_ms": 3.7705,
+    "stdev_ms": 2.0864,
+    "p50_ms": 4.253,
+    "p95_ms": 6.0825,
+    "p99_ms": 6.2055,
+    "cv_pct": 55.34,
+    "min_ms": 1.052,
+    "max_ms": 6.418,
+    "count": 200
+   },
+   "delete_commit": {
+    "mean_ms": 33.3799,
+    "stdev_ms": 7.3935,
+    "p50_ms": 32.1849,
+    "p95_ms": 36.5963,
+    "p99_ms": 45.3745,
+    "cv_pct": 22.15,
+    "min_ms": 26.5663,
+    "max_ms": 113.7421,
+    "count": 200
+   },
+   "delete_total": {
+    "mean_ms": 37.1504,
+    "stdev_ms": 7.6743,
+    "p50_ms": 33.7342,
+    "p95_ms": 41.817,
+    "p99_ms": 51.1988,
+    "cv_pct": 20.66,
+    "min_ms": 32.8188,
+    "max_ms": 115.6577,
+    "count": 200
+   }
+  }
+ }
+}
