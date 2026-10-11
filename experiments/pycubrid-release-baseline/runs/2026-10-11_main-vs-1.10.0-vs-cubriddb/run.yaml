@@ -1,0 +1,41 @@
+run_id: "2026-10-11_main-vs-1.10.0-vs-cubriddb"
+date: "2026-10-11T11:02:00+09:00"
+label: "main-vs-1.10.0-vs-cubriddb"
+role: baseline
+compares_to: null
+comparable_group: "devbox-i5-9400F-linux5.15.0-198-docker29.2.1-cubrid114"
+tracking_issue: "https://github.com/cubrid-lab/pycubrid/issues/797"
+
+environment:
+  host:
+    hostname: "devbox"
+    cpu: "Intel Core i5-9400F @ 2.90GHz"
+    cores: 6            # 6 cores, 1 thread per core
+    memory_gb: 31.3
+    os: "Ubuntu 22.04.5 LTS"
+    kernel: "5.15.0-198-generic"
+    load: "shared machine: 6 logged-in users, other agent sessions running; 1-min loadavg 0.7-5.3 during the run (see raw/loadavg.log, includes the benchmark itself). Results are noisy."
+  software:
+    python: "CPython 3.12.13 (uv-managed, one venv per driver)"
+    cubrid_server: "CUBRID 11.4.6 (11.4.6.1963-0e7d3c1), image cubrid/cubrid:11.4 sha256:1248b77ad39888df9e064655937188ab99fe056ed7e35b57d06155a015dc1791"
+    docker: "29.2.1 (port 33511 -> 33000 via docker-proxy)"
+  drivers:
+    pycubrid-main: "pycubrid main 2228d663b6e2c9462c648b9dd941720219c464ae (reports __version__ 1.10.0)"
+    pycubrid-1.10.0: "pycubrid 1.10.0 from PyPI (tag v1.10.0 = d383be79e55a5f164b2569a0edb44eace9bb7e50)"
+    cubriddb: "CUBRIDdb from CUBRID/cubrid-python tag v11.3.0.51 (c63ab9c51353e5c80e02dd2c1a19d4640acb29f5, cci-src 7d1eb8f40f04089b8218d08e36e2c24a2de11b24), built as in sqlalchemy-cubrid ci.yml with GCC 11.4.0 (no extra CFLAGS needed); dist name cubrid-python 11.3.0.1"
+  database:
+    name: testdb
+    host: localhost
+    port: 33511
+    autocommit: false
+    broker: "default BROKER1, MAX_NUM_APPL_SERVER=40"
+
+protocol:
+  trials: 5 per driver, driver order rotated every trial
+  verification: "every measured iteration verified (row values and counts)"
+
+artifacts:
+  raw_dir: raw/
+  derived_dir: derived/
+
+notes: "pycubrid-only continuity run of scripts/phase_decomposed_bench.py (single run each) in raw/phase_decomposed_*.json."

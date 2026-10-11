@@ -19,10 +19,12 @@ Output: JSON file with per-phase statistics.
 import argparse
 import json
 import math
+import platform
 import statistics
 import time
 from pathlib import Path
 
+import pycubrid
 from pycubrid.connection import Connection
 
 
@@ -324,8 +326,8 @@ def main() -> None:
     results = {
         "metadata": {
             "tool": "phase_decomposed_bench.py",
-            "pycubrid_version": "0.5.0+16a8634",
-            "python_version": "CPython 3.12.8",
+            "pycubrid_version": pycubrid.__version__,
+            "python_version": f"{platform.python_implementation()} {platform.python_version()}",
             "iterations": args.iterations,
             "warmup": args.warmup,
             "row_count": args.row_count,
