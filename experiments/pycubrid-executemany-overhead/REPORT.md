@@ -58,7 +58,7 @@ as a fix for this gap.**
   * `pycubrid native_prepared`: the explicit `pycubrid.compat.native` cursor: FC2 `PREPARE` once, then `bind_param` x k
     and FC3 `EXECUTE` per row (typed INT/string binds). This is the closest pycubrid equivalent of CUBRIDdb's loop and the
     only true server-side prepared path in the driver today. It is a private-flag harness setup: `_driver.autocommit = False`
-    because the public native cursor has no manual-commit mode yet (#467).
+    directly instead of the public `connection.set_autocommit(False)` (#467), which gives the same mode.
   * `CUBRIDdb executemany` (one `cci_prepare`, then bind + execute per row) and `CUBRIDdb loop_execute` (`cursor.execute(sql, args)` per row).
 * Trials: 5 trials per driver, driver order alternating per trial, variant order rotated per trial, a separate process
   per driver and trial. Iterations per trial and path: 20 / 10 / 5 for 100 / 1,000 / 10,000 rows (plus 3 / 2 / 1 untimed warm-ups).

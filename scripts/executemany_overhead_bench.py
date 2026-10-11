@@ -127,8 +127,8 @@ class Conn:
         import pycubrid.compat.native as nat
 
         n = nat.connection(f"CUBRID:{self.host}:{self.port}:{self.db}:::", self.user, self.pw)
-        # compat.native defaults to autocommit=True and has no public manual mode yet
-        # (#467); the private driver flag is the one the driver's own tests use.
+        # compat.native defaults to autocommit=True. The harness sets the driver flag
+        # directly; the public equivalent is n.set_autocommit(False).
         n._driver.autocommit = False
         return n
 

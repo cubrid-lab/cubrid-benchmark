@@ -73,8 +73,8 @@ The two sensitivity runs (broker `SQL_LOG` off, direct container IP) used 3 tria
   rotation. It was re-run with per-run slicing (the version now in `run.sh`) against the same server before the summary was generated.
 * **Restarted run**: the first attempt of the whole run died at the DELETE 10,000-row verification (`SUM()` is NULL on an empty table, a harness bug).
   The harness was fixed and the run restarted from scratch; no partial data was reused.
-* **Private flag for the prepared path**: the `pycubrid.compat.native` harness sets `_driver.autocommit = False` because the public native cursor
-  has no manual-commit mode yet (pycubrid#467).
+* **Private flag for the prepared path**: the `pycubrid.compat.native` harness sets `_driver.autocommit = False` directly. The public
+  `connection.set_autocommit(False)` exists at the measured commit (pycubrid#467) and gives the same mode; the harness did not use it.
 * **Driver code identity**: pycubrid `main` d727224 is used; `git diff 2228d66..d727224 -- pycubrid scripts` is empty, so the driver code equals
   the one measured in pycubrid-release-baseline.
 
@@ -87,4 +87,4 @@ The two sensitivity runs (broker `SQL_LOG` off, direct container IP) used 3 tria
 ## Limitations
 
 Shared machine (load average up to 14), single server instance, loopback only (RTT 76 us), CUBRID 11.4.6 only (10.2/11.0/11.2 not measured), server-side time not profiled below the broker SQL log
-(1 ms resolution), `EXECUTE_ARRAY` not tested, `compat.native` path binds only INT/str/NULL and runs with a private autocommit flag.
+(1 ms resolution), `EXECUTE_ARRAY` not tested, `compat.native` path binds only scalar INT/str/NULL (`bind_param`) and the harness sets the private autocommit flag instead of the public setter.
