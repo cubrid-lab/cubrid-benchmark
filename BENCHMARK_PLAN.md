@@ -1,5 +1,12 @@
 # Comprehensive Benchmark Plan
 
+> **Status (2026-10-14): historical planning document.** The maintained scope is now same-server
+> regression measurement of the CUBRID Python stack (pycubrid, sqlalchemy-cubrid, CUBRIDdb as a
+> reference); see `README.md`. The Track A metric below, `pycubrid / PyMySQL`, is **retired**:
+> it divides measurements from two different DBMS engines and cannot isolate driver overhead.
+> Track B stays separate, optional research outside the Python routine lanes. The rest of this
+> plan is kept unchanged as the March 2026 record.
+>
 > **Created**: 2026-03-22
 >
 > This plan defines the two-track benchmark strategy for cubrid-benchmark,
@@ -29,7 +36,7 @@ cubrid-benchmark serves two distinct audiences with shared infrastructure:
 | **Goal** | Measure driver/ORM quality over time | Fair CUBRID vs MySQL engine comparison |
 | **Audience** | cubrid-labs internal developers | External developers, decision makers |
 | **Output** | Regression data → driver repo improvement backlog | Cross-DB performance positioning |
-| **Key Metric** | Efficiency ratio vs reference driver (e.g., `pycubrid / PyMySQL`) | Absolute ops/s with compiled-language drivers |
+| **Key Metric** | Efficiency ratio vs reference driver (e.g., `pycubrid / PyMySQL`; *retired 2026-10: cross-engine, cannot isolate driver overhead*) | Absolute ops/s with compiled-language drivers |
 | **Caveats** | Client overhead included intentionally | Client overhead minimized via compiled stacks |
 
 ### Core Principle

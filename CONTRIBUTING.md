@@ -1,103 +1,103 @@
 # Contributing to cubrid-benchmark
 
-Thank you for your interest in contributing to `cubrid-benchmark`.
+Thank you for your interest in contributing to `cubrid-benchmark`. The maintained track measures
+the CUBRID Python stack (pycubrid, sqlalchemy-cubrid, with CUBRIDdb as a same-server reference) on
+CUBRID only; see `README.md` for the scope.
 
 ## Development Setup
 
 ### Prerequisites
 
-- Python 3.10+
-- Node.js 18+
-- Go 1.19+
-- Git
+- Python 3.11+ and [uv](https://docs.astral.sh/uv/) (or `pip`)
 - Docker
+- Git
+- Only for the Track B research suites: Node.js 20, Go 1.22, Rust 1.75
 
 ### Installation
 
 ```bash
-git clone https://github.com/cubrid-labs/cubrid-benchmark.git
+git clone https://github.com/cubrid-lab/cubrid-benchmark.git
 cd cubrid-benchmark
-
-# Install Python dependencies
-pip install -r python/requirements.txt
-
-# Install Node.js dependencies
-npm install --prefix typescript
-
-# Verify Go setup (no external dependencies required)
-go version
+uv venv -p 3.12 .venv && . .venv/bin/activate
+uv pip install -r requirements-dev.txt   # python/requirements.txt + offline test tools
 ```
 
 ## Running Benchmarks
 
-### Start CUBRID
+### Start CUBRID (maintained track)
 
 ```bash
-docker compose up -d
+docker run -d --name cubrid-bench-114 -e CUBRID_DB=benchdb -p 33000:33000 cubrid/cubrid:11.4
+python scripts/wait_for_cubrid.py --timeout 180
+make seed
 ```
 
-### Run Python benchmarks
+Set `CUBRID_PORT` (and `CUBRID_ORM_DSN=cubrid+pycubrid://dba@localhost:<port>/benchdb` for
+SQLAlchemy) when you map another port.
+
+### Run the Python benchmarks
 
 ```bash
-cd python
-python -m benchmark
+make tier0                                                        # functional smoke
+(cd python && pytest bench_pycubrid.py --benchmark-disable -q)    # verified, no timing
+make tier1-python                                                 # timed Tier 1
+make tier1-python-extended                                        # extended workloads
+make tier2-python                                                 # SQLAlchemy Core/ORM
 ```
 
-### Run TypeScript benchmarks
+What each workload does and what is timed is in `docs/WORKLOADS.md`. A timed command is one
+independent trial; follow `REPRODUCIBILITY.md` and `RUNBOOK.md` before reporting a result.
+
+### Run the offline tests
 
 ```bash
-cd typescript
-npm run benchmark
+pytest tests -q
 ```
 
-### Run Go benchmarks
+### Track B research suites (optional)
+
+They need the legacy CUBRID 11.2 + MySQL 8.0 stack:
 
 ```bash
-cd go
-go run main.go
+make up            # docker compose -f docker/compose.yml up -d + readiness wait
+make seed          # CUBRID; add MySQL with: python3 scripts/apply_schema.py --with-mysql
+make tier0-ts tier1-ts tier0-go tier1-go tier0-rust tier1-rust
 ```
 
 ### Cleanup
 
 ```bash
-docker compose down -v
+docker rm -f cubrid-bench-114
+make clean         # only if you started the compose stack
 ```
 
 ## Code Style
 
-This project uses multiple linters depending on language:
+**Python** (on the files you change; some older files predate the formatter settings):
 
-**Python:**
 ```bash
-ruff check python/
-ruff format --check python/
+ruff check <changed files>
+ruff format --check <changed files>
 ```
 
-**TypeScript:**
-```bash
-npm run lint --prefix typescript
-npm run format --prefix typescript
-```
-
-**Go:**
-```bash
-cd go && gofmt -d .
-```
+**Go** (Track B): `cd go && gofmt -d .`. The TypeScript suite has no linter configured.
 
 ## Pull Request Guidelines
 
 1. Keep changes focused and explain the motivation in the PR description.
-2. Add or update benchmarks for new test cases.
-3. Ensure lint passes before submitting.
-4. Run benchmarks locally and include performance data in PR description.
+2. Add or update tests (`tests/`) and, for a workload change, its contract in `docs/WORKLOADS.md`.
+3. Ensure the offline tests and the lint checks above pass.
+4. For performance claims, include the run folder or workflow run and follow
+   `REPRODUCIBILITY.md` (same measured identity; at least three independent runs before any
+   regression claim). Do not present a comparison with another database engine as a goal.
 5. Update `CHANGELOG.md` for user-visible changes.
 
 ## Reporting Issues
 
 When filing an issue, include:
 
-- Language/implementation affected (Python/TypeScript/Go)
-- CUBRID server version
-- Driver version
-- Detailed description of the benchmark issue
-- Performance metrics (if applicable)
+- Workload and file affected (for example `python/bench_pycubrid.py::select_by_pk`)
+- CUBRID server version and image digest
+- pycubrid / sqlalchemy-cubrid versions (or source commit) and Python version
+- The run folder or workflow run with raw results
+- What you expected and what you measured

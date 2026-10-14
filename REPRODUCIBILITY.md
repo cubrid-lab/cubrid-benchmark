@@ -9,18 +9,30 @@ policy together with the matching run metadata under `experiments/**/runs/**/run
 This policy applies to:
 
 - Tier 0 smoke checks used to validate environment readiness
-- Tier 1 driver-throughput measurements across Python, Go, and TypeScript
-- Tier 2 ORM-overhead measurements built on top of Tier 1 scenarios
-- Before/after optimization comparisons used by the Performance Loop
+- Tier 1 driver-throughput measurements of the maintained Python track (pycubrid), and of the
+  Go/TypeScript Track B research suites when they are reported
+- Tier 2 SQLAlchemy measurements (sqlalchemy-cubrid Core/ORM)
+- Before/after optimization comparisons used by the Performance Loop, always on the same CUBRID
+  server
 
 It does not authorize cross-machine or cross-version comparisons without a new baseline.
 
 ## Standard Benchmark Environment
 
-### Containerized database baseline
+### Current maintained Python lanes
 
-All benchmark reports must use the repository-standard Docker environment unless the experiment
-README explicitly documents a justified exception:
+The pinned lanes in `.github/workflows/bench.yml` use one CUBRID service container per cell:
+`cubrid/cubrid:11.4` for the representative lane, and 10.2 and 11.4 for the release lane
+(`python/lanes.json`), with the exact Python packages in `python/constraints-current.txt`. They
+need no MySQL. Each run records its own measured identity, including the image digest and server
+build ("Measured comparison identity" below). An experiment may use another fixed CUBRID image
+if it records it the same way.
+
+### Historical baseline environment (legacy compose stack)
+
+The 2026-03/04 experiments and the Track B research suites use the original Docker stack
+described below. Reports that compare against those historical runs must use it unchanged, and
+those comparisons stay historical:
 
 - CUBRID: `cubrid/cubrid:11.2`
 - MySQL: `mysql:8.0`

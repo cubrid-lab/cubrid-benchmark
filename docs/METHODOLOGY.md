@@ -1,20 +1,23 @@
 # Benchmark Methodology
 
-How the CUBRID Benchmark suite measures and compares database performance.
+How the CUBRID Benchmark suite measures the CUBRID Python stack. The maintained track compares
+pycubrid and sqlalchemy-cubrid revisions (and the CUBRIDdb reference in experiments) **on the same
+CUBRID server**. The cross-database CUBRID vs MySQL material below is marked as historical or as
+Track B research.
 
-## Overview
+## Overview (maintained pinned lane)
 
 ```mermaid
 flowchart TD
-    Trigger[Trigger: Schedule / Manual / PR] --> Setup[Setup Phase]
-    Setup --> Docker[Start CUBRID + MySQL containers]
-    Docker --> Schema[Apply schema + seed data]
-    Schema --> Tier0{Tier 0: Smoke Tests}
-    Tier0 -->|Pass| Tier1[Tier 1: Full Benchmarks]
-    Tier0 -->|Fail| Abort[Abort — connectivity issue]
-    Tier1 --> Normalize[Normalize Results]
-    Normalize --> Publish[Publish to gh-pages]
-    Publish --> Report[Generate Report + Charts]
+    Trigger[Trigger: weekly schedule / manual dispatch] --> Plan[Plan cells from python/lanes.json]
+    Plan --> Install[Install exact pins, verify versions]
+    Install --> Server[CUBRID service container]
+    Server --> Tier0{Tier 0: CUBRID smoke}
+    Tier0 -->|Pass| Tier1[Tier 1: verified pycubrid workload]
+    Tier0 -->|Fail| Abort[Fail the cell]
+    Tier1 --> Provenance[Capture measured provenance]
+    Provenance --> Compare[Report-only comparison + evidence decision]
+    Compare --> Manifest[Upload cell; manifest fails on missing cells]
 ```
 
 ## Tier Structure
@@ -24,7 +27,7 @@ flowchart TD
 **Purpose**: Verify database connectivity and basic operation before running expensive benchmarks.
 
 **What it tests**:
-- TCP connectivity to both CUBRID (port 33000) and MySQL (port 3306)
+- Connectivity to CUBRID (port 33000); the Track B suites also check MySQL (port 3306)
 - Basic `INSERT` / `SELECT` / `UPDATE` / `DELETE` operations
 - Schema compatibility
 
@@ -56,21 +59,18 @@ only through a manual `workflow_dispatch` with `lane=full` (never on PRs).
 
 ## Database Setup
 
-Both databases run as Docker containers on the CI runner:
+The maintained Python lanes run one CUBRID service container per cell: `cubrid/cubrid:11.4` for
+the representative lane, 10.2 and 11.4 for the release lane (`python/lanes.json`), with database
+`benchdb` and user `dba` (no password). The image digest and server build are recorded in each
+run's `comparison_identity`.
 
-| Database | Image | Port | Credentials |
-|----------|-------|------|-------------|
-| CUBRID | `cubrid/cubrid:11.2` | 33000 | `dba` (no password) |
-| MySQL | `mysql:8.0` | 3306 | `root` / `bench` |
-
-Both use the same database name (`benchdb`) and identical schema, ensuring a fair comparison.
+The Track B suites and the historical experiments use `docker/compose.yml` (`cubrid/cubrid:11.2`
+on 33000, `mysql:8.0` on 3306 with `root` / `bench`).
 
 ### Schema
 
-The benchmark schema is applied via `scripts/apply_schema.py`:
-- Creates identical tables in both databases
-- Seeds with the same initial data
-- Ensures indexes match between CUBRID and MySQL
+`scripts/apply_schema.py` (`make seed`) applies `schema/cubrid_init.sql` and `schema/seed.sql` to
+CUBRID. `--with-mysql` also seeds MySQL for the Track B suites and the archived modules.
 
 ## Metrics
 
@@ -82,7 +82,7 @@ All results are normalized to **operations per second** for consistent compariso
 flowchart LR
     Raw[Raw pytest-benchmark JSON] --> Normalize[normalize_results.py]
     Normalize --> Ops["ops/sec per benchmark"]
-    Ops --> Compare["CUBRID vs MySQL ratio"]
+    Ops --> Compare["Candidate vs baseline on the same CUBRID server"]
 ```
 
 ### Secondary Metrics: Tail Latency and Memory
@@ -176,9 +176,10 @@ Metrics artifact fields:
 | TypeScript | cubrid-client | mysql2 | Custom timer |
 | Go | cubrid-go | go-sql-driver/mysql | `testing.B` |
 
-## Known Performance Characteristics
+## Historical Cross-Database Observations (2026-03, not targets)
 
-Based on benchmark results:
+From the archived cross-database experiments. These numbers mix DBMS and driver differences.
+They are not current engineering targets and are not re-measured:
 
 | Language | CUBRID vs MySQL | Notes |
 |----------|----------------|-------|
@@ -234,27 +235,19 @@ Results are published to the `gh-pages` branch using [`github-action-benchmark`]
 ## Running Locally
 
 ```bash
-# Start databases
-make up
-
-# Run smoke tests
+# Maintained track: CUBRID only
+docker run -d --name cubrid-bench-114 -e CUBRID_DB=benchdb -p 33000:33000 cubrid/cubrid:11.4
+python scripts/wait_for_cubrid.py --timeout 180
+make seed
 make tier0
-make tier0-ts
-make tier0-go
-
-# Run full benchmarks
 make tier1-python
 make tier1-python-extended
-make tier1-ts
-make tier1-ts-extended
-make tier1-go
-make tier1-go-extended
-
-# Normalize results
 python3 scripts/normalize_results.py results/python_tier1.json
-python3 scripts/normalize_results.py results/python_tier1_extended.json
+docker rm -f cubrid-bench-114
 
-# Cleanup
+# Track B research (legacy CUBRID 11.2 + MySQL 8.0 stack)
+make up
+make tier0-ts tier1-ts tier1-ts-extended tier0-go tier1-go tier1-go-extended
 make clean
 ```
 
@@ -262,12 +255,13 @@ make clean
 
 ### Adding a new workload
 
-1. Add the benchmark function to the appropriate language directory
-2. Follow naming convention: `bench_{operation}_{variant}`
-3. Ensure both CUBRID and MySQL variants exist for fair comparison
-4. Update the Makefile targets if needed
+1. Add the benchmark to the maintained Python module it belongs to
+2. Add its contract to that module's `SCENARIOS` and to `docs/WORKLOADS.md` (one call, rows per
+   call, timed region, untimed setup, verification, any claimed protocol path)
+3. Verify results outside the timed region; a wrong or empty answer must fail
+4. Start a new workload revision when what one call does changes
 
-### Adding a new language
+### Adding a new language (Track B research only)
 
 1. Create a new directory under the repo root
 2. Implement Tier 0 (connectivity) and Tier 1 (performance) benchmarks
