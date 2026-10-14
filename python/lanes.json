@@ -18,6 +18,7 @@
     },
     "archival": {
       "constraints": "python/constraints-archival-1.0.0.txt",
+      "source_override": false,
       "cells": [
         {"python": "3.10", "cubrid": "11.2"},
         {"python": "3.11", "cubrid": "11.2"},

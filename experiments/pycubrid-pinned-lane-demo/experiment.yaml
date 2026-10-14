@@ -16,4 +16,9 @@ protocol:
   metrics: [ops_per_round]
 repro:
   setup: "docker run -d --name bench30-cubrid-114 -e CUBRID_DB=benchdb -p 33681:33000 cubrid/cubrid:11.4 (and cubrid/cubrid:10.2 on 33682)"
-  run: "one venv per pycubrid release: pip install -r python/requirements.txt -c <constraints with pycubrid==X>; python scripts/python_lanes.py verify-install; pytest python/bench_pycubrid.py; python scripts/run_provenance.py capture --fixed-host devbox-i5-9400F; python scripts/compare_runs.py"
+  run: |
+    D=experiments/pycubrid-pinned-lane-demo
+    FIXED_HOST=devbox-i5-9400F CUBRID_PORT=33681 $D/run.sh $D/runs/<date>_pycubrid-1.11.0-baseline 1.11.0 baseline
+    FIXED_HOST=devbox-i5-9400F CUBRID_PORT=33681 $D/run.sh $D/runs/<date>_pycubrid-1.12.0-candidate 1.12.0 candidate $D/runs/<date>_pycubrid-1.11.0-baseline
+    FIXED_HOST=devbox-i5-9400F CUBRID_PORT=33682 CUBRID_VERSION=10.2 $D/run.sh $D/runs/<date>_pycubrid-1.12.0-cubrid102-candidate 1.12.0 candidate $D/runs/<date>_pycubrid-1.11.0-baseline
+  notes: "run.sh performs every step of the recorded runs: a fresh venv pinned by python/constraints-current.txt with pycubrid==<version>, scripts/python_lanes.py verify-install --constraints <file> --output versions.json, python/bench_pycubrid.py, scripts/run_provenance.py capture with the pinned-lane arguments plus --cubrid-port and --versions-file, and scripts/compare_runs.py. The recorded runs were measured before run.sh existed and before capture copied raw/versions.json itself. Their compares_to field was set after capture."

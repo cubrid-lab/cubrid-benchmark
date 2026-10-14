@@ -10,7 +10,8 @@ another run without also matching that run's identity.
 
 Subcommands:
 
-    capture          measure this host and write <out-dir>/run.yaml (+ raw/<results>)
+    capture          measure this host and write <out-dir>/run.yaml (+ raw/results.json and
+                     raw/versions.json)
     select-baseline  find the newest compatible baseline run for a candidate run directory
 
 Neither subcommand reads environment identity from another run.
@@ -256,7 +257,8 @@ def _cmd_capture(args: argparse.Namespace) -> int:
         for name, info in sorted(verified.get("packages", {}).items()):
             if isinstance(info, dict) and info.get("source") == "vcs":
                 software[f"{name}_source_commit"] = info.get("commit_id")
-        software["verified_versions_file"] = Path(args.versions_file).name
+        # Copied into raw/ below, so the run folder is self-contained.
+        software["verified_versions_file"] = "raw/versions.json"
     if env.get("GITHUB_RUN_ID"):
         software["github_run"] = (
             f"{env.get('GITHUB_SERVER_URL', 'https://github.com')}/"
@@ -268,8 +270,11 @@ def _cmd_capture(args: argparse.Namespace) -> int:
     if unknown:
         notes = (notes + " " if notes else "") + f"unmeasured identity fields: {', '.join(unknown)}"
     out_dir.mkdir(parents=True, exist_ok=True)
+    raw_dir = out_dir / "raw"
+    if args.versions_file:
+        raw_dir.mkdir(exist_ok=True)
+        shutil.copyfile(args.versions_file, raw_dir / "versions.json")
     if args.results:
-        raw_dir = out_dir / "raw"
         raw_dir.mkdir(exist_ok=True)
         if args.results_module:
             payload = select_module_results(
@@ -379,7 +384,10 @@ def build_parser() -> argparse.ArgumentParser:
     capture.add_argument("--command", default="", help="The benchmark command this run executed")
     capture.add_argument(
         "--versions-file",
-        help="versions.json from python_lanes.py verify-install (records source commits)",
+        help=(
+            "versions.json from python_lanes.py verify-install: copied to raw/versions.json, "
+            "and source commits are recorded"
+        ),
     )
     capture.set_defaults(func=_cmd_capture)
 

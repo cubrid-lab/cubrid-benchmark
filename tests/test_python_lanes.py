@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import importlib
 import json
+import re
+import shlex
 import sys
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
 
 import pytest
+
+yaml = pytest.importorskip("yaml")
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -41,8 +45,22 @@ class TestPlan:
         cells = python_lanes.plan("archival", python_lanes.load_lanes())
         pins = python_lanes.read_pins(ROOT / cells[0]["constraints"])
 
-        assert pins == {"pycubrid": "1.0.0"}
+        # The benchmark plugin is pinned too, so it cannot float with python/requirements.txt.
+        assert pins == {"pycubrid": "1.0.0", "pytest-benchmark": "5.3.0"}
         assert {cell["python"] for cell in cells} == {"3.10", "3.11", "3.12"}
+
+    def test_archival_lane_rejects_a_pycubrid_source_override(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        with pytest.raises(python_lanes.LaneError, match="pycubrid_source_sha is not accepted"):
+            python_lanes.plan("archival", python_lanes.load_lanes(), SHA)
+        # The CLI the plan job runs fails too, so no archival cell starts installing.
+        assert python_lanes.main(["plan", "--lane", "archival", "--source-sha", SHA]) == 1
+        assert "::error::lane 'archival'" in capsys.readouterr().out
+
+    @pytest.mark.parametrize("lane", ["representative", "release"])
+    def test_current_lanes_still_accept_a_source_override(self, lane: str) -> None:
+        assert python_lanes.plan(lane, python_lanes.load_lanes(), SHA)
 
     @pytest.mark.parametrize(
         ("lanes", "message"),
@@ -343,4 +361,47 @@ def test_capture_records_the_verified_source_commit(
     assert run_provenance.main(argv) == 0
     software = compare_runs._parse_run_yaml(out / "run.yaml")["software_under_test"]
     assert software["pycubrid_source_commit"] == SHA
-    assert software["verified_versions_file"] == "versions.json"
+    # The verified file travels with the run folder, under the path that run.yaml records.
+    assert software["verified_versions_file"] == "raw/versions.json"
+    assert (out / "raw" / "versions.json").read_bytes() == versions.read_bytes()
+
+
+def _flags(text: str) -> set[str]:
+    return set(re.findall(r"(?<![\w-])(--[a-z][a-z-]+)", text))
+
+
+def test_demo_runner_reproduces_the_pinned_lane_capture() -> None:
+    demo = ROOT / "experiments" / "pycubrid-pinned-lane-demo"
+    runner = demo / "run.sh"
+    experiment = yaml.safe_load((demo / "experiment.yaml").read_text(encoding="utf-8"))
+    workflow = yaml.safe_load((ROOT / ".github" / "workflows" / "bench.yml").read_text())
+    capture_step = next(
+        step
+        for step in workflow["jobs"]["pinned"]["steps"]
+        if step.get("name") == "Capture candidate provenance"
+    )
+
+    assert runner.stat().st_mode & 0o111, "run.sh must be executable"
+    script = runner.read_text(encoding="utf-8")
+    # Every capture argument of the pinned lanes, plus the server and host the demo used.
+    assert _flags(capture_step["run"]) <= _flags(script)
+    assert {"--cubrid-port", "--fixed-host", "--versions-file"} <= _flags(script)
+    assert "verify-install --constraints" in script
+    # Only compare_runs.py report outcomes (0, 1, 3) are tolerated; an error (2) fails the run.
+    assert "0 | 1 | 3) ;;" in script and 'exit "$status"' in script
+    # One complete command per recorded run: run-dir, version, role and, for a candidate, the
+    # baseline, with the server port it used.
+    recorded = sorted(path.name.split("_", 1)[1] for path in (demo / "runs").iterdir())
+    commands = []
+    for line in experiment["repro"]["run"].splitlines():
+        tokens = shlex.split(line)
+        script_at = next((i for i, t in enumerate(tokens) if t.endswith("run.sh")), None)
+        if script_at is None:
+            continue
+        env = dict(t.split("=", 1) for t in tokens[:script_at])
+        run_dir, version, role, *baseline = tokens[script_at + 1 :]
+        assert env["CUBRID_PORT"] in ("33681", "33682")
+        assert run_dir.split("_", 1)[1].startswith(f"pycubrid-{version}")
+        assert (role == "candidate") == bool(baseline)
+        commands.append(run_dir.split("_", 1)[1])
+    assert sorted(commands) == recorded
