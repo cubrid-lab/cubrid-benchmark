@@ -1,0 +1,4 @@
+# Only for running the archived PyMySQL / SQLAlchemy+MySQL modules (`make historical-python-mysql`).
+# Not part of the maintained CUBRID Python track.
+-r requirements.txt
+PyMySQL>=1.1

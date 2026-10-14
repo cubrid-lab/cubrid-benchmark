@@ -103,10 +103,8 @@ jobs:
 
       - name: CUBRID-only Tier 0 and verified Tier 1 workload (no timing)
         working-directory: python
-        env:
-          PYTHONPATH: ../experiments/tier1-python-workload
         run: >-
-          python -m pytest --noconftest -p cubrid_only_plugin -p no:cacheprovider
+          python -m pytest -p no:cacheprovider
           bench_tier0_cubrid.py bench_pycubrid.py --benchmark-disable -v
 
   representative:
@@ -152,10 +150,8 @@ jobs:
 
       - name: CUBRID-only Tier 0 smoke
         working-directory: python
-        env:
-          PYTHONPATH: ../experiments/tier1-python-workload
         run: >-
-          python -m pytest --noconftest -p cubrid_only_plugin -p no:cacheprovider
+          python -m pytest -p no:cacheprovider
           bench_tier0_cubrid.py -v --junitxml="../$OUT/tier0.xml"
 
       - name: Injected failure (manual verification only)
@@ -166,10 +162,8 @@ jobs:
 
       - name: CUBRID-only Tier 1 pycubrid measurement
         working-directory: python
-        env:
-          PYTHONPATH: ../experiments/tier1-python-workload
         run: >-
-          python -m pytest --noconftest -p cubrid_only_plugin -p no:cacheprovider
+          python -m pytest -p no:cacheprovider
           bench_pycubrid.py -v --benchmark-json="../$OUT/python_tier1_pycubrid.json"
 
       - name: Capture candidate provenance

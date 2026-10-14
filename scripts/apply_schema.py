@@ -1,9 +1,16 @@
+"""Apply schema/cubrid_init.sql and schema/seed.sql to CUBRID.
+
+``--with-mysql`` also applies schema/mysql_init.sql and seed.sql to MySQL. That is only for the
+historical cross-database reproduction (``make historical-python-mysql``) and needs PyMySQL
+from ``python/requirements-historical-mysql.txt``.
+"""
+
 from __future__ import annotations
 
-import os
+import argparse
 import importlib
+import os
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_DIR = ROOT / "schema"
@@ -69,10 +76,21 @@ def apply_mysql() -> None:
         conn.close()
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Apply the benchmark schema and seed data.")
+    parser.add_argument(
+        "--with-mysql",
+        action="store_true",
+        help="Also seed MySQL (historical cross-database reproduction only)",
+    )
+    args = parser.parse_args(argv)
+
     apply_cubrid()
-    apply_mysql()
-    print("Schema and seed applied to CUBRID and MySQL.")
+    if args.with_mysql:
+        apply_mysql()
+        print("Schema and seed applied to CUBRID and MySQL.")
+    else:
+        print("Schema and seed applied to CUBRID.")
     return 0
 
 
