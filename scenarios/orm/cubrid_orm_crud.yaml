@@ -13,13 +13,13 @@ teardown:
 
 steps:
   - name: orm-single-row-crud
-    worker: python/bench_sqlalchemy_cubrid.py::test_bench_single_row_crud
+    worker: python/bench_sqlalchemy_cubrid.py::test_bench_single_row_crud_orm
 
   - name: orm-query-builder-select-all
-    worker: python/bench_sqlalchemy_cubrid.py::test_bench_query_builder_select_all
+    worker: python/bench_sqlalchemy_cubrid.py::test_bench_orm_select_all_entities
 
   - name: raw-sql-select-all
-    worker: python/bench_sqlalchemy_cubrid.py::test_bench_raw_sql_select_all
+    worker: python/bench_sqlalchemy_cubrid.py::test_bench_text_select_all_rows
 
 targets:
   - name: sqlalchemy-cubrid

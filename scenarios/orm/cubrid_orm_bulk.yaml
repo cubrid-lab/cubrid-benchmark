@@ -13,10 +13,10 @@ teardown:
 
 steps:
   - name: orm-bulk-insert-100
-    worker: python/bench_sqlalchemy_cubrid.py::test_bench_bulk_insert[100]
+    worker: python/bench_sqlalchemy_cubrid.py::test_bench_bulk_insert_orm[100]
 
   - name: orm-bulk-insert-1000
-    worker: python/bench_sqlalchemy_cubrid.py::test_bench_bulk_insert[1000]
+    worker: python/bench_sqlalchemy_cubrid.py::test_bench_bulk_insert_orm[1000]
 
 targets:
   - name: sqlalchemy-cubrid
