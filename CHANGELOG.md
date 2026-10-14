@@ -7,6 +7,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Fixed
+- The benchmark workflow runs on a bounded schedule again. The daily cross-language nightly and
+  the weekly matrix are replaced by one weekly CUBRID-only `representative` lane (CUBRID 11.4:
+  Tier 0, pycubrid Tier 1, provenance, report-only comparison). The cross-language suite
+  (`lane=full`) and the matrix (`lane=matrix`) now run only through manual dispatch. Pull
+  requests and pushes that touch benchmark code run offline tests, workflow policy checks and a
+  CUBRID-only correctness smoke; docs-only changes run nothing.
+- Every job has a timeout, every action is pinned to a commit SHA, and the token is read-only
+  except for the manual full suite's gh-pages publish. No lane opens regression issues.
+- Uploads keep whatever was produced (`if-no-files-found: warn`) instead of adding "no files
+  found" failures after the first error. `scripts/check_required_results.py` fails a lane whose
+  required measurement is missing. Optional full-suite tracks are reported instead of stopping
+  the run. `inject_failure` checks this behaviour on demand. The scheduler state
+  (`disabled_inactivity` since 2026-06-22) is recorded in `RUNBOOK.md`.
+
+### Added
+- `requirements-dev.txt` for the offline tests (PyYAML, jsonschema format checks),
+  `scripts/wait_for_cubrid.py` and `tests/test_workflow_policy.py`.
 - The nightly comparison no longer copies the historical baseline's `comparable_group` into its
   candidate. `scripts/run_provenance.py capture` measures the candidate's own identity: runner
   image, CPU, OS/kernel, Docker, CUBRID image digest and build, Python and the workload

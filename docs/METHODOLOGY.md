@@ -32,7 +32,8 @@ flowchart TD
 
 **Runtime**: ~30 seconds
 
-**When it runs**: Every PR and every nightly run.
+**When it runs**: CUBRID-only on every PR and push that touches benchmark code (`cubrid-smoke`), in
+the weekly `representative` lane, and in every manual full-suite run.
 
 ### Tier 1 — Full Benchmarks
 
@@ -50,7 +51,8 @@ flowchart TD
 
 **Runtime**: ~10-15 minutes
 
-**When it runs**: Nightly schedule and manual `workflow_dispatch` only (not on PRs).
+**When it runs**: pycubrid Tier 1 in the weekly `representative` lane; the cross-language Tier 1
+only through a manual `workflow_dispatch` with `lane=full` (never on PRs).
 
 ## Database Setup
 
@@ -182,18 +184,24 @@ The `scripts/normalize_results.py` script converts raw `pytest-benchmark` JSON o
 
 ```mermaid
 flowchart TD
-    PR[Pull Request] --> T0PR[Tier 0 Only]
-    Schedule["Schedule (daily 3am UTC)"] --> Nightly[Full: Tier 0 + Tier 1]
-    Manual[workflow_dispatch] --> Nightly
-
-    Nightly --> PubStep[Publish Step]
+    PR["Pull request / push to main (code paths)"] --> Checks["checks: offline tests + workflow policy"]
+    PR --> Smoke["cubrid-smoke: CUBRID-only Tier 0 + verified Tier 1, no timing"]
+    Schedule["Schedule (weekly, Sunday 04:00 UTC)"] --> Rep["representative: CUBRID-only Tier 0 + pycubrid Tier 1 + provenance"]
+    Manual["workflow_dispatch lane=representative"] --> Rep
+    ManualFull["workflow_dispatch lane=full"] --> Full["full-suite: cross-language Tier 0-2"]
+    Full --> PubStep[Publish Step]
     PubStep --> GHPages["Push to gh-pages branch"]
     GHPages --> Charts["github-action-benchmark charts"]
 ```
 
-**PR runs**: Tier 0 only (quick validation, ~30s)
+**PR and push runs**: offline tests, workflow policy and a CUBRID-only correctness smoke. They
+are never a throughput gate.
 
-**Nightly runs**: Full suite (Tier 0 → Tier 1 → Normalize → Publish)
+**Scheduled runs**: the bounded CUBRID-only `representative` lane, once a week. Its comparison is
+report-only.
+
+**Manual full suite**: Tier 0 → Tier 1 → Tier 2 → Normalize → Publish across languages. Only
+Python Tier 0/1 are required. See `RUNBOOK.md`, "Scheduled and manual benchmark runs".
 
 ### Benchmark Tracking
 
@@ -201,7 +209,7 @@ Results are published to the `gh-pages` branch using [`github-action-benchmark`]
 - Historical data stored in `dev/bench/` directory
 - Alert threshold: 110% (warns if performance degrades by >10%)
 - Charts auto-generated from historical data
-- Comments posted on PRs when alerts trigger
+- Published only from manual full-suite runs; alerts do not comment or open issues
 
 ## Running Locally
 

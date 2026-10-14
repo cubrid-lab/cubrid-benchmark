@@ -1,0 +1,5 @@
+# Offline test and workflow-policy dependencies (benchmarks use python/requirements.txt).
+-r python/requirements.txt
+jsonschema[format-nongpl]>=4.0
+PyYAML>=6.0
+ruff>=0.6

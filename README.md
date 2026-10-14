@@ -32,8 +32,9 @@ make all       # Run all benchmarks
 
 ## Version Matrix
 
-The weekly version-matrix runner lives in `.github/workflows/bench.yml` as the
-`matrix-benchmark` job. It expands two axes:
+The legacy version-matrix runner lives in `.github/workflows/bench.yml` as the
+`matrix-benchmark` job. It runs only through a manual `workflow_dispatch` with `lane=matrix`
+(it is no longer scheduled) and expands two axes:
 
 - `python-version`: `3.10`, `3.11`, `3.12`
 - `driver-version`: `1.0.0` for `pycubrid`
@@ -49,8 +50,7 @@ MySQL services, then packages the raw benchmark output into a descriptive result
    `driver-version`.
 3. Keep the packaging step in sync if you add a brand-new driver axis with a different driver
    name, so artifact names and manifest metadata stay descriptive.
-4. Re-run the workflow with `workflow_dispatch` to validate the new combinations before the next
-   weekly schedule.
+4. Run the workflow with `workflow_dispatch` (`lane=matrix`) to validate the new combinations.
 
 ### Matrix Results and Manifest
 
