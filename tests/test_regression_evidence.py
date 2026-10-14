@@ -59,6 +59,8 @@ def _run(
     sha: str = "a" * 40,
     dirty: str | None = "false",
     extra_software: dict[str, object] | None = None,
+    arm: str | None = None,
+    date: str | None = None,
 ) -> Path:
     run_dir = root / name
     (run_dir / "raw").mkdir(parents=True)
@@ -66,7 +68,7 @@ def _run(
     (run_dir / "raw" / "results.json").write_text(json.dumps(results), encoding="utf-8")
     text = run_provenance.render_run_yaml(
         run_id=name,
-        date=f"2026-10-{len(name) % 28 + 1:02d}T00:00:00Z",
+        date=date or f"2026-10-{len(name) % 28 + 1:02d}T00:00:00Z",
         label=name,
         role=role,
         identity=identity or _identity(),
@@ -77,6 +79,7 @@ def _run(
             "packages": {"pycubrid": pycubrid},
         },
         notes="",
+        arm=arm,
         measurement={
             "command": f"pytest bench_pycubrid.py  # {name}",
             "artifact_url": "https://x/1",
@@ -164,6 +167,150 @@ class TestTrialCounts:
         assert any("repeats run_id" in reason for reason in reasons)
         assert any("identical raw results" in reason for reason in reasons)
         assert report["decision"] == "insufficient_evidence"
+
+
+class TestBaselineArm:
+    """Repeats of the baseline condition count as baseline trials (role vs comparison arm)."""
+
+    def _experiment(self, root: Path, repeat_pycubrid: str = "1.11.0") -> list[Path]:
+        runs = root / "runs"
+        # Documented lifecycle: the first run of the group is role baseline, every later run is
+        # role candidate. The two repeats measured the baseline condition (arm baseline).
+        first = _run(
+            runs,
+            "2026-10-01_base",
+            "baseline",
+            BASE_OPS,
+            pycubrid="1.11.0",
+            date="2026-10-01T00:00:00Z",
+        )
+        repeats = [
+            _run(
+                runs,
+                f"2026-10-0{i}_base-repeat",
+                "candidate",
+                {k: v * (1 + 0.01 * i) for k, v in BASE_OPS.items()},
+                pycubrid=repeat_pycubrid,
+                arm="baseline",
+                date=f"2026-10-0{i}T00:00:00Z",
+            )
+            for i in (2, 3)
+        ]
+        return [first, *repeats]
+
+    def _candidates(self, root: Path) -> list[Path]:
+        return [
+            _run(
+                root / "cand",
+                f"cand-{i}",
+                "candidate",
+                {k: v * 0.80 * (1 + 0.01 * i) for k, v in BASE_OPS.items()},
+            )
+            for i in range(3)
+        ]
+
+    def test_one_baseline_and_two_repeats_are_three_baseline_trials(self, tmp_path: Path) -> None:
+        recorded = self._experiment(tmp_path / "exp")
+        candidates = self._candidates(tmp_path)
+
+        baselines, reason = run_provenance.select_baselines(candidates[0], [tmp_path / "exp"])
+        report = evidence.evaluate(baselines, candidates)
+
+        assert reason == "compatible baseline found"
+        assert baselines == recorded
+        assert report["independent_trials"] == {"baseline": 3, "candidate": 3}
+        assert report["decision"] == "reproduced_regression"
+        assert [t["arm"] for t in report["trials"]["baseline"]] == ["baseline"] * 3
+        assert [t["role"] for t in report["trials"]["baseline"]] == [
+            "baseline",
+            "candidate",
+            "candidate",
+        ]
+
+    def test_a_candidate_arm_run_is_never_a_baseline_trial(self, tmp_path: Path) -> None:
+        exp = tmp_path / "exp"
+        self._experiment(exp)
+        stray_ops = {k: v * 1.07 for k, v in BASE_OPS.items()}  # distinct raw file, not a copy
+        stray = _run(exp / "runs", "2026-10-09_after-fix", "candidate", stray_ops)
+        candidates = self._candidates(tmp_path)
+
+        baselines, _ = run_provenance.select_baselines(candidates[0], [exp])
+        mixed = evidence.evaluate([*baselines, stray], candidates)
+
+        assert stray not in baselines
+        assert mixed["excluded_runs"] == []
+        assert mixed["decision"] == "not_comparable"
+        assert any("measured the 'candidate' arm" in r for r in mixed["reasons"])
+
+    def test_a_baseline_arm_run_is_never_a_candidate(self, tmp_path: Path) -> None:
+        recorded = self._experiment(tmp_path / "exp")
+        candidates = self._candidates(tmp_path)
+
+        report = evidence.evaluate(recorded[:1], [*candidates, recorded[1]])
+
+        assert report["decision"] == "not_comparable"
+        assert any("expected the 'candidate' arm" in r for r in report["reasons"])
+
+    def test_repeats_with_other_software_are_still_rejected(self, tmp_path: Path) -> None:
+        exp = tmp_path / "exp"
+        self._experiment(exp, repeat_pycubrid="1.12.0")
+        candidates = self._candidates(tmp_path)
+
+        baselines, _ = run_provenance.select_baselines(candidates[0], [exp])
+        report = evidence.evaluate(baselines, candidates)
+
+        assert len(baselines) == 3
+        assert report["decision"] == "not_comparable"
+        assert "baseline trials mix software under test" in report["reasons"]
+
+    def test_the_candidate_is_not_its_own_baseline(self, tmp_path: Path) -> None:
+        exp = tmp_path / "exp"
+        recorded = self._experiment(exp)
+
+        baselines, _ = run_provenance.select_baselines(recorded[-1], [exp])
+
+        assert baselines == recorded[:-1]
+
+    @pytest.mark.parametrize(
+        ("role", "arm", "message"),
+        [
+            ("baseline", "candidate", "role 'baseline' but arm 'candidate'"),
+            ("candidate", "control", "arm 'control'"),
+            # A valid arm never makes up for a missing or unknown lifecycle role.
+            ("", "baseline", "baseline run has role {}, expected"),
+            ("control", "baseline", "baseline run has role 'control', expected"),
+        ],
+    )
+    def test_invalid_role_and_arm_pairs_are_not_comparable(
+        self, tmp_path: Path, role: str, arm: str, message: str
+    ) -> None:
+        bad = _run(tmp_path / "b", "bad", role, BASE_OPS, arm=arm)
+        candidates = self._candidates(tmp_path)
+
+        report = evidence.evaluate([bad], candidates)
+
+        assert report["decision"] == "not_comparable"
+        assert any(message in r for r in report["reasons"])
+        # Nor is such a run ever selected as baseline evidence.
+        exp = tmp_path / "exp" / "runs"
+        exp.mkdir(parents=True)
+        (bad.parent / bad.name).rename(exp / bad.name)
+        baselines, _ = run_provenance.select_baselines(candidates[0], [tmp_path / "exp"])
+        assert baselines == []
+
+    def test_stored_runs_without_arm_keep_their_role(self, tmp_path: Path) -> None:
+        legacy = _run(tmp_path / "exp" / "runs", "2026-10-01_old", "baseline", BASE_OPS)
+        text = (legacy / "run.yaml").read_text(encoding="utf-8")
+        (legacy / "run.yaml").write_text(
+            "\n".join(line for line in text.splitlines() if not line.startswith("arm:")) + "\n",
+            encoding="utf-8",
+        )
+        candidates = self._candidates(tmp_path)
+
+        baselines, _ = run_provenance.select_baselines(candidates[0], [tmp_path / "exp"])
+
+        assert baselines == [legacy]
+        assert compare_runs._load_run(legacy)["arm"] == "baseline"
 
 
 class TestDecisions:

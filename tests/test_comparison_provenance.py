@@ -549,6 +549,28 @@ class TestCapture:
         assert meta["comparable_group"] == compare_runs.derive_comparable_group(identity)
         assert meta["software_under_test"]["benchmark_source_sha"] == "0123456789abcdef"
         assert (out_dir / "raw" / "results.json").is_file()
+        # The default arm is the role: a plain candidate run measured the candidate condition.
+        assert (meta["role"], meta["arm"]) == ("candidate", "candidate")
+
+        repeat_dir = tmp_path / "baseline-repeat"
+        repeat = ["--out-dir", str(repeat_dir), *args[3:], "--arm", "baseline"]
+        assert run_provenance.main(["capture", *repeat]) == 0
+        meta = compare_runs._parse_run_yaml(repeat_dir / "run.yaml")
+        assert (meta["role"], meta["arm"]) == ("candidate", "baseline")
+
+        # The first run of a group (role baseline) cannot be recorded as the candidate arm.
+        contradictory = tmp_path / "contradictory"
+        bad = [
+            "--out-dir",
+            str(contradictory),
+            *args[3:],
+            "--role",
+            "baseline",
+            "--arm",
+            "candidate",
+        ]
+        assert run_provenance.main(["capture", *bad]) == 2
+        assert not (contradictory / "run.yaml").exists()
 
     def test_unmeasured_fields_are_recorded_and_block_comparison(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch

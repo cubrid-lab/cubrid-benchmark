@@ -334,12 +334,43 @@ def _load_run(run_dir: Path) -> dict[str, object]:
         "run_id": run_meta.get("run_id", run_dir.name),
         "date": run_meta.get("date"),
         "role": run_meta.get("role"),
+        "arm": run_arm(run_meta),
         "compares_to": run_meta.get("compares_to"),
         "comparable_group": run_meta.get("comparable_group"),
         "comparison_identity": run_meta.get("comparison_identity"),
         "software_under_test": run_meta.get("software_under_test"),
         "operations": operations,
     }
+
+
+ARMS = ("baseline", "candidate")
+
+
+def run_arm(run: Mapping[str, object]) -> object:
+    """The comparison arm of a run: ``arm`` when recorded, otherwise its ``role``.
+
+    ``role`` is the run's place in its group's lifecycle (the first run is ``baseline``, every
+    later run is ``candidate``). ``arm`` is the condition it measured, so a later repeat of the
+    baseline condition is ``role: candidate`` with ``arm: baseline``. Runs recorded before
+    ``arm`` existed keep their ``role`` as their arm.
+    """
+    arm = run.get("arm")
+    return run.get("role") if arm is None else arm
+
+
+def arm_problems(run: Mapping[str, object], label: str) -> list[str]:
+    """Reasons a run's ``role``/``arm`` pair is not a valid comparison arm."""
+    arm, role = run_arm(run), run.get("role")
+    if role not in ARMS:
+        return [f"{label} run has role {role!r}, expected one of {list(ARMS)}"]
+    if arm not in ARMS:
+        return [f"{label} run has arm {arm!r} (role {role!r}), expected one of {list(ARMS)}"]
+    if role == "baseline" and arm != "baseline":
+        return [
+            f"{label} run has role 'baseline' but arm {arm!r}; the first run of a group is "
+            "the baseline arm"
+        ]
+    return []
 
 
 def _blank(value: object) -> bool:
@@ -360,12 +391,14 @@ def _comparability_problems(
 ) -> tuple[list[str], str]:
     """Return (reasons the runs are not comparable, comparison basis)."""
     problems: list[str] = []
-    for label, run, role in (
-        ("baseline", baseline, "baseline"),
-        ("candidate", candidate, "candidate"),
-    ):
-        if run.get("role") != role:
-            problems.append(f"{label} run has role {run.get('role')!r}, expected {role!r}")
+    for label, run in (("baseline", baseline), ("candidate", candidate)):
+        invalid = arm_problems(run, label)
+        problems.extend(invalid)
+        if not invalid and run_arm(run) != label:
+            problems.append(
+                f"{label} run measured the {run_arm(run)!r} arm (role {run.get('role')!r}), "
+                f"expected the {label!r} arm"
+            )
         if _blank(run.get("comparable_group")):
             problems.append(f"{label} comparable_group is missing or blank")
 

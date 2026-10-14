@@ -5,6 +5,10 @@ This is the one eligibility decision used by every regression-reporting path (th
 ``nightly_compare.py``, ``make gap-issues`` / ``gap_to_issue.py`` and
 ``file_regression_issue.py``).
 
+A baseline trial is any baseline-arm run (``compare_runs.run_arm``): the group's first run
+(``role: baseline``) or a later repeat of the baseline condition (``role: candidate``,
+``arm: baseline``). A candidate-arm run on the baseline side, or the reverse, is not comparable.
+
 An *independent trial* is one run directory: one complete benchmark command with its own
 ``run.yaml`` and raw result file. Pedantic rounds, rows and operations inside one result file are
 never counted as trials. Run directories that repeat a ``run_id`` or an identical raw result file
@@ -14,8 +18,8 @@ Decisions (``decision`` in the report, with the exit code):
 
 - ``error`` (2): a run or its raw result is missing, unreadable or invalid. Never a pass.
 - ``not_comparable`` (3): a trial pair fails the ``compare_runs.py`` compatibility checks
-  (identity, roles, group, operations, units), or one side mixes software or benchmark source
-  revisions, or a source revision is not pinned.
+  (identity, comparison arms, group, operations, units), or one side mixes software or
+  benchmark source revisions, or a source revision is not pinned.
 - ``insufficient_evidence`` (0): fewer than ``--min-trials`` independent trials on either side.
   Per-operation results are listed as advisory only.
 - ``equivalent`` (0): every operation is within the noise band (``|change| <= --noise``).
@@ -86,6 +90,8 @@ def _trial_summary(run: Mapping[str, object]) -> dict[str, object]:
     return {
         "run_id": run.get("run_id"),
         "date": run.get("date"),
+        "role": run.get("role"),
+        "arm": run.get("arm"),
         "dir": run.get("dir"),
         "results_path": run.get("results_path"),
         "comparable_group": run.get("comparable_group"),

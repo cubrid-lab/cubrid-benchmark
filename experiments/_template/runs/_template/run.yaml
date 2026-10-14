@@ -1,7 +1,8 @@
 run_id: "YYYY-MM-DD_label"
 date: "ISO 8601"
 label: "descriptive-label"
-role: baseline  # baseline | candidate
+role: baseline  # baseline | candidate: first run of the group, or a later run
+arm: baseline  # baseline | candidate: condition measured; a repeat of the baseline is role candidate, arm baseline
 compares_to: null  # run_id of baseline if this is candidate
 comparable_group: "machine-cpu-docker-dbversion"
 

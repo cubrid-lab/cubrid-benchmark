@@ -37,7 +37,9 @@ from compare_runs import (  # noqa: E402
     IDENTITY_KEYS,
     UNKNOWN,
     _parse_run_yaml,
+    arm_problems,
     derive_comparable_group,
+    run_arm,
 )
 
 DRIVER_PACKAGES = ("pycubrid", "sqlalchemy-cubrid", "SQLAlchemy", "pytest-benchmark")
@@ -186,12 +188,16 @@ def render_run_yaml(
     software: Mapping[str, object],
     notes: str,
     measurement: Mapping[str, object] | None = None,
+    arm: str | None = None,
 ) -> str:
     lines = [
         f"run_id: {_yaml_value(run_id)}",
         f"date: {_yaml_value(date)}",
         f"label: {_yaml_value(label)}",
         f"role: {role}",
+        # The condition measured: a repeat of the baseline condition is role candidate, arm
+        # baseline.
+        f"arm: {arm or role}",
         "compares_to: null",
         f"comparable_group: {_yaml_value(derive_comparable_group(identity))}",
         "",
@@ -243,6 +249,9 @@ def _cmd_capture(args: argparse.Namespace) -> int:
     if (out_dir / "run.yaml").exists():
         sys.stderr.write(f"ERROR: {out_dir / 'run.yaml'} already exists; runs are immutable\n")
         return 2
+    if args.role == "baseline" and args.arm not in (None, "baseline"):
+        sys.stderr.write("ERROR: --role baseline (the first run of a group) is the baseline arm\n")
+        return 2
     identity = capture_identity(args, env)
     unknown = [key for key in IDENTITY_KEYS if identity[key] in ("", UNKNOWN)]
     software: dict[str, object] = {
@@ -291,6 +300,7 @@ def _cmd_capture(args: argparse.Namespace) -> int:
             date=now.isoformat().replace("+00:00", "Z"),
             label=args.label,
             role=args.role,
+            arm=args.arm,
             identity=identity,
             software=software,
             notes=notes,
@@ -306,20 +316,26 @@ def _cmd_capture(args: argparse.Namespace) -> int:
 
 
 def select_baselines(candidate_dir: Path, search_roots: list[Path]) -> tuple[list[Path], str]:
-    """Every compatible ``role: baseline`` run, oldest first, or ``[]`` with the reason.
+    """Every compatible baseline-arm run, oldest first, or ``[]`` with the reason.
 
-    Each returned run directory is one independent baseline trial.
+    A baseline-arm run is the group's first run (``role: baseline``) or a later repeat of the
+    baseline condition (``role: candidate``, ``arm: baseline``); see ``compare_runs.run_arm``.
+    Each returned run directory is one independent baseline trial. The candidate itself is
+    never returned.
     """
     candidate = _parse_run_yaml(candidate_dir / "run.yaml")
     identity = candidate.get("comparison_identity")
     if not isinstance(identity, Mapping):
         return [], "candidate run.yaml has no comparison_identity"
     group = candidate.get("comparable_group")
+    candidate_path = candidate_dir.resolve()
     matches: list[tuple[str, Path]] = []
     for root in search_roots:
         for run_yaml in sorted(root.glob("runs/*/run.yaml")):
             meta = _parse_run_yaml(run_yaml)
-            if meta.get("role") != "baseline":
+            if run_yaml.parent.resolve() == candidate_path:
+                continue
+            if arm_problems(meta, "baseline") or run_arm(meta) != "baseline":
                 continue
             if meta.get("comparable_group") != group:
                 continue
@@ -328,7 +344,7 @@ def select_baselines(candidate_dir: Path, search_roots: list[Path]) -> tuple[lis
             matches.append((str(meta.get("date", "")), run_yaml.parent))
     if not matches:
         return [], (
-            f"not comparable / needs fresh baseline: no role=baseline run with comparable_group "
+            f"not comparable / needs fresh baseline: no baseline-arm run with comparable_group "
             f"{group!r} and an identical comparison_identity under "
             f"{', '.join(str(root) for root in search_roots)}"
         )
@@ -337,7 +353,7 @@ def select_baselines(candidate_dir: Path, search_roots: list[Path]) -> tuple[lis
 
 
 def select_baseline(candidate_dir: Path, search_roots: list[Path]) -> tuple[Path | None, str]:
-    """Return the newest compatible ``role: baseline`` run, or ``None`` with the reason."""
+    """Return the newest compatible baseline-arm run, or ``None`` with the reason."""
     baselines, reason = select_baselines(candidate_dir, search_roots)
     return (baselines[-1] if baselines else None), reason
 
@@ -362,6 +378,14 @@ def build_parser() -> argparse.ArgumentParser:
     capture.add_argument("--out-dir", required=True)
     capture.add_argument("--label", required=True)
     capture.add_argument("--role", choices=["baseline", "candidate"], default="candidate")
+    capture.add_argument(
+        "--arm",
+        choices=["baseline", "candidate"],
+        help=(
+            "Condition measured (default: the role). Record a repeat of the baseline condition "
+            "as --role candidate --arm baseline so it counts as a baseline trial."
+        ),
+    )
     capture.add_argument("--results", help="Raw result JSON to copy to raw/results.json")
     capture.add_argument(
         "--results-module",
