@@ -128,9 +128,12 @@ Failure handling:
   is uploaded, and a missing file never adds a second, misleading failure.
 - `scripts/check_required_results.py` is the separate gate. A lane that measured successfully
   but lacks a required result (or has an empty pytest-benchmark file) fails there.
-- In the full suite, Python Tier 0 and Tier 1 are required. Python extended/Tier 2, TypeScript,
-  Go, Rust and the benchforge report steps are optional (`continue-on-error`). Their outcomes are
-  listed in the job summary and as warnings by the last step.
+- In the full suite, Python Tier 0 and Tier 1 are required. The rest is optional
+  (`continue-on-error`): Python extended/Tier 2, the TypeScript, Go and Rust tracks (including
+  their toolchain setup, whose failure skips only that track and never falls back to a
+  preinstalled toolchain) and the benchforge report steps. Their outcomes are listed in the job
+  summary and as warnings. The full suite's required-result check runs only after Python Tier 1
+  succeeded, so a Tier 1 failure is not followed by a second error.
 - `workflow_dispatch` with `inject_failure=true` makes the representative lane fail right after
   its Tier 0 smoke, to check this behaviour on demand.
 

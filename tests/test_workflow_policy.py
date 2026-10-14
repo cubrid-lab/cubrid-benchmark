@@ -174,6 +174,30 @@ def test_injected_failure_precedes_measurement_and_needs_dispatch() -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("setup", "dependents"),
+    [
+        ("setup_node", ["ts_install"]),
+        ("setup_go", ["go_tier0", "go_tier1", "go_tier1_extended"]),
+        ("setup_rust", ["rust_tier0", "rust_tier1"]),
+    ],
+)
+def test_optional_toolchain_setup_cannot_stop_python(setup: str, dependents: list[str]) -> None:
+    steps = {step.get("id"): step for step in _steps("full-suite")}
+    assert steps[setup]["continue-on-error"] is True
+    for dependent in dependents:
+        assert steps[dependent]["if"] == f"steps.{setup}.outcome == 'success'", dependent
+    for ts_step in ("ts_tier0", "ts_tier1", "ts_tier1_extended"):
+        assert steps[ts_step]["if"] == "steps.ts_install.outcome == 'success'"
+
+
+def test_artifact_names_are_unique_per_attempt() -> None:
+    for job_name in ("representative", "full-suite"):
+        for step in _steps(job_name):
+            if str(step.get("uses", "")).startswith("actions/upload-artifact@"):
+                assert "${{ github.run_attempt }}" in step["with"]["name"], step["name"]
+
+
 def test_cubrid_only_lanes_do_not_use_mysql() -> None:
     for job_name in ("cubrid-smoke", "representative"):
         job = JOBS[job_name]
@@ -186,10 +210,15 @@ def test_cubrid_only_lanes_do_not_use_mysql() -> None:
 
 
 def test_full_suite_required_and_optional_tracks() -> None:
-    for name in ("Run Python Tier 0", "Run Python Tier 1"):
-        assert "continue-on-error" not in _step("full-suite", name)
+    for name in ("Run Python Tier 0", "Run Python Tier 1", "Install Python dependencies"):
+        step = _step("full-suite", name)
+        assert "continue-on-error" not in step and "if" not in step, name
+    required = _step("full-suite", "Verify required results")
+    # Only after a successful Tier 1, so a Tier 1 failure is not followed by a second error.
+    assert required["if"] == "always() && steps.python_tier1.outcome == 'success'"
     outcomes = _step("full-suite", "Report optional track outcomes")
     assert outcomes["if"] == "always()"
+    assert "--lane outcomes" in outcomes["run"]
     reported = str(outcomes["env"]["OUTCOMES"])
     for step in _steps("full-suite"):
         if step.get("continue-on-error"):
@@ -239,7 +268,7 @@ class TestRequiredResults:
         rc = check_required_results.main(
             [
                 "--lane",
-                "full",
+                "outcomes",
                 "--dir",
                 str(tmp_path),
                 "--outcomes",

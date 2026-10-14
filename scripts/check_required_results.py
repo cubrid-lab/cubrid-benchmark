@@ -5,7 +5,7 @@ not followed by misleading "no files found" errors. This check is the separate g
 a *successful* required measurement from passing without its evidence.
 
     python scripts/check_required_results.py --lane representative --dir results/representative
-    python scripts/check_required_results.py --lane full --dir results --outcomes "a=success"
+    python scripts/check_required_results.py --lane outcomes --dir results --outcomes "a=success"
 
 ``--outcomes`` (full lane) lists optional track outcomes as ``name=outcome`` pairs. Optional
 failures are reported as warnings and in the job summary; they do not fail this step.
@@ -29,6 +29,8 @@ REQUIRED: dict[str, tuple[str, ...]] = {
         "comparison/regression_report.json",
     ),
     "full": ("python_tier1.json",),
+    # Report optional track outcomes only; nothing is required.
+    "outcomes": (),
 }
 PYTEST_BENCHMARK_FILES = {"python_tier1_pycubrid.json", "python_tier1.json"}
 
@@ -72,8 +74,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--outcomes", default="")
     args = parser.parse_args(argv)
 
-    lines = [f"### Required results ({args.lane} lane)", ""]
+    lines: list[str] = []
     problems = missing_results(args.lane, Path(args.dir))
+    if REQUIRED[args.lane]:
+        lines += [f"### Required results ({args.lane} lane)", ""]
     for relative in REQUIRED[args.lane]:
         lines.append(
             f"- `{relative}`: {'missing' if any(relative in p for p in problems) else 'ok'}"

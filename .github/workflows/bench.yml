@@ -249,17 +249,25 @@ jobs:
         with:
           python-version: "3.11"
 
+      # Optional toolchains: a setup failure skips only that track (no fallback to the
+      # runner's preinstalled version) and is reported with the optional outcomes.
       - name: Setup Node.js
+        id: setup_node
+        continue-on-error: true
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "20"
 
       - name: Setup Go
+        id: setup_go
+        continue-on-error: true
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: "1.22"
 
       - name: Setup Rust
+        id: setup_rust
+        continue-on-error: true
         uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master, toolchain pinned below
         with:
           toolchain: "1.75.0"
@@ -271,6 +279,7 @@ jobs:
 
       - name: Install TypeScript dependencies
         id: ts_install
+        if: steps.setup_node.outcome == 'success'
         continue-on-error: true
         run: cd typescript && npm ci
 
@@ -301,41 +310,49 @@ jobs:
 
       - name: Run TypeScript Tier 0
         id: ts_tier0
+        if: steps.ts_install.outcome == 'success'
         continue-on-error: true
         run: make tier0-ts
 
       - name: Run TypeScript Tier 1
         id: ts_tier1
+        if: steps.ts_install.outcome == 'success'
         continue-on-error: true
         run: make tier1-ts
 
       - name: Run TypeScript Tier 1 Extended
         id: ts_tier1_extended
+        if: steps.ts_install.outcome == 'success'
         continue-on-error: true
         run: make tier1-ts-extended
 
       - name: Run Go Tier 0
         id: go_tier0
+        if: steps.setup_go.outcome == 'success'
         continue-on-error: true
         run: make tier0-go
 
       - name: Run Go Tier 1
         id: go_tier1
+        if: steps.setup_go.outcome == 'success'
         continue-on-error: true
         run: make tier1-go
 
       - name: Run Go Tier 1 Extended
         id: go_tier1_extended
+        if: steps.setup_go.outcome == 'success'
         continue-on-error: true
         run: make tier1-go-extended
 
       - name: Run Rust Tier 0
         id: rust_tier0
+        if: steps.setup_rust.outcome == 'success'
         continue-on-error: true
         run: make tier0-rust
 
       - name: Run Rust Tier 1
         id: rust_tier1
+        if: steps.setup_rust.outcome == 'success'
         continue-on-error: true
         run: make tier1-rust
 
@@ -486,7 +503,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: benchforge-v2-results-${{ github.run_id }}
+          name: benchforge-v2-results-${{ github.run_id }}-${{ github.run_attempt }}
           path: /tmp/bench-results/benchforge_v2/*.json
           if-no-files-found: warn
 
@@ -505,10 +522,17 @@ jobs:
           fail-on-alert: false
           summary-always: true
 
+      - name: Verify required results
+        if: always() && steps.python_tier1.outcome == 'success'
+        run: python3 scripts/check_required_results.py --lane full --dir results
+
       - name: Report optional track outcomes
         if: always()
         env:
           OUTCOMES: >-
+            setup-node=${{ steps.setup_node.outcome }}
+            setup-go=${{ steps.setup_go.outcome }}
+            setup-rust=${{ steps.setup_rust.outcome }}
             typescript-install=${{ steps.ts_install.outcome }}
             python-tier1-extended=${{ steps.python_tier1_extended.outcome }}
             python-tier2=${{ steps.python_tier2.outcome }}
@@ -522,7 +546,7 @@ jobs:
             rust-tier1=${{ steps.rust_tier1.outcome }}
             download-previous-benchforge=${{ steps.download_previous.outcome }}
             benchforge-reports=${{ steps.benchforge_reports.outcome }}
-        run: python3 scripts/check_required_results.py --lane full --dir results --outcomes "$OUTCOMES"
+        run: python3 scripts/check_required_results.py --lane outcomes --dir results --outcomes "$OUTCOMES"
 
   matrix-benchmark:
     if: github.event_name == 'workflow_dispatch' && inputs.lane == 'matrix'
