@@ -38,6 +38,9 @@ IDENTITY_KEYS = (
     "measurement_protocol",
 )
 
+# Throughput units, where a larger value is better; the comparator's verdicts assume that.
+SUPPORTED_UNITS = ("ops/sec", "scans/sec")
+
 RESULT_PRIORITY = (
     "results.json",
     "summary.json",
@@ -167,10 +170,12 @@ def _normalize_named_results(entries: list[dict[str, object]]) -> dict[str, dict
         value = _coerce_float(entry.get("value"))
         if not isinstance(name, str) or value is None:
             continue
+        if name in operations:
+            raise ValueError(f"Ambiguous operation name {name!r}: it appears more than once")
         operations[name] = {
             "name": name,
             "value": value,
-            "unit": entry.get("unit", "ops/sec"),
+            "unit": entry.get("unit"),
             "source": "normalized",
         }
     return operations
@@ -411,9 +416,19 @@ def _operation_problems(
         if not isinstance(baseline_entry, Mapping) or not isinstance(candidate_entry, Mapping):
             problems.append(f"operation {name} has no result entry")
             continue
-        baseline_unit = baseline_entry.get("unit") or "ops/sec"
-        candidate_unit = candidate_entry.get("unit") or "ops/sec"
-        if baseline_unit != candidate_unit:
+        baseline_unit = baseline_entry.get("unit")
+        candidate_unit = candidate_entry.get("unit")
+        unsupported = [
+            f"{label} {unit!r}"
+            for label, unit in (("baseline", baseline_unit), ("candidate", candidate_unit))
+            if unit not in SUPPORTED_UNITS
+        ]
+        if unsupported:
+            problems.append(
+                f"operation {name} has a missing or unsupported unit ({', '.join(unsupported)}); "
+                f"supported: {', '.join(SUPPORTED_UNITS)}"
+            )
+        elif baseline_unit != candidate_unit:
             problems.append(
                 f"operation {name} unit differs (baseline {baseline_unit!r}, "
                 f"candidate {candidate_unit!r})"

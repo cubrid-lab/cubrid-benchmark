@@ -338,8 +338,9 @@ jobs:
             --transaction-policy "autocommit=false; one commit per write round" \
             --measurement-protocol "pytest-benchmark pedantic; 1 warm-up + 5 rounds; untimed setup/teardown" \
             --cubrid-image cubrid/cubrid:11.2
+          # Keep the whole candidate run (run.yaml + raw/) in the uploaded reports artifact.
           mkdir -p results/reports/regression
-          cp "$candidate_dir/run.yaml" results/reports/regression/candidate_run.yaml
+          cp -R "$candidate_dir" results/reports/regression/candidate
           printf 'dir=%s\n' "$candidate_dir" >> "$GITHUB_OUTPUT"
 
       - name: Compare nightly run against a compatible baseline

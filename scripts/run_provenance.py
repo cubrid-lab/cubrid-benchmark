@@ -79,11 +79,13 @@ def _host_class(env: Mapping[str, str], fixed_host: str | None) -> str:
     if fixed_host:
         return f"fixed:{fixed_host}"
     if env.get("GITHUB_ACTIONS") == "true":
-        environment = env.get("RUNNER_ENVIRONMENT", "github-hosted")
-        image = env.get("ImageOS", UNKNOWN)
-        version = env.get("ImageVersion", UNKNOWN)
-        return f"{environment}:{image}:{version}"
-    return f"local:{platform.node() or UNKNOWN}"
+        parts = [env.get("RUNNER_ENVIRONMENT"), env.get("ImageOS"), env.get("ImageVersion")]
+        # A partly measured runner class is not an identity: two such hosts must not match.
+        if not all(parts):
+            return UNKNOWN
+        return ":".join(str(part) for part in parts)
+    node = platform.node()
+    return f"local:{node}" if node else UNKNOWN
 
 
 def _docker_version() -> str:
@@ -102,17 +104,25 @@ def _cubrid_build(host: str, port: int, database: str) -> str:
         import pycubrid
     except ImportError:
         return UNKNOWN
+    # Any failure (connect, query or close) leaves the field unknown, which blocks comparison.
     try:
         conn = pycubrid.connect(host=host, port=port, database=database, user="dba", password="")
-    except Exception:  # noqa: BLE001 - provenance capture reports unknown instead of failing
+    except Exception:  # noqa: BLE001
         return UNKNOWN
+    build = UNKNOWN
     try:
         cursor = conn.cursor()
         cursor.execute("SELECT version()")
         row = cursor.fetchone()
-        return str(row[0]) if row else UNKNOWN
-    finally:
+        if row and row[0]:
+            build = str(row[0])
+    except Exception:  # noqa: BLE001
+        build = UNKNOWN
+    try:
         conn.close()
+    except Exception:  # noqa: BLE001
+        pass
+    return build
 
 
 def _package_versions() -> dict[str, str]:
@@ -138,7 +148,7 @@ def capture_identity(args: argparse.Namespace, env: Mapping[str, str]) -> dict[s
     return {
         "host_class": _host_class(env, args.fixed_host),
         "cpu": _cpu_model(),
-        "cores": os.cpu_count() or 0,
+        "cores": os.cpu_count() or UNKNOWN,
         "os": _os_name(),
         "kernel": platform.release() or UNKNOWN,
         "docker": _docker_version(),

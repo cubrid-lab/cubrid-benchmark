@@ -107,11 +107,12 @@ any of the following holds:
 - either run lacks `comparison_identity`, or has an unknown field in it
 - a group does not match the group derived from its own identity (it was copied or edited)
 - any identity field differs
-- the operation sets or units differ
+- the operation sets differ
+- a unit is missing, is not a supported throughput unit (`ops/sec`, `scans/sec`), or differs
 
-Name-keyed results that repeat a benchmark name are rejected as ambiguous. The 2026-03
-`baseline-multilang` Python Tier 1 file stores pycubrid and PyMySQL benchmarks under the same
-names, for example.
+Name-keyed results that repeat a benchmark name (pytest-benchmark or normalized lists) are
+rejected as ambiguous. For example, the 2026-03 `baseline-multilang` Python Tier 1 file stores
+pycubrid and PyMySQL benchmarks under the same names.
 
 Runs recorded before this rule have no measured identity. `make compare` passes
 `--allow-legacy-group-match` so that two such historical runs can still be compared by their

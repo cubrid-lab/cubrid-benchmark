@@ -237,7 +237,7 @@ class TestComparator:
             role="candidate",
             identity=_identity(),
             ops={"insert": 100.0, "update": 1.0},
-            unit="rows/sec",
+            unit="scans/sec",
         )
 
         reasons = _compare(baseline, candidate)["summary"]["reasons"]
@@ -251,6 +251,33 @@ class TestComparator:
         # names, so a name-keyed comparison silently kept only one of each pair.
         with pytest.raises(ValueError, match="Ambiguous operation name"):
             compare_runs._load_run(HISTORICAL_BASELINE)
+
+    def test_duplicate_names_in_normalized_list_are_ambiguous(self, tmp_path: Path) -> None:
+        run = _write_run(tmp_path / "b", role="baseline", identity=_identity(), ops=OPS)
+        (run / "raw" / "results.json").write_text(
+            json.dumps(_results(OPS) + _results({"insert": 1.0})), encoding="utf-8"
+        )
+
+        with pytest.raises(ValueError, match="Ambiguous operation name 'insert'"):
+            compare_runs._load_run(run)
+
+    @pytest.mark.parametrize("unit", ["ms", None])
+    def test_unsupported_or_missing_unit_is_not_comparable(
+        self, tmp_path: Path, unit: str | None
+    ) -> None:
+        baseline = _write_run(tmp_path / "b", role="baseline", identity=_identity(), ops=OPS)
+        candidate = _write_run(tmp_path / "c", role="candidate", identity=_identity(), ops=OPS)
+        for run in (baseline, candidate):
+            entries = [
+                {"name": name, "value": value} | ({"unit": unit} if unit else {})
+                for name, value in OPS.items()
+            ]
+            (run / "raw" / "results.json").write_text(json.dumps(entries), encoding="utf-8")
+
+        report = _compare(baseline, candidate)
+
+        assert report["summary"]["overall_status"] == "not_comparable"
+        assert any("unsupported unit" in reason for reason in report["summary"]["reasons"])
 
     def test_duplicate_pytest_names_are_ambiguous(self) -> None:
         payload = {
@@ -457,7 +484,87 @@ class TestCapture:
         assert identity["docker"] == "unknown"
 
 
+class TestUnmeasuredFields:
+    @pytest.mark.parametrize("missing", ["RUNNER_ENVIRONMENT", "ImageOS", "ImageVersion"])
+    def test_partly_measured_runner_class_is_unknown(self, missing: str) -> None:
+        env = {
+            "GITHUB_ACTIONS": "true",
+            "RUNNER_ENVIRONMENT": "github-hosted",
+            "ImageOS": "ubuntu24",
+            "ImageVersion": "20261005.1",
+        }
+        env.pop(missing)
+
+        assert run_provenance._host_class(env, None) == "unknown"
+
+    def test_missing_hostname_is_unknown(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(run_provenance.platform, "node", lambda: "")
+
+        assert run_provenance._host_class({}, None) == "unknown"
+
+    def test_unmeasured_core_count_is_unknown(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(run_provenance, "_docker_version", lambda: "28.0.4")
+        monkeypatch.setattr(run_provenance, "_image_digest", lambda image: "sha256:abc")
+        monkeypatch.setattr(run_provenance, "_cubrid_build", lambda *a: "11.4.6.1963")
+        monkeypatch.setattr(run_provenance.os, "cpu_count", lambda: None)
+        namespace = argparse.Namespace(
+            fixed_host="bench-01",
+            cubrid_image="cubrid/cubrid:11.4",
+            cubrid_host="localhost",
+            cubrid_port=1,
+            cubrid_db="benchdb",
+            scenario="python-tier1",
+            workload_revision="r",
+            schema="s",
+            data_count=1,
+            transaction_policy="t",
+            measurement_protocol="m",
+        )
+
+        assert run_provenance.capture_identity(namespace, {})["cores"] == "unknown"
+
+    @pytest.mark.parametrize("failing", ["cursor", "execute", "fetchone", "close"])
+    def test_database_failures_leave_build_unknown(
+        self, monkeypatch: pytest.MonkeyPatch, failing: str
+    ) -> None:
+        def boom(*args: object) -> object:
+            raise RuntimeError(failing)
+
+        class Cursor:
+            def execute(self, sql: str) -> None:
+                if failing == "execute":
+                    boom()
+
+            def fetchone(self) -> tuple[str]:
+                if failing == "fetchone":
+                    boom()
+                return ("11.4.6.1963",)
+
+        class Conn:
+            def cursor(self) -> Cursor:
+                if failing == "cursor":
+                    boom()
+                return Cursor()
+
+            def close(self) -> None:
+                if failing == "close":
+                    boom()
+
+        fake = type(sys)("pycubrid")
+        fake.connect = lambda **kwargs: Conn()  # type: ignore[attr-defined]
+        monkeypatch.setitem(sys.modules, "pycubrid", fake)
+
+        build = run_provenance._cubrid_build("localhost", 1, "benchdb")
+
+        assert build == ("11.4.6.1963" if failing == "close" else "unknown")
+
+
 class TestWorkflowWiring:
+    def test_candidate_run_is_uploaded_with_its_raw_results(self) -> None:
+        text = WORKFLOW.read_text(encoding="utf-8")
+
+        assert 'cp -R "$candidate_dir" results/reports/regression/candidate' in text
+
     def test_nightly_never_copies_baseline_identity(self) -> None:
         text = WORKFLOW.read_text(encoding="utf-8")
 
