@@ -76,6 +76,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   decision, not a claim about MySQL or PyMySQL performance.
 
 ### Fixed
+- An explicit `arm: null` (or empty `arm`) in `run.yaml` is now rejected as not comparable, and
+  such a run is never selected as a baseline. Only a run without an `arm` key falls back to its
+  `role` (`compare_runs.run_arm()`). Every stored run resolves to the same arm as before.
 - Repeated runs of the baseline condition now count as baseline trials. A run records its
   comparison `arm` (`baseline` or `candidate`) next to its lifecycle `role`. A repeat of the
   baseline condition is `role: candidate`, `arm: baseline` (`run_provenance.py capture --arm

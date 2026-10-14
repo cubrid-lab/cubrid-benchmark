@@ -116,8 +116,9 @@ any of the following holds:
 
 - either run's group is missing or blank
 - either `role` is not `baseline` or `candidate`, or the comparison arms are not `baseline` and
-  `candidate`. A run's arm is its `arm` field, or its `role` when `arm` is absent; a
-  `role: baseline` run must be the baseline arm
+  `candidate`. A run's arm is its `arm` field, or its `role` only when the `arm` key is
+  absent (an explicit `arm: null` or empty value is rejected); a `role: baseline` run must be the
+  baseline arm
 - either run lacks `comparison_identity`, or has an unknown field in it
 - a group does not match the group derived from its own identity (it was copied or edited)
 - any identity field differs

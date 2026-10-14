@@ -182,7 +182,7 @@ Comparisons are only valid between runs in the **same comparable group**.
    `role` is the run's place in that lifecycle. `arm` (`baseline` or `candidate`, default: the role)
    is the condition it measured: a later repeat of the baseline condition is `role: candidate`,
    `arm: baseline` (`run_provenance.py capture --arm baseline`) and counts as a baseline trial.
-   A `role: baseline` run is always the baseline arm. Runs without `arm` keep their role as arm.
+   A `role: baseline` run is always the baseline arm. Runs without an `arm` key keep their role as arm; an explicit `arm: null` or empty value is rejected.
 5. **Never overwrite a run folder** — every execution creates a new immutable run
 
 **Example lifecycle:**

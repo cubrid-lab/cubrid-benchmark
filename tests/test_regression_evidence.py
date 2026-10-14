@@ -298,6 +298,26 @@ class TestBaselineArm:
         baselines, _ = run_provenance.select_baselines(candidates[0], [tmp_path / "exp"])
         assert baselines == []
 
+    @pytest.mark.parametrize("value", ["null", '""', ""])
+    def test_an_explicit_null_or_empty_arm_is_not_the_role(
+        self, tmp_path: Path, value: str
+    ) -> None:
+        # Only an absent arm key falls back to the role; a present but empty arm is malformed.
+        run = _run(tmp_path / "exp" / "runs", "2026-10-01_bad", "baseline", BASE_OPS)
+        text = (run / "run.yaml").read_text(encoding="utf-8")
+        lines = [
+            f"arm: {value}".rstrip() if ln.startswith("arm:") else ln for ln in text.splitlines()
+        ]
+        (run / "run.yaml").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        candidates = self._candidates(tmp_path)
+
+        report = evidence.evaluate([run], candidates)
+        baselines, _ = run_provenance.select_baselines(candidates[0], [tmp_path / "exp"])
+
+        assert report["decision"] == "not_comparable"
+        assert any("baseline run has arm" in r for r in report["reasons"])
+        assert baselines == []
+
     def test_stored_runs_without_arm_keep_their_role(self, tmp_path: Path) -> None:
         legacy = _run(tmp_path / "exp" / "runs", "2026-10-01_old", "baseline", BASE_OPS)
         text = (legacy / "run.yaml").read_text(encoding="utf-8")
