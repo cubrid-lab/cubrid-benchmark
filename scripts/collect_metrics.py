@@ -16,7 +16,8 @@ Units: Linux reports ``ru_maxrss`` in KiB and macOS in bytes (converted to KiB h
 platforms the unit is unknown and the value is reported as unavailable.
 
 Exit status: the command's own non-zero status is returned unchanged. When the command succeeds
-but its result file is missing or not valid JSON, the exit status is 2 and ``result_status``
+but does not write its result file (any earlier file is removed before the command starts), or
+writes one that is not valid UTF-8 JSON, the exit status is 2 and ``result_status``
 records which.
 """
 
@@ -40,7 +41,7 @@ def _read_result(path: Path) -> tuple[str, object]:
         return "missing", None
     try:
         return "ok", json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
+    except ValueError as exc:  # JSONDecodeError and UnicodeDecodeError
         return "invalid_json", str(exc)
 
 
@@ -117,6 +118,8 @@ def main(argv: list[str] | None = None) -> int:
         Path(args.metrics_json) if args.metrics_json else result_path.with_suffix(".metrics.json")
     )
 
+    # The command must write the result now: a stale file from an earlier run is not its output.
+    result_path.unlink(missing_ok=True)
     usage_before = resource.getrusage(resource.RUSAGE_CHILDREN)
     completed = subprocess.run(command, check=False)
     usage_after = resource.getrusage(resource.RUSAGE_CHILDREN)

@@ -197,7 +197,9 @@ Metrics artifact fields (`metrics.memory`):
   `peak_rss_delta_kb` (the after-minus-before delta, valid only when the before value is 0)
 
 Top-level `result_status` is `ok`, `missing` or `invalid_json`. A failing command keeps its own
-exit status. A successful command whose result file is missing or invalid exits 2.
+exit status. The result file is removed before the command starts, so a stale file from an
+earlier run is never reported as this run's output. A successful command whose result file is
+then missing, not UTF-8 or not valid JSON exits 2.
 
 ## Language-Specific Drivers
 

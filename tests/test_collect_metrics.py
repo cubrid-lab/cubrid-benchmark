@@ -56,17 +56,24 @@ def _run(
     before: int,
     after: int,
     returncode: int,
-    result: str | None,
+    result: str | bytes | None,
+    stale: str | None = None,
 ) -> tuple[int, dict[str, Any]]:
+    result_path = tmp_path / "result.json"
+    if stale is not None:
+        result_path.write_text(stale, encoding="utf-8")
+
+    def fake_run(cmd: list[str], check: bool) -> SimpleNamespace:
+        if isinstance(result, bytes):
+            result_path.write_bytes(result)
+        elif result is not None:
+            result_path.write_text(result, encoding="utf-8")
+        return SimpleNamespace(returncode=returncode)
+
     readings = iter([SimpleNamespace(ru_maxrss=before), SimpleNamespace(ru_maxrss=after)])
     monkeypatch.setattr(collect_metrics.resource, "getrusage", lambda who: next(readings))
-    monkeypatch.setattr(
-        collect_metrics.subprocess, "run", lambda cmd, check: SimpleNamespace(returncode=returncode)
-    )
+    monkeypatch.setattr(collect_metrics.subprocess, "run", fake_run)
     monkeypatch.setattr(collect_metrics.sys, "platform", "linux")
-    result_path = tmp_path / "result.json"
-    if result is not None:
-        result_path.write_text(result, encoding="utf-8")
     metrics_path = tmp_path / "metrics.json"
     rc = collect_metrics.main(
         ["--result-json", str(result_path), "--metrics-json", str(metrics_path), "--", "true"]
@@ -93,14 +100,34 @@ class TestWrapper:
         assert payload["metrics"]["returncode"] == 5
         assert payload["result_status"] == "missing"
 
-    @pytest.mark.parametrize(("result", "status"), [(None, "missing"), ("{oops", "invalid_json")])
+    @pytest.mark.parametrize(
+        ("result", "status"),
+        [(None, "missing"), ("{oops", "invalid_json"), (b"\xff\xfe{", "invalid_json")],
+    )
     def test_successful_command_without_valid_result_fails(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, result: str | None, status: str
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, result: str | bytes | None, status: str
     ) -> None:
         rc, payload = _run(tmp_path, monkeypatch, before=0, after=900, returncode=0, result=result)
 
         assert rc == collect_metrics.EXIT_RESULT_MISSING
         assert payload["result_status"] == status
+
+    def test_stale_result_from_an_earlier_run_is_not_accepted(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        rc, payload = _run(
+            tmp_path,
+            monkeypatch,
+            before=0,
+            after=900,
+            returncode=0,
+            result=None,
+            stale='{"benchmarks": ["old"]}',
+        )
+
+        assert rc == collect_metrics.EXIT_RESULT_MISSING
+        assert payload["result_status"] == "missing"
+        assert payload["result"] == {}
 
     def test_reused_wrapper_reports_unavailable(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]

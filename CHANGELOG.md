@@ -79,8 +79,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - `scripts/collect_metrics.py` no longer reports a misleading peak-RSS delta. It records
   `child_peak_rss_kb`, the measured child's own peak RSS, only when the wrapper had no earlier
   child. Otherwise the value is `null` with a reason and a warning. It also converts macOS bytes
-  to KiB, marks unknown platform units as unavailable, records `result_status`, and exits 2 when a
-  successful command leaves a missing or invalid result file instead of crashing.
+  to KiB, marks unknown platform units as unavailable, records `result_status`, removes a stale result file before
+  the command starts, and exits 2 when a successful command leaves a missing or invalid (including
+  non-UTF-8) result file instead of crashing.
   `peak_rss_delta_kb` and the `_kb` before/after fields remain as deprecated compatibility fields.
 - `scripts/normalize_results.py` and `scripts/emit_benchforge_v2.py` no longer write
   `mean + z * stddev` normal-model estimates as `p95_latency` / `p99_latency`. Those keys now hold
