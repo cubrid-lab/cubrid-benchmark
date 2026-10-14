@@ -331,6 +331,7 @@ jobs:
             --label nightly-python-tier1 \
             --role candidate \
             --results results/python_tier1.json \
+            --results-module bench_pycubrid.py \
             --scenario python-tier1 \
             --workload-revision "$workload_revision" \
             --schema "bench_driver_pycubrid (id INT PRIMARY KEY, name VARCHAR(100), amount INT)" \

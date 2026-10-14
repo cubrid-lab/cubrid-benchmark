@@ -406,6 +406,81 @@ class TestBaselineSelectionAndNightlyDecision:
         assert outputs == {"status": "fail", "exit_code": "1", "open_issue": "true"}
 
 
+class TestNightlyMixedResults:
+    def _mixed_payload(self) -> dict[str, object]:
+        benchmarks = []
+        for module, scale in (("bench_pycubrid.py", 1.0), ("bench_pymysql.py", 9.0)):
+            for name, value in OPS.items():
+                benchmarks.append(
+                    {
+                        "name": name,
+                        "fullname": f"python/{module}::{name}",
+                        "stats": {"ops": value * scale},
+                    }
+                )
+        return {"benchmarks": benchmarks}
+
+    def test_mixed_tier1_file_is_compared_after_module_selection(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        identity = _identity(host_class="fixed:bench-01")
+        monkeypatch.setattr(run_provenance, "capture_identity", lambda args, env: identity)
+        mixed = tmp_path / "python_tier1.json"
+        mixed.write_text(json.dumps(self._mixed_payload()), encoding="utf-8")
+        experiment = tmp_path / "experiment"
+        baseline = _write_run(
+            experiment / "runs" / "2026-10-01_base", role="baseline", identity=identity, ops={}
+        )
+        (baseline / "raw" / "results.json").write_text(
+            json.dumps(
+                run_provenance.select_module_results(self._mixed_payload(), "bench_pycubrid.py")
+            ),
+            encoding="utf-8",
+        )
+        candidate = tmp_path / "candidate"
+        argv = ["capture", "--out-dir", str(candidate), "--label", "nightly"]
+        argv += ["--results", str(mixed), "--results-module", "bench_pycubrid.py"]
+        for flag in ("--scenario", "--workload-revision", "--schema", "--transaction-policy"):
+            argv += [flag, "x"]
+        argv += ["--measurement-protocol", "x", "--data-count", "1", "--cubrid-image", "i"]
+
+        assert run_provenance.main(argv) == 0
+        kept = json.loads((candidate / "raw" / "results.json").read_text())["benchmarks"]
+        assert {entry["fullname"].split("::")[0] for entry in kept} == {"python/bench_pycubrid.py"}
+
+        output = tmp_path / "gh"
+        rc = nightly_compare.main(
+            ["--candidate-dir", str(candidate), "--search", str(experiment)]
+            + ["--output-dir", str(tmp_path / "out"), "--github-output", str(output)]
+        )
+
+        assert rc == 0
+        assert "status=pass" in output.read_text()
+
+    def test_unfiltered_mixed_file_is_an_input_error(self, tmp_path: Path) -> None:
+        identity = _identity()
+        experiment = tmp_path / "experiment"
+        _write_run(experiment / "runs" / "b", role="baseline", identity=identity, ops=OPS)
+        candidate = _write_run(tmp_path / "c", role="candidate", identity=identity, ops=OPS)
+        (candidate / "raw" / "results.json").write_text(
+            json.dumps(self._mixed_payload()), encoding="utf-8"
+        )
+
+        rc = nightly_compare.main(
+            ["--candidate-dir", str(candidate), "--search", str(experiment)]
+            + ["--output-dir", str(tmp_path / "out")]
+        )
+
+        assert rc == compare_runs.EXIT_ERROR
+
+    def test_module_without_results_is_rejected(self) -> None:
+        with pytest.raises(ValueError, match="no benchmarks from bench_x.py"):
+            run_provenance.select_module_results(self._mixed_payload(), "bench_x.py")
+
+    def test_workflow_selects_the_pycubrid_module(self) -> None:
+        assert "--results-module bench_pycubrid.py" in WORKFLOW.read_text(encoding="utf-8")
+
+
 class TestCapture:
     def test_capture_measures_this_host_and_round_trips(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -453,7 +528,7 @@ class TestCapture:
         identity = meta["comparison_identity"]
         assert identity["host_class"] == "github-hosted:ubuntu24:20261005.1"
         assert identity["cubrid_image_digest"] == "sha256:abc"
-        assert identity["measurement_protocol"] == "m 1"
+        assert identity["measurement_protocol"] == "m #1"
         assert meta["comparable_group"] == compare_runs.derive_comparable_group(identity)
         assert meta["software_under_test"]["benchmark_source_sha"] == "0123456789abcdef"
         assert (out_dir / "raw" / "results.json").is_file()
@@ -482,6 +557,40 @@ class TestCapture:
 
         assert identity["host_class"] == "fixed:bench-01"
         assert identity["docker"] == "unknown"
+
+
+class TestSerialization:
+    def test_hash_in_values_is_preserved_and_distinct(self, tmp_path: Path) -> None:
+        with_hash = _write_run(
+            tmp_path / "a",
+            role="baseline",
+            identity=_identity(measurement_protocol="m #1"),
+            ops=OPS,
+        )
+        without = _write_run(
+            tmp_path / "b",
+            role="candidate",
+            identity=_identity(measurement_protocol="m 1"),
+            ops=OPS,
+        )
+
+        a = compare_runs._parse_run_yaml(with_hash / "run.yaml")
+        b = compare_runs._parse_run_yaml(without / "run.yaml")
+
+        assert a["comparison_identity"]["measurement_protocol"] == "m #1"
+        assert a["comparable_group"] != b["comparable_group"]
+        assert a["comparable_group"] == compare_runs.derive_comparable_group(
+            a["comparison_identity"]
+        )
+
+    def test_quoted_scalars_are_decoded_and_comments_stripped(self, tmp_path: Path) -> None:
+        path = tmp_path / "run.yaml"
+        path.write_text(
+            'a: "x \\"#1\\" y"  # comment\nb: plain # comment\nc: \'q # r\'\n',
+            encoding="utf-8",
+        )
+
+        assert compare_runs._parse_run_yaml(path) == {"a": 'x "#1" y', "b": "plain", "c": "q # r"}
 
 
 class TestUnmeasuredFields:

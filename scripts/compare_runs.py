@@ -59,9 +59,13 @@ def _parse_scalar(raw_value: str) -> object:
         return True
     if value in {"false", "False"}:
         return False
-    if value.startswith('"') and value.endswith('"'):
-        return value[1:-1]
-    if value.startswith("'") and value.endswith("'"):
+    if value.startswith('"') and value.endswith('"') and len(value) >= 2:
+        try:
+            decoded = json.loads(value)
+        except json.JSONDecodeError:
+            return value[1:-1]
+        return decoded if isinstance(decoded, str) else value[1:-1]
+    if value.startswith("'") and value.endswith("'") and len(value) >= 2:
         return value[1:-1]
     try:
         if any(marker in value for marker in (".", "e", "E")):
@@ -69,6 +73,23 @@ def _parse_scalar(raw_value: str) -> object:
         return int(value)
     except ValueError:
         return value
+
+
+def _strip_comment(value: str) -> str:
+    """Drop a trailing ``# comment``; a ``#`` inside a quoted scalar is part of the value."""
+    if value[:1] in {'"', "'"}:
+        quote = value[0]
+        index = 1
+        while index < len(value):
+            char = value[index]
+            if quote == '"' and char == "\\":
+                index += 2
+                continue
+            if char == quote:
+                return value[: index + 1]
+            index += 1
+        return value
+    return value.split("#", 1)[0].rstrip()
 
 
 def _parse_run_yaml(path: Path) -> dict[str, object]:
@@ -98,7 +119,7 @@ def _parse_run_yaml(path: Path) -> dict[str, object]:
             stack.append((indent, child))
             continue
 
-        current[key] = _parse_scalar(value.split("#", 1)[0].rstrip())
+        current[key] = _parse_scalar(_strip_comment(value))
 
     return root
 

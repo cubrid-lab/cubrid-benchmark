@@ -172,8 +172,7 @@ def _yaml_value(value: object) -> str:
         return str(value)
     if value is None:
         return "null"
-    # run.yaml readers treat "#" as a comment start, even inside quotes.
-    return json.dumps(str(value).replace("#", ""))
+    return json.dumps(str(value))
 
 
 def render_run_yaml(
@@ -186,11 +185,6 @@ def render_run_yaml(
     software: Mapping[str, object],
     notes: str,
 ) -> str:
-    # Derive the group from exactly the values that are written (and read back).
-    identity = {
-        key: value.replace("#", "") if isinstance(value, str) else value
-        for key, value in identity.items()
-    }
     lines = [
         f"run_id: {_yaml_value(run_id)}",
         f"date: {_yaml_value(date)}",
@@ -214,6 +208,27 @@ def render_run_yaml(
             lines.append(f"  {key}: {_yaml_value(value)}")
     lines.extend(["", "artifacts:", "  raw_dir: raw/", "", f"notes: {_yaml_value(notes)}", ""])
     return "\n".join(lines)
+
+
+def select_module_results(payload: object, module: str) -> dict[str, object]:
+    """Keep only the pytest-benchmark entries collected from ``module`` (a file name).
+
+    One ``pytest`` invocation over several benchmark modules reuses test names (for example
+    ``bench_pycubrid.py`` and ``bench_pymysql.py``); the candidate must hold one module only.
+    """
+    if not isinstance(payload, dict) or not isinstance(payload.get("benchmarks"), list):
+        raise ValueError("--results-module needs a pytest-benchmark JSON file")
+    kept = [
+        entry
+        for entry in payload["benchmarks"]
+        if isinstance(entry, dict)
+        and Path(str(entry.get("fullname", "")).split("::", 1)[0]).name == module
+    ]
+    if not kept:
+        raise ValueError(f"no benchmarks from {module} in the results file")
+    selected = dict(payload)
+    selected["benchmarks"] = kept
+    return selected
 
 
 def _cmd_capture(args: argparse.Namespace) -> int:
@@ -243,7 +258,15 @@ def _cmd_capture(args: argparse.Namespace) -> int:
     if args.results:
         raw_dir = out_dir / "raw"
         raw_dir.mkdir(exist_ok=True)
-        shutil.copyfile(args.results, raw_dir / "results.json")
+        if args.results_module:
+            payload = select_module_results(
+                json.loads(Path(args.results).read_text(encoding="utf-8")), args.results_module
+            )
+            (raw_dir / "results.json").write_text(
+                json.dumps(payload, indent=2) + "\n", encoding="utf-8"
+            )
+        else:
+            shutil.copyfile(args.results, raw_dir / "results.json")
     (out_dir / "run.yaml").write_text(
         render_run_yaml(
             run_id=run_id,
@@ -309,6 +332,10 @@ def build_parser() -> argparse.ArgumentParser:
     capture.add_argument("--label", required=True)
     capture.add_argument("--role", choices=["baseline", "candidate"], default="candidate")
     capture.add_argument("--results", help="Raw result JSON to copy to raw/results.json")
+    capture.add_argument(
+        "--results-module",
+        help="Keep only pytest-benchmark entries from this module file (e.g. bench_pycubrid.py)",
+    )
     capture.add_argument("--scenario", required=True)
     capture.add_argument("--workload-revision", required=True)
     capture.add_argument("--schema", required=True)
@@ -337,7 +364,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    return args.func(args)
+    try:
+        return args.func(args)
+    except (OSError, ValueError) as exc:
+        sys.stderr.write(f"ERROR: {exc}\n")
+        return 2
 
 
 if __name__ == "__main__":
