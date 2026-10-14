@@ -51,9 +51,9 @@ def cubrid_conn() -> Generator[DBConnection, None, None]:
 def mysql_conn() -> Generator[DBConnection, None, None]:
     """Historical PyMySQL connection, created only when a historical MySQL module asks for it.
 
-    The maintained Python track is CUBRID-only. Only the archived reproduction modules
+    The maintained Python track is CUBRID-only. Only the archived MySQL modules
     (``bench_tier0_mysql.py``, ``bench_pymysql*.py``) request this fixture; ``make
-    historical-python-mysql`` runs them with ``requirements-historical-mysql.txt``.
+    historical-python-mysql`` runs them once ``requirements-historical-mysql.txt`` is installed.
     """
     pymysql = importlib.import_module("pymysql")
 

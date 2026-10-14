@@ -32,10 +32,15 @@ make all       # Run all benchmarks
 
 The maintained Python track measures pycubrid and sqlalchemy-cubrid on the same CUBRID server and
 needs neither MySQL nor PyMySQL. The earlier pycubrid-vs-PyMySQL runs stay as historical
-experiments. `make historical-python-mysql` (MySQL 8.0 plus
-`python/requirements-historical-mysql.txt`) reproduces them. It is opt-in, is not part of
-`make all` or CI, and its results are not a current comparison. Retiring the active comparison
-is a project-scope decision, not evidence that MySQL or PyMySQL is slow or broken.
+experiments; reproduce them from the commands and revisions recorded in their experiment folders.
+
+`make historical-python-mysql` only runs the archived PyMySQL and SQLAlchemy+MySQL pytest modules
+at the current revision. It needs a MySQL 8.0 server and a prior
+`pip install -r python/requirements-historical-mysql.txt`. It is opt-in, is not part of
+`make all` or CI, and is not a protocol-accurate reproduction of those experiments.
+
+Retiring the active comparison is a project-scope decision, not evidence that MySQL or PyMySQL is
+slow or broken.
 
 ## Version Matrix
 

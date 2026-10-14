@@ -186,7 +186,7 @@ Based on benchmark results:
 
 | Language | CUBRID vs MySQL | Notes |
 |----------|----------------|-------|
-| Python | ~4-6× slower (historical, 2026-03; no longer measured) | pycubrid is pure Python; PyMySQL has C extensions |
+| Python | ~4-6× slower (historical, 2026-03; no longer measured) | Both pycubrid and PyMySQL are pure-Python drivers; the gap combines DBMS (CUBRID vs MySQL) and driver differences and does not isolate either |
 | TypeScript | ~0.4-0.5× (CUBRID faster) | cubrid-client uses efficient binary protocol |
 | Go | ~1:1 (near parity) | Both drivers use native implementations |
 

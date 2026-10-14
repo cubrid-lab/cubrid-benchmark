@@ -77,9 +77,11 @@ tier1-python-extended:
 tier2-python:
 	cd python && pytest bench_sqlalchemy_cubrid.py --benchmark-json=../results/tier2_python.json -v
 
-# Historical cross-database reproduction (opt-in, never part of `all` or CI). Needs a MySQL 8.0
-# server and `pip install -r python/requirements-historical-mysql.txt`. Results are not current
-# comparisons; see experiments/baseline-multilang and experiments/benchforge-pycubrid-vs-pymysql.
+# Archived MySQL-module runner (opt-in, never part of `all` or CI). Runs the retired PyMySQL and
+# SQLAlchemy+MySQL pytest modules at the current revision against a MySQL 8.0 server; install
+# `python/requirements-historical-mysql.txt` first. It is NOT a protocol-accurate reproduction of
+# experiments/baseline-multilang or experiments/benchforge-pycubrid-vs-pymysql (use the commands
+# and revisions recorded in those experiments), and its results are not current comparisons.
 historical-python-mysql:
 	mkdir -p results
 	python3 scripts/apply_schema.py --with-mysql

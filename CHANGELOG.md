@@ -13,8 +13,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   also seeds MySQL). `python/conftest.py` no longer opens a MySQL connection or creates MySQL
   tables for every session; `mysql_conn` is created only when a historical module requests it.
   PyMySQL left `python/requirements.txt`. The historical PyMySQL sources stay at their paths and
-  run only through the opt-in `make historical-python-mysql`, which installs from
-  `python/requirements-historical-mysql.txt`. The CUBRID-only workflow lanes now use the
+  run only through the opt-in `make historical-python-mysql`, after a separate
+  `pip install -r python/requirements-historical-mysql.txt`. That target runs the archived modules
+  at the current revision; it is not a protocol-accurate reproduction of the archived
+  experiments. The CUBRID-only workflow lanes now use the
   repository conftest. Historical cross-database experiments are unchanged. This is a scope
   decision, not a claim about MySQL or PyMySQL performance.
 
