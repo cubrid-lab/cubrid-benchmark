@@ -119,10 +119,11 @@ Runs recorded before this rule have no measured identity. `make compare` passes
 operator-written group strings; the report marks that basis as legacy. Automated alerts never use
 that flag.
 
-The nightly workflow captures its candidate on the runner and selects a baseline with
-`scripts/nightly_compare.py` only among `role: baseline` runs with an identical identity. When
-none exists it reports `not comparable / needs fresh baseline`, keeps the candidate `run.yaml`
-and report in the workflow artifacts, and does not open an issue.
+The scheduled `representative` workflow lane captures its candidate on the runner and selects a
+baseline with `scripts/nightly_compare.py` only among `role: baseline` runs with an identical
+identity. When none exists it reports `not comparable / needs fresh baseline` and keeps the
+candidate run and report in the workflow artifacts. No workflow lane opens a regression issue:
+a single scheduled run is not issue evidence.
 
 GitHub-hosted runners are a shared, changing pool and their throughput is noisy. A run on one of
 them is comparable only with a baseline captured on the same runner image and version, and never

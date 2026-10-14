@@ -1,19 +1,82 @@
 name: Benchmark
 
+# Lanes (see RUNBOOK.md, "Scheduled and manual benchmark runs"):
+# - checks / cubrid-smoke: pull requests and pushes to main that touch benchmark code. Offline
+#   tests, workflow policy and a CUBRID-only correctness smoke; never a throughput gate.
+# - representative: the bounded CUBRID-only lane. One weekly schedule and manual dispatch.
+# - full-suite / matrix: manual dispatch only (lane=full or lane=matrix).
 on:
   pull_request:
+    paths:
+      - ".github/workflows/**"
+      - "python/**"
+      - "scripts/**"
+      - "tests/**"
+      - "experiments/tier1-python-workload/*.py"
+      - "requirements-dev.txt"
+      - "Makefile"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/**"
+      - "python/**"
+      - "scripts/**"
+      - "tests/**"
+      - "experiments/tier1-python-workload/*.py"
+      - "requirements-dev.txt"
+      - "Makefile"
   schedule:
-    - cron: "0 3 * * *"
     - cron: "0 4 * * 0"
   workflow_dispatch:
+    inputs:
+      lane:
+        description: "Lane to run"
+        type: choice
+        options: [representative, full, matrix]
+        default: representative
+      inject_failure:
+        description: "Fail the representative lane after its smoke (verifies failure handling)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}-${{ inputs.lane || 'auto' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
-  tier0-pr:
-    if: github.event_name == 'pull_request'
+  checks:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Install test dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Offline tests and workflow policy
+        run: python -m pytest tests -q -p no:cacheprovider
+
+  cubrid-smoke:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       cubrid:
-        image: cubrid/cubrid:11.2
+        image: cubrid/cubrid:11.4
         env:
           CUBRID_DB: benchdb
         ports:
@@ -23,67 +86,136 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 12
-      mysql:
-        image: mysql:8.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: python -m pip install -r python/requirements.txt
+
+      - name: Wait for CUBRID
+        run: python scripts/wait_for_cubrid.py --timeout 180
+
+      - name: CUBRID-only Tier 0 and verified Tier 1 workload (no timing)
+        working-directory: python
         env:
-          MYSQL_ROOT_PASSWORD: bench
-          MYSQL_DATABASE: benchdb
+          PYTHONPATH: ../experiments/tier1-python-workload
+        run: >-
+          python -m pytest --noconftest -p cubrid_only_plugin -p no:cacheprovider
+          bench_tier0_cubrid.py bench_pycubrid.py --benchmark-disable -v
+
+  representative:
+    if: >-
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && inputs.lane == 'representative')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      OUT: results/representative
+    services:
+      cubrid:
+        image: cubrid/cubrid:11.4
+        env:
+          CUBRID_DB: benchdb
         ports:
-          - 3306:3306
+          - 33000:33000
         options: >-
-          --health-cmd "mysqladmin ping -h127.0.0.1 -uroot -pbench --silent"
+          --health-cmd "bash -c 'echo > /dev/tcp/127.0.0.1/33000'"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 12
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
-          python-version: "3.11"
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
+          python-version: "3.12"
 
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
           python -m pip install -r python/requirements.txt
+          mkdir -p "$OUT"
+          python -m pip freeze > "$OUT/pip-freeze.txt"
+          printf 'sha=%s\nref=%s\nevent=%s\nrun=%s/%s/actions/runs/%s\n' \
+            "$GITHUB_SHA" "$GITHUB_REF" "$GITHUB_EVENT_NAME" \
+            "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" > "$OUT/source.txt"
 
-      - name: Install TypeScript dependencies
-        run: cd typescript && npm ci
+      - name: Wait for CUBRID
+        run: python scripts/wait_for_cubrid.py --timeout 180
 
-      - name: Wait for databases
-        run: ./scripts/wait_for_db.sh
+      - name: CUBRID-only Tier 0 smoke
+        working-directory: python
+        env:
+          PYTHONPATH: ../experiments/tier1-python-workload
+        run: >-
+          python -m pytest --noconftest -p cubrid_only_plugin -p no:cacheprovider
+          bench_tier0_cubrid.py -v --junitxml="../$OUT/tier0.xml"
 
-      - name: Apply schema and seed data
-        run: make seed
+      - name: Injected failure (manual verification only)
+        if: github.event_name == 'workflow_dispatch' && inputs.inject_failure
+        run: |
+          echo "::error::Injected failure requested through workflow_dispatch; no measurement follows."
+          exit 1
 
-      - name: Run Python Tier 0
-        run: make tier0
+      - name: CUBRID-only Tier 1 pycubrid measurement
+        working-directory: python
+        env:
+          PYTHONPATH: ../experiments/tier1-python-workload
+        run: >-
+          python -m pytest --noconftest -p cubrid_only_plugin -p no:cacheprovider
+          bench_pycubrid.py -v --benchmark-json="../$OUT/python_tier1_pycubrid.json"
 
-      - name: Run TypeScript Tier 0
-        run: make tier0-ts
+      - name: Capture candidate provenance
+        run: |
+          workload_revision="$(cd python && python -c 'import bench_pycubrid as b; print(b.WORKLOAD_REVISION)')"
+          python scripts/run_provenance.py capture \
+            --out-dir "$OUT/candidate" \
+            --label representative-python-tier1 \
+            --role candidate \
+            --results "$OUT/python_tier1_pycubrid.json" \
+            --results-module bench_pycubrid.py \
+            --scenario python-tier1 \
+            --workload-revision "$workload_revision" \
+            --schema "bench_driver_pycubrid (id INT PRIMARY KEY, name VARCHAR(100), amount INT)" \
+            --data-count 10000 \
+            --transaction-policy "autocommit=false; one commit per write round" \
+            --measurement-protocol "pytest-benchmark pedantic; 1 warm-up + 5 rounds; untimed setup/teardown" \
+            --cubrid-image cubrid/cubrid:11.4
 
-      - name: Run Go Tier 0
-        run: make tier0-go
+      - name: Compare against a compatible baseline (report only)
+        run: |
+          # No regression issue is opened from this lane: single runs are not issue evidence.
+          python scripts/nightly_compare.py \
+            --candidate-dir "$OUT/candidate" \
+            --search experiments/tier1-python-workload \
+            --output-dir "$OUT/comparison"
+          cat "$OUT/comparison/regression_comment.md" >> "$GITHUB_STEP_SUMMARY"
 
-  nightly:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && github.event.schedule == '0 3 * * *')
+      - name: Verify required results
+        run: python scripts/check_required_results.py --lane representative --dir "$OUT"
+
+      - name: Upload representative artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: representative-${{ github.run_id }}-${{ github.run_attempt }}
+          path: results/representative/
+          if-no-files-found: warn
+
+  full-suite:
+    if: github.event_name == 'workflow_dispatch' && inputs.lane == 'full'
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     permissions:
       actions: read
       contents: write
-      issues: write
     services:
       cubrid:
         image: cubrid/cubrid:11.2
@@ -110,25 +242,33 @@ jobs:
           --health-retries 12
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.11"
 
+      # Optional toolchains: a setup failure skips only that track (no fallback to the
+      # runner's preinstalled version) and is reported with the optional outcomes.
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        id: setup_node
+        continue-on-error: true
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "20"
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        id: setup_go
+        continue-on-error: true
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: "1.22"
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+        id: setup_rust
+        continue-on-error: true
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master, toolchain pinned below
         with:
           toolchain: "1.75.0"
 
@@ -138,6 +278,9 @@ jobs:
           python -m pip install -r python/requirements.txt
 
       - name: Install TypeScript dependencies
+        id: ts_install
+        if: steps.setup_node.outcome == 'success'
+        continue-on-error: true
         run: cd typescript && npm ci
 
       - name: Wait for databases
@@ -146,73 +289,89 @@ jobs:
       - name: Apply schema and seed data
         run: make seed
 
+      # Required: Python Tier 0 and Tier 1 have no continue-on-error.
       - name: Run Python Tier 0
         run: make tier0
 
-      - name: Run TypeScript Tier 0
-        run: make tier0-ts
-
-      - name: Run Go Tier 0
-        run: make tier0-go
-
       - name: Run Python Tier 1
+        id: python_tier1
         run: make tier1-python
 
+      # Optional tracks: a failure is reported as a warning in the final step and job summary.
       - name: Run Python Tier 1 Extended
+        id: python_tier1_extended
+        continue-on-error: true
         run: make tier1-python-extended
 
       - name: Run Python Tier 2
+        id: python_tier2
+        continue-on-error: true
         run: make tier2-python
 
+      - name: Run TypeScript Tier 0
+        id: ts_tier0
+        if: steps.ts_install.outcome == 'success'
+        continue-on-error: true
+        run: make tier0-ts
+
       - name: Run TypeScript Tier 1
+        id: ts_tier1
+        if: steps.ts_install.outcome == 'success'
+        continue-on-error: true
         run: make tier1-ts
 
       - name: Run TypeScript Tier 1 Extended
+        id: ts_tier1_extended
+        if: steps.ts_install.outcome == 'success'
+        continue-on-error: true
         run: make tier1-ts-extended
 
+      - name: Run Go Tier 0
+        id: go_tier0
+        if: steps.setup_go.outcome == 'success'
+        continue-on-error: true
+        run: make tier0-go
+
       - name: Run Go Tier 1
+        id: go_tier1
+        if: steps.setup_go.outcome == 'success'
+        continue-on-error: true
         run: make tier1-go
 
       - name: Run Go Tier 1 Extended
+        id: go_tier1_extended
+        if: steps.setup_go.outcome == 'success'
+        continue-on-error: true
         run: make tier1-go-extended
 
       - name: Run Rust Tier 0
+        id: rust_tier0
+        if: steps.setup_rust.outcome == 'success'
+        continue-on-error: true
         run: make tier0-rust
 
       - name: Run Rust Tier 1
+        id: rust_tier1
+        if: steps.setup_rust.outcome == 'success'
+        continue-on-error: true
         run: make tier1-rust
 
-      - name: Normalize benchmark result
+      - name: Normalize and emit benchforge v2 results
         run: |
+          mkdir -p results/benchforge_v2
+          emit() {  # input suite tier
+            if [ ! -f "results/$1" ]; then
+              echo "::warning::results/$1 was not produced; skipping $2"
+              return 0
+            fi
+            python3 scripts/emit_benchforge_v2.py --input "results/$1" \
+              --output "results/benchforge_v2/$2.json" --suite-name "${2//_/-}" \
+              --tier "$3" --language python --driver mixed --database mixed
+          }
           python3 scripts/normalize_results.py results/python_tier1.json > results/normalized_python_tier1.json
-          python3 scripts/normalize_results.py results/python_tier1_extended.json > results/normalized_python_tier1_extended.json
-
-      - name: Emit benchforge v2 results
-        run: |
-          python3 scripts/emit_benchforge_v2.py \
-            --input results/python_tier1.json \
-            --output results/benchforge_v2/python_tier1.json \
-            --suite-name python-tier1 \
-            --tier tier1 \
-            --language python \
-            --driver mixed \
-            --database mixed
-          python3 scripts/emit_benchforge_v2.py \
-            --input results/python_tier1_extended.json \
-            --output results/benchforge_v2/python_tier1_extended.json \
-            --suite-name python-tier1-extended \
-            --tier tier1-extended \
-            --language python \
-            --driver mixed \
-            --database mixed
-          python3 scripts/emit_benchforge_v2.py \
-            --input results/tier2_python.json \
-            --output results/benchforge_v2/python_tier2.json \
-            --suite-name python-tier2 \
-            --tier tier2 \
-            --language python \
-            --driver mixed \
-            --database mixed
+          emit python_tier1.json python_tier1 tier1
+          emit python_tier1_extended.json python_tier1_extended tier1-extended
+          emit tier2_python.json python_tier2 tier2
 
       - name: Find previous benchforge v2 artifact
         id: previous_benchforge
@@ -292,19 +451,24 @@ jobs:
           PY
 
       - name: Download previous benchforge v2 artifact
+        id: download_previous
         if: steps.previous_benchforge.outputs.artifact_name != ''
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ steps.previous_benchforge.outputs.run_id }}
+          ARTIFACT: ${{ steps.previous_benchforge.outputs.artifact_name }}
         run: |
           mkdir -p results/baseline_v2
-          gh run download "${{ steps.previous_benchforge.outputs.run_id }}" \
-            -n "${{ steps.previous_benchforge.outputs.artifact_name }}" \
-            -D results/baseline_v2
+          gh run download "$RUN_ID" -n "$ARTIFACT" -D results/baseline_v2
 
       - name: Generate benchforge reports
+        id: benchforge_reports
+        continue-on-error: true
         run: |
           mkdir -p results/reports
           for artifact in results/benchforge_v2/*.json; do
+            [ -f "$artifact" ] || continue
             suite_name="$(basename "${artifact%.json}")"
             output_dir="results/reports/${suite_name}"
             baseline_artifact="results/baseline_v2/${suite_name}.json"
@@ -320,83 +484,31 @@ jobs:
             fi
           done
 
-      - name: Capture candidate provenance
-        id: candidate
-        run: |
-          # Measured on this runner. Never copy comparable_group or identity from a baseline.
-          candidate_dir="$RUNNER_TEMP/nightly-python-tier1"
-          workload_revision="$(cd python && python3 -c 'import bench_pycubrid as b; print(b.WORKLOAD_REVISION)')"
-          python3 scripts/run_provenance.py capture \
-            --out-dir "$candidate_dir" \
-            --label nightly-python-tier1 \
-            --role candidate \
-            --results results/python_tier1.json \
-            --results-module bench_pycubrid.py \
-            --scenario python-tier1 \
-            --workload-revision "$workload_revision" \
-            --schema "bench_driver_pycubrid (id INT PRIMARY KEY, name VARCHAR(100), amount INT)" \
-            --data-count 10000 \
-            --transaction-policy "autocommit=false; one commit per write round" \
-            --measurement-protocol "pytest-benchmark pedantic; 1 warm-up + 5 rounds; untimed setup/teardown" \
-            --cubrid-image cubrid/cubrid:11.2
-          # Keep the whole candidate run (run.yaml + raw/) in the uploaded reports artifact.
-          mkdir -p results/reports/regression
-          cp -R "$candidate_dir" results/reports/regression/candidate
-          printf 'dir=%s\n' "$candidate_dir" >> "$GITHUB_OUTPUT"
-
-      - name: Compare nightly run against a compatible baseline
-        id: compare_regression
-        env:
-          CANDIDATE_DIR: ${{ steps.candidate.outputs.dir }}
-        run: |
-          # A missing or incompatible baseline yields "not comparable / needs fresh baseline"
-          # with open_issue=false; only an input error fails this step.
-          python3 scripts/nightly_compare.py \
-            --candidate-dir "$CANDIDATE_DIR" \
-            --search experiments/tier1-python-workload \
-            --output-dir results/reports/regression \
-            --github-output "$GITHUB_OUTPUT"
-          cat results/reports/regression/regression_comment.md >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Create issue for nightly regression
-        if: steps.compare_regression.outputs.open_issue == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          existing=$(gh issue list \
-            --search "Nightly benchmark regression detected: Python Tier 1 in:title" \
-            --state open --json number --jq '.[0].number // empty')
-          if [ -n "$existing" ]; then
-            gh issue comment "$existing" --body-file results/reports/regression/regression_comment.md
-          else
-            gh issue create \
-              --title "Nightly benchmark regression detected: Python Tier 1" \
-              --body-file results/reports/regression/regression_comment.md
-          fi
-
       - name: Save results and clean working tree
+        if: always()
         run: |
-          cp -r results/ /tmp/bench-results/
-          git checkout -- results/
+          mkdir -p /tmp/bench-results
+          cp -r results/. /tmp/bench-results/
+          git checkout -- results/ 2>/dev/null || true
+
+      - name: Upload full-suite artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: full-suite-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/bench-results/
+          if-no-files-found: warn
 
       - name: Upload benchforge v2 artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: benchforge-v2-results-${{ github.run_id }}
+          name: benchforge-v2-results-${{ github.run_id }}-${{ github.run_attempt }}
           path: /tmp/bench-results/benchforge_v2/*.json
-          if-no-files-found: error
-
-      - name: Upload benchforge report artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: benchforge-reports-${{ github.run_id }}
-          path: /tmp/bench-results/reports/
-          if-no-files-found: error
+          if-no-files-found: warn
 
       - name: Publish benchmark report
-        uses: benchmark-action/github-action-benchmark@v1
+        uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc # v1.22.2
         with:
           name: Python Tier1 Benchmark
           tool: pytest
@@ -406,13 +518,40 @@ jobs:
           gh-pages-branch: gh-pages
           benchmark-data-dir-path: dev/bench
           alert-threshold: "110%"
-          comment-on-alert: true
+          comment-on-alert: false
           fail-on-alert: false
           summary-always: true
 
+      - name: Verify required results
+        if: always() && steps.python_tier1.outcome == 'success'
+        run: python3 scripts/check_required_results.py --lane full --dir results
+
+      - name: Report optional track outcomes
+        if: always()
+        env:
+          OUTCOMES: >-
+            setup-node=${{ steps.setup_node.outcome }}
+            setup-go=${{ steps.setup_go.outcome }}
+            setup-rust=${{ steps.setup_rust.outcome }}
+            typescript-install=${{ steps.ts_install.outcome }}
+            python-tier1-extended=${{ steps.python_tier1_extended.outcome }}
+            python-tier2=${{ steps.python_tier2.outcome }}
+            typescript-tier0=${{ steps.ts_tier0.outcome }}
+            typescript-tier1=${{ steps.ts_tier1.outcome }}
+            typescript-tier1-extended=${{ steps.ts_tier1_extended.outcome }}
+            go-tier0=${{ steps.go_tier0.outcome }}
+            go-tier1=${{ steps.go_tier1.outcome }}
+            go-tier1-extended=${{ steps.go_tier1_extended.outcome }}
+            rust-tier0=${{ steps.rust_tier0.outcome }}
+            rust-tier1=${{ steps.rust_tier1.outcome }}
+            download-previous-benchforge=${{ steps.download_previous.outcome }}
+            benchforge-reports=${{ steps.benchforge_reports.outcome }}
+        run: python3 scripts/check_required_results.py --lane outcomes --dir results --outcomes "$OUTCOMES"
+
   matrix-benchmark:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && github.event.schedule == '0 4 * * 0')
+    if: github.event_name == 'workflow_dispatch' && inputs.lane == 'matrix'
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -444,10 +583,10 @@ jobs:
           --health-retries 12
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -507,26 +646,27 @@ jobs:
           PY
 
       - name: Upload matrix result artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ steps.matrix_meta.outputs.artifact_name }}
           path: results/${{ steps.matrix_meta.outputs.result_file }}
 
   matrix-manifest:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && github.event.schedule == '0 4 * * 0')
+    if: github.event_name == 'workflow_dispatch' && inputs.lane == 'matrix'
     needs: matrix-benchmark
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
 
       - name: Download matrix result artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: python-tier1-*
           merge-multiple: true
@@ -536,7 +676,7 @@ jobs:
         run: python scripts/generate_manifest.py --results-dir results
 
       - name: Upload matrix manifest artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: python-tier1-matrix-manifest
           path: results/manifest.json

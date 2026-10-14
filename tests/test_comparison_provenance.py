@@ -669,22 +669,16 @@ class TestUnmeasuredFields:
 
 
 class TestWorkflowWiring:
-    def test_candidate_run_is_uploaded_with_its_raw_results(self) -> None:
-        text = WORKFLOW.read_text(encoding="utf-8")
-
-        assert 'cp -R "$candidate_dir" results/reports/regression/candidate' in text
-
-    def test_nightly_never_copies_baseline_identity(self) -> None:
+    def test_candidate_never_copies_baseline_identity(self) -> None:
         text = WORKFLOW.read_text(encoding="utf-8")
 
         assert 'baseline_meta["comparable_group"]' not in text
         assert "scripts/run_provenance.py capture" in text
         assert "scripts/nightly_compare.py" in text
 
-    def test_issue_step_runs_only_on_comparable_regression(self) -> None:
+    def test_no_lane_opens_regression_issues(self) -> None:
+        # Single runs are not issue evidence; see tests/test_workflow_policy.py for the rest.
         text = WORKFLOW.read_text(encoding="utf-8")
-        step = text.split("- name: Create issue for nightly regression", 1)[1]
-        condition = step.split("\n", 2)[1].strip()
 
-        # No status function: GitHub adds success(), so failed/cancelled jobs never file one.
-        assert condition == "if: steps.compare_regression.outputs.open_issue == 'true'"
+        assert "gh issue create" not in text
+        assert "issues: write" not in text

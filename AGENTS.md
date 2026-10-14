@@ -60,7 +60,7 @@ flowchart TD
 | `experiments/` | Self-contained experiment folders with metadata, raw data, and reports |
 | `scripts/normalize_results.py` | Parse pytest-benchmark JSON, Go benchstat, tinybench output → unified JSON |
 | `Makefile` | Orchestrate benchmark tiers and database lifecycle |
-| `.github/workflows/bench.yml` | Nightly CI: start DBs → run benchmarks → publish to GitHub Pages |
+| `.github/workflows/bench.yml` | PR checks, weekly CUBRID-only representative lane, manual full suite (see `RUNBOOK.md`) |
 
 ## Experiment Structure
 
@@ -330,17 +330,14 @@ Skipping any phase requires explicit justification. Trivial changes (typos, sing
 
 ## CI/CD
 
-### Nightly Workflow (`bench.yml`)
-1. Start CUBRID + MySQL via Docker Compose
-2. Wait for readiness
-3. Run schema + seed
-4. Execute Tier 0 (gate), then Tier 1 + Tier 2
-5. Normalize results to JSON
-6. Publish to GitHub Pages via `github-action-benchmark`
-
-### PR Workflow
-- Tier 0 only (functional gate)
-- Comment with regression alert if > 10% slower
+### Workflow lanes (`bench.yml`)
+- PR / push to `main` (code paths only): offline tests, workflow policy, CUBRID-only Tier 0 and
+  verified Tier 1 without timing. Never a throughput gate.
+- Weekly schedule and `workflow_dispatch lane=representative`: bounded CUBRID-only lane
+  (Tier 0, pycubrid Tier 1, provenance, report-only comparison).
+- `workflow_dispatch lane=full` / `lane=matrix`: legacy cross-language suite and matrix, manual
+  only; the full suite publishes to GitHub Pages.
+- Every job has a timeout, actions are SHA-pinned, and no lane opens issues. See `RUNBOOK.md`.
 
 ## Anti-Patterns
 - No hardcoded absolute performance expectations (hardware varies)
