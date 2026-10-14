@@ -105,7 +105,11 @@ class TestWrapper:
         [(None, "missing"), ("{oops", "invalid_json"), (b"\xff\xfe{", "invalid_json")],
     )
     def test_successful_command_without_valid_result_fails(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, result: str | bytes | None, status: str
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        result: str | bytes | None,
+        status: str,
     ) -> None:
         rc, payload = _run(tmp_path, monkeypatch, before=0, after=900, returncode=0, result=result)
 
