@@ -88,9 +88,11 @@ flowchart LR
 ### Secondary Metrics: Tail Latency and Memory
 
 - `p95_latency` and `p99_latency` are **observed** sample percentiles, in seconds, of the
-  per-round samples pytest-benchmark records in `stats.data`. A sample is one measured round
-  (`iterations` calls of the benchmarked function, for example the 10,000 statements of a Tier 1
-  operation), not a single SQL statement. They use linear interpolation between the two closest
+  per-round samples pytest-benchmark records in `stats.data`. pytest-benchmark stores each
+  round's duration divided by its `iterations`, so a sample is the mean time of one call of the
+  benchmarked function within a round. Python Tier 1 uses `iterations == 1`, so there a sample
+  is one whole call, for example the 10,000 statements of one operation. It is never the latency
+  of a single SQL statement. They use linear interpolation between the two closest
   ranks (Hyndman-Fan type 7, the `numpy.percentile` default) and are reported only with at least
   20 samples (p95) or 100 samples (p99). Otherwise the key is omitted and
   `latency_percentiles_unavailable` gives the sample count and reason. Python Tier 1 runs 5 rounds,
@@ -125,7 +127,7 @@ Normalized results follow the `github-action-benchmark` schema:
     "value": 95.4321,
     "range": "+/- 3.2%",
     "latency_samples": 5,
-    "latency_sample_source": "pytest-benchmark stats.data (seconds per measured round)",
+    "latency_sample_source": "pytest-benchmark stats.data (seconds per call: round duration / iterations)",
     "latency_quantile_method": "linear interpolation between closest ranks (Hyndman-Fan type 7)",
     "latency_percentiles_unavailable": "5 samples; p95 needs >= 20 samples, p99 needs >= 100 samples",
     "extra": "language=python tier=1 framework=pytest-benchmark"

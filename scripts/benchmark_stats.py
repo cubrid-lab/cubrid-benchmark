@@ -3,9 +3,11 @@
 Output contract shared by ``normalize_results.py`` and ``emit_benchforge_v2.py``:
 
 - ``p95_latency`` / ``p99_latency`` are **observed** sample percentiles, in seconds, computed
-  from the per-round samples pytest-benchmark stores in ``stats.data``. Each sample is the
-  duration of one measured round (``iterations`` calls of the benchmarked function), not of one
-  SQL statement.
+  from the per-round samples pytest-benchmark stores in ``stats.data``. Each sample is one
+  measured round's duration divided by its ``iterations``: the mean time of one call of the
+  benchmarked function within that round. With ``iterations == 1`` (Python Tier 1) it is the
+  duration of the one call, which itself runs many SQL statements; it is never the latency of
+  a single statement.
 - Method: linear interpolation between the two closest ranks (Hyndman and Fan type 7, the
   ``numpy.percentile`` / ``statistics.quantiles(method="inclusive")`` default).
 - A percentile is reported only with enough samples: ``MIN_SAMPLES[95] = 20`` and
@@ -22,7 +24,7 @@ import math
 from collections.abc import Mapping, Sequence
 
 QUANTILE_METHOD = "linear interpolation between closest ranks (Hyndman-Fan type 7)"
-SAMPLE_SOURCE = "pytest-benchmark stats.data (seconds per measured round)"
+SAMPLE_SOURCE = "pytest-benchmark stats.data (seconds per call: round duration / iterations)"
 MIN_SAMPLES = {95: 20, 99: 100}
 
 
@@ -33,7 +35,10 @@ class InvalidBenchmarkStats(ValueError):
 def _finite_number(value: object) -> float | None:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
-    number = float(value)
+    try:
+        number = float(value)
+    except OverflowError:  # a JSON integer beyond the float range
+        return None
     return number if math.isfinite(number) else None
 
 
@@ -44,7 +49,10 @@ def throughput(name: str, stats: Mapping[str, object]) -> float:
         raise InvalidBenchmarkStats(f"{name}: mean must be a finite positive number, got {mean!r}")
     raw_ops = stats.get("ops")
     if raw_ops is None:
-        return 1.0 / mean
+        derived = 1.0 / mean
+        if not math.isfinite(derived):
+            raise InvalidBenchmarkStats(f"{name}: 1 / mean is not finite (mean {mean!r})")
+        return derived
     ops = _finite_number(raw_ops)
     if ops is None or ops <= 0:
         raise InvalidBenchmarkStats(

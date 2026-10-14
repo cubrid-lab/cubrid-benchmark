@@ -111,6 +111,10 @@ class TestValidation:
             {"data": [0.01, float("nan")]},
             {"data": [0.01, -0.01]},
             {"data": "0.01"},
+            {"mean": 10**400},
+            {"ops": 10**400},
+            {"data": [0.01, 10**400]},
+            {"ops": None, "mean": 5e-324},
         ],
     )
     def test_invalid_stats_fail_explicitly(self, overrides: dict[str, object]) -> None:
