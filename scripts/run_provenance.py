@@ -244,6 +244,14 @@ def _cmd_capture(args: argparse.Namespace) -> int:
         "benchmark_source_dirty": _source_dirty(),
         "packages": _package_versions(),
     }
+    if args.versions_file:
+        # Verified by python_lanes.py verify-install: a source build records its exact commit,
+        # so two commits that report the same version stay distinguishable.
+        verified = json.loads(Path(args.versions_file).read_text(encoding="utf-8"))
+        for name, info in sorted(verified.get("packages", {}).items()):
+            if isinstance(info, dict) and info.get("source") == "vcs":
+                software[f"{name}_source_commit"] = info.get("commit_id")
+        software["verified_versions_file"] = Path(args.versions_file).name
     if env.get("GITHUB_RUN_ID"):
         software["github_run"] = (
             f"{env.get('GITHUB_SERVER_URL', 'https://github.com')}/"
@@ -350,6 +358,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--fixed-host", help="Name of a fixed benchmark machine (otherwise detected)"
     )
     capture.add_argument("--notes", default="")
+    capture.add_argument(
+        "--versions-file",
+        help="versions.json from python_lanes.py verify-install (records source commits)",
+    )
     capture.set_defaults(func=_cmd_capture)
 
     select = sub.add_parser("select-baseline", help="Find a compatible baseline run")

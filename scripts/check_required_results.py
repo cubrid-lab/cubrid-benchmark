@@ -28,7 +28,6 @@ REQUIRED: dict[str, tuple[str, ...]] = {
         "candidate/run.yaml",
         "candidate/raw/results.json",
         "comparison/regression_report.json",
-        "cell.json",
     ),
     "full": ("python_tier1.json",),
     # Report optional track outcomes only; nothing is required.

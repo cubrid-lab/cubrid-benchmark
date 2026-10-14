@@ -188,7 +188,13 @@ def test_pinned_required_steps_fail_the_job() -> None:
         assert "continue-on-error" not in step, name
         # No condition: GitHub's implicit success() skips them after a failure or cancellation.
         assert "if" not in step, name
-    assert _index("pinned", "Verify required results") < _index("pinned", "Upload cell artifacts")
+    # cell.json (the manifest entry) is written only after every required result passed.
+    assert (
+        _index("pinned", "Verify required results")
+        < _index("pinned", "Package cell")
+        < _index("pinned", "Upload cell artifacts")
+    )
+    assert "--versions-file" in _step("pinned", "Capture candidate provenance")["run"]
 
 
 def test_injected_failure_precedes_measurement_and_needs_dispatch() -> None:

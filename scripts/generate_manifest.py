@@ -69,6 +69,14 @@ def build_manifest(
             "driver_version": _require_string(payload, "driver_version", result_file),
             "result_file": result_file.relative_to(relative_base).as_posix(),
         }
+        declared = payload.get("result_file")
+        if isinstance(declared, str) and declared:
+            # A packaged cell (cell.json) names its measured result next to itself.
+            measured = result_file.parent / declared
+            if not measured.is_file():
+                raise ValueError(f"{result_file} declares a missing result_file {declared!r}")
+            entry["result_file"] = measured.relative_to(relative_base).as_posix()
+            entry["cell_file"] = result_file.relative_to(relative_base).as_posix()
         for optional in ("cell_id", "lane", "cubrid"):
             value = payload.get(optional)
             if isinstance(value, str) and value:

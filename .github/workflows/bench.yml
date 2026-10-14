@@ -234,7 +234,8 @@ jobs:
             --data-count 10000 \
             --transaction-policy "autocommit=false; one commit per write round" \
             --measurement-protocol "pytest-benchmark pedantic; 1 warm-up + 5 rounds; untimed setup/teardown" \
-            --cubrid-image "$IMAGE"
+            --cubrid-image "$IMAGE" \
+            --versions-file "$OUT/versions.json"
 
       - name: Compare against a compatible baseline (report only)
         run: |
@@ -245,6 +246,11 @@ jobs:
             --output-dir "$OUT/comparison"
           cat "$OUT/comparison/regression_comment.md" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Verify required results
+        run: python scripts/check_required_results.py --lane pinned --dir "$OUT"
+
+      # Last: cell.json exists only for a cell whose every required result passed, so the
+      # manifest never counts a failed cell as complete.
       - name: Package cell
         env:
           LANE: ${{ matrix.cell.lane }}
@@ -253,9 +259,6 @@ jobs:
         run: >-
           python scripts/python_lanes.py package-cell --dir "$OUT" --lane "$LANE"
           --python "$CELL_PYTHON" --cubrid "$CELL_CUBRID"
-
-      - name: Verify required results
-        run: python scripts/check_required_results.py --lane pinned --dir "$OUT"
 
       - name: Upload cell artifacts
         if: always()

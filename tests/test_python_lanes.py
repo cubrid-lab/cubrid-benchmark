@@ -216,6 +216,16 @@ class TestVerifyInstall:
         assert versions["packages"]["pycubrid"]["source"] == "vcs"
         assert versions["packages"]["pycubrid"]["commit_id"] == SHA
 
+    def test_source_install_with_stale_module_fails(self, fake_env: dict[str, Any]) -> None:
+        fake_env["dists"]["pycubrid"] = FakeDistribution(
+            "1.13.0.dev0",
+            {"url": "https://github.com/cubrid-lab/pycubrid", "vcs_info": {"commit_id": SHA}},
+        )
+        fake_env["dunder"] = "1.12.0"  # the import resolves to a different copy
+
+        with pytest.raises(python_lanes.LaneError, match="__version__"):
+            python_lanes.verify_install(PINS, SHA)
+
     def test_failed_source_install_fails(self, fake_env: dict[str, Any]) -> None:
         # The release is still installed: the requested source commit never replaced it.
         with pytest.raises(python_lanes.LaneError, match="source commit is None"):
@@ -281,6 +291,10 @@ class TestCellsAndManifest:
         assert sorted(entry["cell_id"] for entry in manifest["matrix"]) == sorted(
             cell["id"] for cell in cells
         )
+        for entry in manifest["matrix"]:
+            # Points at the measured result, not at the cell metadata.
+            assert entry["result_file"].endswith("/python_tier1_pycubrid.json")
+            assert entry["cell_file"].endswith("/cell.json")
         assert {entry["cubrid"] for entry in manifest["matrix"]} == {"10.2", "11.4"}
 
     def test_missing_failed_cell_fails_the_manifest(
@@ -301,3 +315,32 @@ class TestCellsAndManifest:
     def test_no_cells_at_all_reports_every_missing_cell(self, tmp_path: Path) -> None:
         with pytest.raises(ValueError, match="missing cells \\['release-py3.11-cubrid10.2'\\]"):
             generate_manifest.build_manifest(tmp_path, "*/cell.json", ["release-py3.11-cubrid10.2"])
+
+
+def test_capture_records_the_verified_source_commit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    run_provenance = cast(Any, importlib.import_module("run_provenance"))
+    compare_runs = cast(Any, importlib.import_module("compare_runs"))
+    for name, value in (
+        ("_docker_version", lambda: "28.0.4"),
+        ("_image_digest", lambda image: "sha256:abc"),
+        ("_cubrid_build", lambda *a: "11.4.6.1963"),
+    ):
+        monkeypatch.setattr(run_provenance, name, value)
+    versions = tmp_path / "versions.json"
+    versions.write_text(
+        json.dumps({"packages": {"pycubrid": {"source": "vcs", "commit_id": SHA}}}),
+        encoding="utf-8",
+    )
+    out = tmp_path / "candidate"
+    argv = ["capture", "--out-dir", str(out), "--label", "x", "--fixed-host", "h"]
+    for flag in ("--scenario", "--workload-revision", "--schema", "--transaction-policy"):
+        argv += [flag, "x"]
+    argv += ["--measurement-protocol", "x", "--data-count", "1", "--cubrid-image", "i"]
+    argv += ["--versions-file", str(versions)]
+
+    assert run_provenance.main(argv) == 0
+    software = compare_runs._parse_run_yaml(out / "run.yaml")["software_under_test"]
+    assert software["pycubrid_source_commit"] == SHA
+    assert software["verified_versions_file"] == "versions.json"

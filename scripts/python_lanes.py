@@ -133,7 +133,8 @@ def verify_install(pins: dict[str, str], source_sha: str | None) -> dict[str, ob
         module = importlib.import_module("pycubrid")
         dunder = getattr(module, "__version__", None)
         packages["pycubrid"]["__version__"] = dunder
-        if source_sha is None and dunder != packages["pycubrid"]["version"]:
+        # Release and source installs alike: the imported module must be the installed one.
+        if dunder != packages["pycubrid"]["version"]:
             problems.append(
                 f"pycubrid.__version__ {dunder!r} != metadata {packages['pycubrid']['version']!r}"
             )
