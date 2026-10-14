@@ -143,7 +143,9 @@ Use the following interpretation inside one comparable group:
 ### Threshold tuning for draft issue generation
 
 `scripts/gap_to_issue.py` converts `compare_runs.py` JSON output into draft GitHub issue markdown.
-Use it only for fail-level regressions inside one comparable group.
+Use it only for fail-level regressions inside one comparable group. `make gap-issues` runs the
+comparator without the legacy flag, so a pair without a matching measured `comparison_identity`
+stops with exit code `3` (not comparable) before any draft is written.
 
 - `--min-effect-size` defaults to `10.0` and should stay aligned with the issue-opening bar above.
 - `--min-replications` defaults to `3`, matching the minimum issue-worthy claim in this runbook.

@@ -82,6 +82,53 @@ Rules:
 3. Never overwrite an existing run folder; every execution is immutable evidence
 4. Benchmark reports must state which baseline a candidate run compares to
 
+### Measured comparison identity
+
+A `comparable_group` string is only an assertion unless the run also records what was measured.
+`scripts/run_provenance.py capture` measures the host running the benchmark and writes a run
+folder whose `run.yaml` holds:
+
+- `comparison_identity`: the fields that must be equal for a direct comparison. These are
+  `host_class` (the GitHub-hosted runner image and version, or `fixed:<name>` for a fixed benchmark
+  machine), `cpu`, `cores`, `os`, `kernel`, `docker`, `cubrid_image`, `cubrid_image_digest`,
+  `cubrid_build`, `python`, `scenario`, `workload_revision`, `schema`, `data_count`,
+  `transaction_policy` and `measurement_protocol`
+- `software_under_test`: what a regression comparison is expected to change (driver and
+  dialect versions, benchmark source SHA and whether the tree was dirty). It is recorded, but it
+  is not part of the identity
+- `comparable_group`: derived from `comparison_identity` (a readable prefix plus a hash of every
+  identity field), so it is never copied from another run
+
+`scripts/compare_runs.py` reports `not_comparable` (exit code `3`, no regression verdict) when
+any of the following holds:
+
+- either run's group is missing or blank
+- the roles are not `baseline` and `candidate`
+- either run lacks `comparison_identity`, or has an unknown field in it
+- a group does not match the group derived from its own identity (it was copied or edited)
+- any identity field differs
+- the operation sets differ
+- a unit is missing, is not a supported throughput unit (`ops/sec`, `scans/sec`), or differs
+
+Name-keyed results that repeat a benchmark name (pytest-benchmark or normalized lists) are
+rejected as ambiguous. For example, the 2026-03 `baseline-multilang` Python Tier 1 file stores
+pycubrid and PyMySQL benchmarks under the same names.
+
+Runs recorded before this rule have no measured identity. `make compare` passes
+`--allow-legacy-group-match` so that two such historical runs can still be compared by their
+operator-written group strings; the report marks that basis as legacy. Automated alerts never use
+that flag.
+
+The nightly workflow captures its candidate on the runner and selects a baseline with
+`scripts/nightly_compare.py` only among `role: baseline` runs with an identical identity. When
+none exists it reports `not comparable / needs fresh baseline`, keeps the candidate `run.yaml`
+and report in the workflow artifacts, and does not open an issue.
+
+GitHub-hosted runners are a shared, changing pool and their throughput is noisy. A run on one of
+them is comparable only with a baseline captured on the same runner image and version, and never
+with a developer machine. A new run cannot borrow another host's `comparable_group` to pass the
+equality check.
+
 ## Measurement Protocol
 
 ### Warmup and measurement counts

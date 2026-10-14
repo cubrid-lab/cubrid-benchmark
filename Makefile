@@ -25,9 +25,11 @@ clean:
 seed:
 	python3 scripts/apply_schema.py
 
+# Manual comparison of two historical runs: they predate measured comparison_identity, so the
+# operator-written comparable_group strings are accepted (the report marks the legacy basis).
 compare:
 	mkdir -p "$(dir $(COMPARE_REPORT))"
-	python3 scripts/compare_runs.py --baseline-dir "$(COMPARE_BASELINE_DIR)" --candidate-dir "$(COMPARE_CANDIDATE_DIR)" --output "$(COMPARE_REPORT)"
+	python3 scripts/compare_runs.py --allow-legacy-group-match --baseline-dir "$(COMPARE_BASELINE_DIR)" --candidate-dir "$(COMPARE_CANDIDATE_DIR)" --output "$(COMPARE_REPORT)"
 	python3 -c 'import sys; from pathlib import Path; sys.stdout.write(Path(sys.argv[1]).read_text(encoding="utf-8"))' "$(COMPARE_REPORT)"
 
 report:
