@@ -10,8 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - `scripts/normalize_results.py` and `scripts/emit_benchforge_v2.py` no longer write
   `mean + z * stddev` normal-model estimates as `p95_latency` / `p99_latency`. Those keys now hold
   observed percentiles of pytest-benchmark's per-round samples (`stats.data`, seconds per call
-  within a round; Hyndman-Fan type
-  7), only with at least 20 (p95) or 100 (p99) samples. Each result records
+  within a round; Hyndman-Fan type 7), only with at least 20 (p95) or 100 (p99) samples. Each
+  result records
   `latency_samples`, `latency_sample_source` and `latency_quantile_method`, or
   `latency_percentiles_unavailable` (Python Tier 1 has 5 rounds, so it reports unavailable).
   Non-finite or non-positive means and throughput, negative stddev and invalid samples now fail
