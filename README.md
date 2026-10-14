@@ -1,5 +1,11 @@
 # CUBRID Benchmark Suite
 
+<!-- CUBRID-LAB-ROLE-ICON:START -->
+<a href="https://github.com/cubrid-lab/brand">
+  <img src="https://raw.githubusercontent.com/cubrid-lab/brand/aa62d38b48d165e39f0c56ed706a9dadb090a2bb/studies/icons/cubrid-benchmark.svg" alt="CUBRID Lab Benchmark icon (Neutral)" width="80" />
+</a>
+<!-- CUBRID-LAB-ROLE-ICON:END -->
+
 <!-- BADGES:START -->
 ![CI](https://github.com/cubrid-labs/cubrid-benchmark/actions/workflows/bench.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
