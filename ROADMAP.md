@@ -1,15 +1,20 @@
 # Roadmap
 
-> **Last updated**: 2026-03-22
+> **Last updated**: 2026-03-22 (links updated 2026-10-14).
+>
+> **Status:** the phases below are the March 2026 plan. The maintained scope is now same-server
+> regression measurement of the CUBRID Python stack; see `README.md` ("Current Experiments" and
+> "Measured Python Versions"). Cross-database items (Track A efficiency ratios against
+> PyMySQL, Track B CUBRID vs MySQL) are historical or separate research, not current targets.
 >
 > This roadmap reflects current priorities. For the ecosystem-wide view, see the
-> [CUBRID Labs Ecosystem Roadmap](https://github.com/cubrid-labs/.github/blob/main/ROADMAP.md).
+> [CUBRID Lab Ecosystem Roadmap](https://github.com/cubrid-lab/.github/blob/main/ROADMAP.md).
 
 ## Links
 
-- 📋 [GitHub Milestones](https://github.com/cubrid-labs/cubrid-benchmark/milestones)
-- 🗂️ [Org Project Board](https://github.com/orgs/cubrid-labs/projects/2)
-- 🌐 [Ecosystem Roadmap](https://github.com/cubrid-labs/.github/blob/main/ROADMAP.md)
+- 📋 [GitHub Milestones](https://github.com/cubrid-lab/cubrid-benchmark/milestones)
+- 🗂️ [Org Project Board](https://github.com/orgs/cubrid-lab/projects/2)
+- 🌐 [Ecosystem Roadmap](https://github.com/cubrid-lab/.github/blob/main/ROADMAP.md)
 - 📝 [Benchmark Plan](BENCHMARK_PLAN.md)
 
 ## Next Release — v1.0 — Comprehensive Benchmarks
@@ -37,6 +42,6 @@ See [BENCHMARK_PLAN.md](BENCHMARK_PLAN.md) for the detailed two-track strategy.
 
 ## Compatibility
 
-- Python 3.10+, Node.js 18+, Go 1.21+
-- CUBRID 11.2 and MySQL 8.0 (comparison target)
+- Maintained Python lanes: Python 3.11+ (archival lane 3.10), CUBRID 10.2–11.4 (see `python/lanes.json`)
+- Track B research: Node.js 20, Go 1.22, Rust 1.75; CUBRID 11.2 and MySQL 8.0 via `docker/compose.yml`
 - Docker-based reproducible environment

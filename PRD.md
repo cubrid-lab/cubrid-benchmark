@@ -1,5 +1,10 @@
 # Product Requirements Document — cubrid-benchmark
 
+> **Status (2026-10-14): historical (March 2026).** The cross-database goal below is no longer
+> maintained. The current scope is reproducible same-server regression measurement of pycubrid and
+> sqlalchemy-cubrid, with CUBRIDdb as a reference; see `README.md`. Cross-database results stay as
+> archived experiments.
+
 ## Overview
 
 **cubrid-benchmark** is a unified, multi-language benchmark suite that measures CUBRID database

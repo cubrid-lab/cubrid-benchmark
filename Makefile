@@ -9,7 +9,7 @@ REPORT_BASELINE ?=
 REPORT_FORMAT ?= both
 MIN_EFFECT_SIZE ?= 10.0
 MIN_REPLICATIONS ?= 3
-TARGET_REPO ?= cubrid-labs/pycubrid
+TARGET_REPO ?= cubrid-lab/pycubrid
 GAP_ISSUES_OUTPUT_DIR ?=
 
 up:

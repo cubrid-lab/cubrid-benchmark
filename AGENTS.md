@@ -4,11 +4,17 @@ Project knowledge base for AI coding agents.
 
 ## Project Overview
 
-**cubrid-benchmark** is a unified, multi-language benchmark suite measuring CUBRID database
-performance against MySQL across Python, Go, and TypeScript driver/ORM stacks.
+**cubrid-benchmark** is a regression laboratory for the CUBRID Python stack. It makes
+reproducible, same-server measurements of pycubrid and sqlalchemy-cubrid (raw driver, Core, ORM),
+with CUBRIDdb (the C-extension driver) as a same-server reference. The goal is regression avoidance
+and controlled experiments, not a race against another database engine, and not a requirement
+that pycubrid beat CUBRIDdb everywhere.
 
-- **Languages**: Python 3.10+, Go 1.21+, TypeScript/Node.js 18+
-- **Databases**: CUBRID 11.2, MySQL 8.0
+- **Maintained track**: Python 3.11+ (pinned releases in `python/constraints-current.txt`; cells in
+  `python/lanes.json`), CUBRID 10.2–11.4, CUBRID only
+- **Historical and research**: cross-database CUBRID vs MySQL experiments (archived), and the
+  "Track B" research suites, run only by the manual `lane=full`: Go and TypeScript (CUBRID 11.2 +
+  MySQL 8.0 via `docker/compose.yml`) and Rust (CUBRID only)
 - **License**: MIT
 
 ## Architecture
@@ -17,15 +23,15 @@ performance against MySQL across Python, Go, and TypeScript driver/ORM stacks.
 flowchart TD
     ROOT["cubrid-benchmark/"]
 
-    DOCKER["docker/<br/>compose.yml<br/>CUBRID 11.2 + MySQL 8.0"]
+    DOCKER["docker/<br/>compose.yml<br/>legacy CUBRID 11.2 + MySQL 8.0 (Track B)"]
     SCHEMA["schema/<br/>cubrid_init.sql, mysql_init.sql, seed.sql"]
-    PY["python/<br/>conftest.py, bench_pycubrid.py, bench_pymysql.py,<br/>bench_sqlalchemy.py, requirements.txt"]
-    GO["go/<br/>cubrid_bench_test.go, mysql_bench_test.go,<br/>gorm_bench_test.go, go.mod"]
-    TS["ts/<br/>bench_cubrid.ts, bench_mysql.ts, bench_drizzle.ts,<br/>package.json, tsconfig.json"]
-    SCRIPTS["scripts/<br/>wait_for_db.sh, normalize_results.py"]
-    MAKE["Makefile<br/>make tier0, make tier1-python, make all, etc."]
-    GH[".github/workflows/<br/>bench.yml<br/>Nightly CI + GitHub Pages publish"]
-    EXP["experiments/<br/>_template/, baseline-multilang/,<br/>benchforge-pycubrid-vs-pymysql/,<br/>driver-comparison/"]
+    PY["python/<br/>conftest.py, bench_pycubrid.py, bench_pycubrid_extended.py,<br/>bench_sqlalchemy_cubrid.py, lanes.json, constraints-*.txt"]
+    GO["go/ (Track B research)"]
+    TS["typescript/ (Track B research)"]
+    SCRIPTS["scripts/<br/>run_provenance.py, compare_runs.py, regression_evidence.py,<br/>python_lanes.py, normalize_results.py, ..."]
+    MAKE["Makefile<br/>make seed, make tier0, make tier1-python, ..."]
+    GH[".github/workflows/<br/>bench.yml<br/>PR checks, pinned CUBRID-only lanes, manual full suite"]
+    EXP["experiments/<br/>current same-server and historical cross-DB experiments"]
     PRD["PRD.md"]
     AGENTS["AGENTS.md"]
     README["README.md"]
@@ -52,11 +58,12 @@ flowchart TD
 
 | Module | Role |
 |--------|------|
-| `docker/compose.yml` | Spin up CUBRID 11.2 and MySQL 8.0 with health checks |
-| `schema/` | Create tables and seed deterministic data for both DBs |
+| `docker/compose.yml` | Legacy CUBRID 11.2 + MySQL 8.0 stack for the Track B suites and `make all` |
+| `schema/` | Create tables and seed deterministic data (`make seed` seeds CUBRID; `--with-mysql` also MySQL) |
 | `python/` | pytest-benchmark based benchmarks for pycubrid and sqlalchemy-cubrid on CUBRID; `bench_pymysql*.py` / `bench_sqlalchemy_mysql.py` are kept only for `make historical-python-mysql` |
-| `go/` | `go test -bench` based benchmarks for cubrid-go, go-sql-driver/mysql, GORM |
-| `ts/` | tinybench based benchmarks for cubrid-client, mysql2, Drizzle |
+| `go/` | Track B research: `go test -bench` benchmarks for cubrid-go and go-sql-driver/mysql |
+| `typescript/` | Track B research: vitest/tinybench benchmarks for cubrid-client and mysql2 |
+| `docs/WORKLOADS.md` | Contracts of every maintained Python workload |
 | `experiments/` | Self-contained experiment folders with metadata, raw data, and reports |
 | `scripts/normalize_results.py` | Parse pytest-benchmark JSON, Go benchstat, tinybench output → unified JSON |
 | `Makefile` | Orchestrate benchmark tiers and database lifecycle |
@@ -204,44 +211,48 @@ runs/
 
 ## Development
 
-### Prerequisites
+### Prerequisites (maintained CUBRID-only track)
 
 ```bash
-docker compose -f docker/compose.yml up -d
-./scripts/wait_for_db.sh
+docker run -d --name cubrid-bench-114 -e CUBRID_DB=benchdb -p 33000:33000 cubrid/cubrid:11.4
+uv venv -p 3.12 .venv && . .venv/bin/activate && uv pip install -r requirements-dev.txt
+python scripts/wait_for_cubrid.py --timeout 180
+make seed
 ```
 
 ### Key Commands
 
 ```bash
-make tier0                    # Functional smoke test (all languages)
-make tier1-python             # Python driver throughput
-make tier1-go                 # Go driver throughput
-make tier1-ts                 # TypeScript driver throughput
-make tier2-python             # Python ORM overhead
-make tier2-go                 # Go ORM overhead
-make tier2-ts                 # TypeScript ORM overhead
-make all                      # All tiers
-make clean                    # Stop containers, remove volumes
+make tier0                    # CUBRID-only Python functional smoke
+make tier1-python             # pycubrid Tier 1 (verified rows)
+make tier1-python-extended    # extended pycubrid workloads (docs/WORKLOADS.md)
+make tier2-python             # SQLAlchemy Core/ORM workloads (set CUBRID_ORM_DSN)
+make bench-verify             # two back-to-back Tier 1 runs and their drift
+pytest tests -q               # offline tests and workflow policy
+# Track B research (needs `make up`; Go/TypeScript also use MySQL 8.0, Rust is CUBRID-only)
+make tier0-ts tier1-ts tier1-ts-extended tier0-go tier1-go tier1-go-extended tier0-rust tier1-rust
+make all                      # Python tiers plus the TypeScript and Go suites (not Rust)
+make clean                    # Stop the compose stack, remove volumes
 ```
 
 ### Running Individual Benchmarks
 
 ```bash
-# Python
-cd python && pytest bench_pycubrid.py --benchmark-json=results.json -v
+# Python (maintained)
+cd python && pytest bench_pycubrid.py --benchmark-json=../results/python_tier1.json -v
 
-# Go
-cd go && go test -bench=. -benchtime=10s -count=5 ./...
+# Go (Track B)
+cd go && go test -v -bench 'Benchmark(Cubrid|Mysql)SelectByPK$' -benchtime 5x ./...
 
-# TypeScript
-cd ts && npx tsx bench_cubrid.ts
+# TypeScript (Track B)
+cd typescript && npm ci && npm run tier1
 ```
 
 ## Code Conventions
 
 ### Style
-- Python: Ruff, line length 100, Python 3.10+
+- Python: Ruff, line length 100 (`pyproject.toml` targets py310 so the archival pycubrid 1.0.0
+  lane still parses; maintained lanes run 3.11+)
 - Go: gofmt, Go 1.21+
 - TypeScript: ESLint + Prettier, Node.js 18+
 
@@ -269,9 +280,9 @@ Examples:
 }
 ```
 
-## Development Workflow (cubrid-labs org standard)
+## Development Workflow (cubrid-lab org standard)
 
-All non-trivial work across cubrid-labs repositories MUST follow this 4-phase cycle:
+All non-trivial work across cubrid-lab repositories MUST follow this 4-phase cycle:
 
 1. **Oracle Design Review** — Consult Oracle before implementation to validate architecture, API surface, and approach. Raise concerns early.
 2. **Implementation** — Build the feature/fix with tests. Follow existing codebase patterns.
@@ -282,6 +293,9 @@ Skipping any phase requires explicit justification. Trivial changes (typos, sing
 
 ## Benchmark Tiers
 
+Exact contracts of the Python workloads are in `docs/WORKLOADS.md`; the lists below are the
+general tier definitions.
+
 ### Tier 0 — Functional (PR gate)
 - Connect to DB
 - CREATE TABLE
@@ -291,24 +305,25 @@ Skipping any phase requires explicit justification. Trivial changes (typos, sing
 - DELETE 1 row
 - DROP TABLE
 
-### Tier 1 — Driver Throughput (Nightly)
+### Tier 1 — Driver Throughput (weekly pinned lane)
 - INSERT 10K rows (sequential)
 - SELECT 10K rows (by PK)
 - SELECT 10K rows (full scan)
 - UPDATE 1K rows (WHERE indexed)
 - DELETE 1K rows (sequential)
-- Bulk INSERT 10K rows (batch)
+- Extended: connect/query/close, parameterized execute loop, executemany literal batch,
+  opt-in executemany(prepared=True), 4-thread lookups
 
-### Tier 2 — ORM Overhead (Nightly)
-- Same operations as Tier 1, but via ORM
-- Compare: raw driver time vs ORM time
+### Tier 2 — SQLAlchemy (manual)
+- ORM single-row CRUD, ORM bulk inserts, ORM select vs text() select
+- Not equivalent pairs: each records its actual SQL shape
 
-### Tier 3 — Concurrency (Weekly)
+### Tier 3 — Concurrency (planned)
 - 10 / 50 / 100 parallel connections
 - Mixed read/write workload
 - Connection pool efficiency
 
-### Tier 4 — Soak/Leak (Weekly)
+### Tier 4 — Soak/Leak (planned)
 - 1-hour continuous load
 - Memory usage tracking
 - Connection leak detection
@@ -318,15 +333,17 @@ Skipping any phase requires explicit justification. Trivial changes (typos, sing
 | Database | Host | Port | Database | User | Password |
 |----------|------|------|----------|------|----------|
 | CUBRID | localhost | 33000 | benchdb | dba | (empty) |
-| MySQL | localhost | 3306 | benchdb | root | bench |
+| MySQL (Track B / historical only) | localhost | 3306 | benchdb | root | bench |
 
 ## Comparison Methodology
 
-1. Same schema, same seed data, same operations
-2. Same hardware (CI runner), same run
-3. Warm-up iterations excluded from measurement
-4. Minimum 5 iterations, report median + stddev
-5. Results within ±5% considered equivalent
+1. Same CUBRID server, schema, seed data and operations; the measured `comparison_identity` must
+   match (`REPRODUCIBILITY.md`, "Measured comparison identity")
+2. Warm-up rounds excluded; setup and verification outside the timed region
+3. Report medians and spread; observed percentiles only with enough samples
+4. A regression claim needs at least 3 independent runs per side (`scripts/regression_evidence.py`);
+   pedantic rounds inside one run are not independent runs
+5. Results within ±5% are equivalent
 
 ## CI/CD
 
@@ -350,14 +367,14 @@ Skipping any phase requires explicit justification. Trivial changes (typos, sing
 ## Project Context — Performance Loop System
 
 > This repo is the **measurement backbone** of the Performance Loop.
-> Board: [CUBRID Ecosystem Roadmap](https://github.com/orgs/cubrid-labs/projects/2)
+> Board: [CUBRID Ecosystem Roadmap](https://github.com/orgs/cubrid-lab/projects/2)
 
 ### Role
 
 cubrid-benchmark provides the **before/after evidence** that proves the Performance Loop works.
 All optimization work in pycubrid and sqlalchemy-cubrid must be validated here.
 
-### Related Issues
+### Related Issues (historical planning, 2026-03)
 
 | Issue | Phase | Priority |
 |-------|-------|----------|
@@ -369,8 +386,11 @@ All optimization work in pycubrid and sqlalchemy-cubrid must be validated here.
 | #6 Benchmark runbook and reproducibility controls | R1 | Must-Have |
 | #1 Add Rust benchmark | R4 | Nice-to-Have |
 
-### Key Current Results
+### Current focus
 
-- Python (pycubrid): CUBRID 4.5-6× slower than MySQL ← **primary optimization target**
-- Go (cubrid-go): Nearly 1:1 with MySQL
-- TypeScript (cubrid-client): CUBRID faster than MySQL in some scenarios
+- Same-server regressions of pinned pycubrid and sqlalchemy-cubrid releases and source revisions
+  (`python/lanes.json`), with CUBRIDdb as a same-server reference in experiments.
+- The 2026-03 cross-database observations (for example "Python: CUBRID 4.5–6× slower than
+  MySQL") are **historical**. They mixed DBMS and driver differences, are not optimization
+  targets, and live only in `experiments/baseline-multilang` and
+  `experiments/benchforge-pycubrid-vs-pymysql`.
