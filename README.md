@@ -53,9 +53,10 @@ targets. Both pycubrid and PyMySQL are pure-Python drivers.
 | [Baseline (multi-language)](experiments/baseline-multilang/README.md) | 2026-03-16 | CUBRID 11.2, MySQL 8.0; pycubrid 0.5.0, PyMySQL (version not recorded), cubrid-client 1.1.0, cubrid-go 0.2.1; CPython 3.10.12 | `experiments/baseline-multilang/runs/2026-03-16_initial` | pycubrid `fetchall()` bug affected SELECT results; pre-correction Tier 1 workload; DBMS and driver mixed |
 | [pycubrid vs PyMySQL (benchforge)](experiments/benchforge-pycubrid-vs-pymysql/README.md) | 2026-03-27 | CUBRID 11.2, MySQL 8.0; pycubrid 0.5.0, PyMySQL 1.1.2; CPython 3.12.8 | `experiments/benchforge-pycubrid-vs-pymysql/runs/2026-03-27_initial` | DBMS and driver mixed; single shared devbox |
 
-The Go/TypeScript/Rust suites (`go/`, `typescript/`, `rust/`, "Track B") are separate research.
-They still run CUBRID next to MySQL, only through the manual `lane=full` workflow run, and are
-not part of the Python routine lanes.
+The Go, TypeScript and Rust suites ("Track B") are separate research, run only through the
+manual `lane=full` workflow run, and are not part of the Python routine lanes. The Go
+(`go/`) and TypeScript (`typescript/`) suites still run CUBRID next to MySQL. The Rust suite
+(`rust/`) measures CUBRID only.
 
 ## Quick Start (CUBRID only)
 
@@ -90,7 +91,8 @@ Retiring the active comparison is a project-scope decision, not evidence that My
 slow or broken.
 
 The legacy cross-language stack (`docker/compose.yml`: CUBRID 11.2 + MySQL 8.0) starts with
-`make up` and is used by the Go/TypeScript suites and `make all`.
+`make up` and is used by the Go/TypeScript suites and `make all` (which runs the Python,
+TypeScript and Go targets, not Rust).
 
 ## Measured Python Versions
 

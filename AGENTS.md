@@ -13,8 +13,8 @@ that pycubrid beat CUBRIDdb everywhere.
 - **Maintained track**: Python 3.11+ (pinned releases in `python/constraints-current.txt`; cells in
   `python/lanes.json`), CUBRID 10.2–11.4, CUBRID only
 - **Historical and research**: cross-database CUBRID vs MySQL experiments (archived), and the
-  Go/TypeScript/Rust "Track B" suites (CUBRID 11.2 + MySQL 8.0 via `docker/compose.yml`, manual
-  `lane=full` only)
+  "Track B" research suites, run only by the manual `lane=full`: Go and TypeScript (CUBRID 11.2 +
+  MySQL 8.0 via `docker/compose.yml`) and Rust (CUBRID only)
 - **License**: MIT
 
 ## Architecture
@@ -229,9 +229,9 @@ make tier1-python-extended    # extended pycubrid workloads (docs/WORKLOADS.md)
 make tier2-python             # SQLAlchemy Core/ORM workloads (set CUBRID_ORM_DSN)
 make bench-verify             # two back-to-back Tier 1 runs and their drift
 pytest tests -q               # offline tests and workflow policy
-# Track B research (needs `make up`: CUBRID 11.2 + MySQL 8.0)
+# Track B research (needs `make up`; Go/TypeScript also use MySQL 8.0, Rust is CUBRID-only)
 make tier0-ts tier1-ts tier1-ts-extended tier0-go tier1-go tier1-go-extended tier0-rust tier1-rust
-make all                      # Python tiers plus the Track B suites
+make all                      # Python tiers plus the TypeScript and Go suites (not Rust)
 make clean                    # Stop the compose stack, remove volumes
 ```
 
