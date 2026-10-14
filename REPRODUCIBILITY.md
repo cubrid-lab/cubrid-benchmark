@@ -92,6 +92,24 @@ files via `pytest-benchmark` pedantic mode:
 - warmup: `1` warmup round discarded
 - measurement: `5` measured rounds per benchmark function
 
+`python/bench_pycubrid.py` (workload revision `tier1-explicit-keys-v2`) also fixes what each
+round measures:
+
+- the table uses explicit primary keys `1..10000`, not `AUTO_INCREMENT`, so a re-seed after a
+  `DELETE` always produces the same keys
+- an untimed `setup` rebuilds and verifies the starting state before every round, warm-up
+  included: an empty table for INSERT, `10000` seeded rows for the other operations
+- the timed region holds only the measured statements and, for INSERT/UPDATE/DELETE, their one
+  final `commit()`; re-seeding, verification and clean-up are not timed
+- an untimed `teardown` checks every SELECT row (id and payload), every UPDATE/DELETE
+  affected-row count and the final table state; a miss raises `WorkloadVerificationError`
+  and fails the benchmark
+
+Tier 1 results recorded before this revision timed a re-seed in every round and, after the
+warm-up round, addressed keys that `AUTO_INCREMENT` had already moved past. They are a different
+workload: keep them as historical evidence and never compare them with the corrected series as
+proof of a regression or improvement.
+
 Go and TypeScript reports must document their equivalent command-level repetition settings in the
 experiment definition and run notes.
 

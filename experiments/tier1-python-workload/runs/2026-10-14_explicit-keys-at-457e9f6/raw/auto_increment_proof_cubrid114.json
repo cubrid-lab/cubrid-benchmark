@@ -1,0 +1,40 @@
+{
+  "cubrid_version": "11.4.6.1963",
+  "pycubrid": "1.12.0",
+  "rounds": [
+    {
+      "round": 1,
+      "generated_ids": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "addressed_keys": [
+        1,
+        5
+      ],
+      "select_hits": 5,
+      "update_rowcount": 5,
+      "delete_rowcount": 5
+    },
+    {
+      "round": 2,
+      "generated_ids": [
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "addressed_keys": [
+        1,
+        5
+      ],
+      "select_hits": 0,
+      "update_rowcount": 0,
+      "delete_rowcount": 0
+    }
+  ]
+}
