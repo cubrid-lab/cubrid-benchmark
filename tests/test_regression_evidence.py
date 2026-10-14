@@ -276,6 +276,9 @@ class TestBaselineArm:
         [
             ("baseline", "candidate", "role 'baseline' but arm 'candidate'"),
             ("candidate", "control", "arm 'control'"),
+            # A valid arm never makes up for a missing or unknown lifecycle role.
+            ("", "baseline", "baseline run has role {}, expected"),
+            ("control", "baseline", "baseline run has role 'control', expected"),
         ],
     )
     def test_invalid_role_and_arm_pairs_are_not_comparable(
@@ -288,6 +291,12 @@ class TestBaselineArm:
 
         assert report["decision"] == "not_comparable"
         assert any(message in r for r in report["reasons"])
+        # Nor is such a run ever selected as baseline evidence.
+        exp = tmp_path / "exp" / "runs"
+        exp.mkdir(parents=True)
+        (bad.parent / bad.name).rename(exp / bad.name)
+        baselines, _ = run_provenance.select_baselines(candidates[0], [tmp_path / "exp"])
+        assert baselines == []
 
     def test_stored_runs_without_arm_keep_their_role(self, tmp_path: Path) -> None:
         legacy = _run(tmp_path / "exp" / "runs", "2026-10-01_old", "baseline", BASE_OPS)

@@ -115,8 +115,9 @@ folder whose `run.yaml` holds:
 any of the following holds:
 
 - either run's group is missing or blank
-- the comparison arms are not `baseline` and `candidate`. A run's arm is its `arm` field, or its
-  `role` when `arm` is absent; a `role: baseline` run must be the baseline arm
+- either `role` is not `baseline` or `candidate`, or the comparison arms are not `baseline` and
+  `candidate`. A run's arm is its `arm` field, or its `role` when `arm` is absent; a
+  `role: baseline` run must be the baseline arm
 - either run lacks `comparison_identity`, or has an unknown field in it
 - a group does not match the group derived from its own identity (it was copied or edited)
 - any identity field differs

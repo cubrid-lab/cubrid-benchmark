@@ -361,6 +361,8 @@ def run_arm(run: Mapping[str, object]) -> object:
 def arm_problems(run: Mapping[str, object], label: str) -> list[str]:
     """Reasons a run's ``role``/``arm`` pair is not a valid comparison arm."""
     arm, role = run_arm(run), run.get("role")
+    if role not in ARMS:
+        return [f"{label} run has role {role!r}, expected one of {list(ARMS)}"]
     if arm not in ARMS:
         return [f"{label} run has arm {arm!r} (role {role!r}), expected one of {list(ARMS)}"]
     if role == "baseline" and arm != "baseline":
