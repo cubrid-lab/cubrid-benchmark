@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import cast
 
 
-def _parse_args() -> Path:
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Generate a version-matrix manifest from packaged benchmark result files."
     )
@@ -19,15 +19,22 @@ def _parse_args() -> Path:
         type=Path,
         help="Directory containing packaged matrix benchmark JSON files.",
     )
-    args = parser.parse_args()
-    results_dir = getattr(args, "results_dir", None)
-    if not isinstance(results_dir, Path):
-        raise SystemExit("--results-dir must be a path")
-    return results_dir.resolve()
+    _ = parser.add_argument(
+        "--glob",
+        default="*.json",
+        help="Pattern for packaged result files under --results-dir (e.g. '*/cell.json').",
+    )
+    _ = parser.add_argument(
+        "--expect-cell",
+        action="append",
+        default=[],
+        help="A cell_id that must be present; a missing cell fails the manifest.",
+    )
+    return parser.parse_args(argv)
 
 
-def _iter_result_files(results_dir: Path) -> Iterable[Path]:
-    for path in sorted(results_dir.glob("*.json")):
+def _iter_result_files(results_dir: Path, pattern: str = "*.json") -> Iterable[Path]:
+    for path in sorted(results_dir.glob(pattern)):
         if path.name == "manifest.json":
             continue
         yield path
@@ -47,21 +54,34 @@ def _require_string(payload: Mapping[str, object], key: str, result_file: Path) 
     return value
 
 
-def build_manifest(results_dir: Path) -> dict[str, object]:
+def build_manifest(
+    results_dir: Path, pattern: str = "*.json", expected_cells: Iterable[str] = ()
+) -> dict[str, object]:
     entries: list[dict[str, str]] = []
     relative_base = results_dir.parent
 
-    for result_file in _iter_result_files(results_dir):
+    for result_file in _iter_result_files(results_dir, pattern):
         payload = _read_result_file(result_file)
-        entries.append(
-            {
-                "scenario": _require_string(payload, "scenario", result_file),
-                "python": _require_string(payload, "python", result_file),
-                "driver": _require_string(payload, "driver", result_file),
-                "driver_version": _require_string(payload, "driver_version", result_file),
-                "result_file": result_file.relative_to(relative_base).as_posix(),
-            }
-        )
+        entry = {
+            "scenario": _require_string(payload, "scenario", result_file),
+            "python": _require_string(payload, "python", result_file),
+            "driver": _require_string(payload, "driver", result_file),
+            "driver_version": _require_string(payload, "driver_version", result_file),
+            "result_file": result_file.relative_to(relative_base).as_posix(),
+        }
+        declared = payload.get("result_file")
+        if isinstance(declared, str) and declared:
+            # A packaged cell (cell.json) names its measured result next to itself.
+            measured = result_file.parent / declared
+            if not measured.is_file():
+                raise ValueError(f"{result_file} declares a missing result_file {declared!r}")
+            entry["result_file"] = measured.relative_to(relative_base).as_posix()
+            entry["cell_file"] = result_file.relative_to(relative_base).as_posix()
+        for optional in ("cell_id", "lane", "cubrid"):
+            value = payload.get(optional)
+            if isinstance(value, str) and value:
+                entry[optional] = value
+        entries.append(entry)
 
     entries.sort(
         key=lambda entry: (
@@ -72,25 +92,44 @@ def build_manifest(results_dir: Path) -> dict[str, object]:
             entry["result_file"],
         )
     )
-    if not entries:
+    expected = set(expected_cells)
+    if not entries and not expected:
         raise ValueError(f"No result JSON files found in {results_dir}")
+    if expected:
+        present = [entry.get("cell_id", "") for entry in entries]
+        duplicated = sorted({cell for cell in present if present.count(cell) > 1})
+        missing = sorted(expected - set(present))
+        unexpected = sorted(set(present) - expected)
+        if missing or unexpected or duplicated:
+            raise ValueError(
+                "Manifest is incomplete: "
+                f"missing cells {missing or 'none'}, unexpected cells {unexpected or 'none'}, "
+                f"duplicated cells {duplicated or 'none'} (a failed, cancelled or skipped cell "
+                "has no result)"
+            )
 
     return {
         "schema_version": "1.0",
-        "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace(
-            "+00:00", "Z"
-        ),
+        "generated_at": datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z"),
         "matrix": entries,
     }
 
 
-def main() -> int:
-    results_dir = _parse_args()
+def main(argv: list[str] | None = None) -> int:
+    args = _parse_args(argv)
+    results_dir = cast(Path, args.results_dir).resolve()
 
     if not results_dir.is_dir():
         raise SystemExit(f"Results directory does not exist: {results_dir}")
 
-    manifest = build_manifest(results_dir)
+    try:
+        manifest = build_manifest(results_dir, args.glob, args.expect_cell)
+    except ValueError as exc:
+        print(f"::error::{exc}")
+        return 1
     manifest_path = results_dir / "manifest.json"
     _ = manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     print(manifest_path)

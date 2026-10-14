@@ -1,0 +1,2 @@
+# Archival reproduction lane only: the legacy pycubrid 1.0.0 matrix. Not current support evidence.
+pycubrid==1.0.0

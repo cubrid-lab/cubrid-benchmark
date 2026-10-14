@@ -24,6 +24,7 @@ WORKFLOW: dict[Any, Any] = yaml.safe_load(WORKFLOW_PATH.read_text(encoding="utf-
 TRIGGERS: dict[str, Any] = WORKFLOW.get("on", WORKFLOW.get(True))  # PyYAML reads "on" as True
 JOBS: dict[str, dict[str, Any]] = WORKFLOW["jobs"]
 MAX_TIMEOUT_MINUTES = 120
+PINNED_JOBS = {"plan", "pinned", "pinned-manifest"}
 
 
 def _steps(job: str) -> list[dict[str, Any]]:
@@ -40,25 +41,48 @@ def _index(job: str, name: str) -> int:
     return [step.get("name") for step in _steps(job)].index(name)
 
 
-def _evaluate(expression: str, event: str, inputs: dict[str, object]) -> bool:
+def _evaluate(
+    expression: str, event: str, inputs: dict[str, object], needs: dict[str, str]
+) -> bool:
     """Evaluate the small subset of GitHub expressions used by job conditions."""
     python = expression.replace("||", " or ").replace("&&", " and ").replace("\n", " ")
-    if re.search(r"[^\w\s.'=()!]", python.replace("==", "")):
+    if re.search(r"[^\w\s.'=()!-]", python.replace("==", "")):
         raise AssertionError(f"unsupported expression: {expression}")
     context = {
         "github": SimpleNamespace(event_name=event),
         "inputs": SimpleNamespace(lane=inputs.get("lane"), inject_failure=False),
+        "needs": SimpleNamespace(**{n: SimpleNamespace(result=r) for n, r in needs.items()}),
+        "always": lambda: True,
     }
     return bool(eval(python, {"__builtins__": {}}, context))  # noqa: S307 - fixed test input
 
 
+def _needs(job: dict[str, Any]) -> list[str]:
+    needs = job.get("needs", [])
+    return [needs] if isinstance(needs, str) else list(needs)
+
+
 def _jobs_for(event: str, **inputs: object) -> set[str]:
-    selected = set()
-    for name, job in JOBS.items():
-        condition = job.get("if")
-        if condition is None or _evaluate(str(condition), event, inputs):
-            selected.add(name)
-    return selected
+    """Jobs GitHub would start, assuming every started job succeeds."""
+    results: dict[str, str] = {}
+    pending = dict(JOBS)
+    while pending:
+        for name, job in list(pending.items()):
+            needs = _needs(job)
+            if any(need in pending for need in needs):
+                continue
+            needed = {need: results[need] for need in needs}
+            condition = job.get("if")
+            if condition is None:
+                # Implicit success(): every needed job must have succeeded.
+                runs = all(result == "success" for result in needed.values())
+            else:
+                runs = _evaluate(str(condition), event, inputs, needed)
+                if "always()" not in str(condition):
+                    runs = runs and all(result == "success" for result in needed.values())
+            results[name] = "success" if runs else "skipped"
+            del pending[name]
+    return {name for name, result in results.items() if result == "success"}
 
 
 @pytest.mark.parametrize(
@@ -66,10 +90,11 @@ def _jobs_for(event: str, **inputs: object) -> set[str]:
     [
         ("pull_request", {}, {"checks", "cubrid-smoke"}),
         ("push", {}, {"checks", "cubrid-smoke"}),
-        ("schedule", {}, {"representative"}),
-        ("workflow_dispatch", {"lane": "representative"}, {"representative"}),
+        ("schedule", {}, PINNED_JOBS),
+        ("workflow_dispatch", {"lane": "representative"}, PINNED_JOBS),
+        ("workflow_dispatch", {"lane": "release"}, PINNED_JOBS),
+        ("workflow_dispatch", {"lane": "archival"}, PINNED_JOBS),
         ("workflow_dispatch", {"lane": "full"}, {"full-suite"}),
-        ("workflow_dispatch", {"lane": "matrix"}, {"matrix-benchmark", "matrix-manifest"}),
     ],
 )
 def test_event_selection(event: str, inputs: dict[str, object], expected: set[str]) -> None:
@@ -82,14 +107,17 @@ def test_only_one_bounded_weekly_schedule() -> None:
     minute, hour, day_of_month, month, day_of_week = schedules[0]["cron"].split()
     assert day_of_month == "*" and month == "*" and day_of_week.isdigit()
     # The scheduled lane is the bounded CUBRID-only one, never the cross-language suite.
-    assert _jobs_for("schedule") == {"representative"}
-    assert "mysql" not in JOBS["representative"].get("services", {})
+    assert _jobs_for("schedule") == PINNED_JOBS
+    assert "mysql" not in JOBS["pinned"].get("services", {})
+    # A schedule has no inputs; the planner then selects the one-cell representative lane.
+    assert '--lane "$LANE"' in _step("plan", "Plan the lane's cells")["run"]
 
 
 def test_manual_dispatch_is_kept_with_lane_choice() -> None:
     inputs = TRIGGERS["workflow_dispatch"]["inputs"]
     assert inputs["lane"]["default"] == "representative"
-    assert set(inputs["lane"]["options"]) == {"representative", "full", "matrix"}
+    assert set(inputs["lane"]["options"]) == {"representative", "release", "archival", "full"}
+    assert inputs["pycubrid_source_sha"]["default"] == ""
     assert inputs["inject_failure"]["default"] is False
 
 
@@ -144,33 +172,40 @@ def test_uploads_keep_existing_files_without_masking_the_first_failure() -> None
                 assert step["with"].get("if-no-files-found") == "warn", (job_name, step["name"])
 
 
-def test_representative_required_steps_fail_the_job() -> None:
+def test_pinned_required_steps_fail_the_job() -> None:
     required = [
+        "Install pinned Python packages",
+        "Verify installed versions",
         "CUBRID-only Tier 0 smoke",
         "CUBRID-only Tier 1 pycubrid measurement",
         "Capture candidate provenance",
         "Compare against a compatible baseline (report only)",
+        "Package cell",
         "Verify required results",
     ]
     for name in required:
-        step = _step("representative", name)
+        step = _step("pinned", name)
         assert "continue-on-error" not in step, name
         # No condition: GitHub's implicit success() skips them after a failure or cancellation.
         assert "if" not in step, name
-    assert _index("representative", "Verify required results") < _index(
-        "representative", "Upload representative artifacts"
+    # cell.json (the manifest entry) is written only after every required result passed.
+    assert (
+        _index("pinned", "Verify required results")
+        < _index("pinned", "Package cell")
+        < _index("pinned", "Upload cell artifacts")
     )
+    assert "--versions-file" in _step("pinned", "Capture candidate provenance")["run"]
 
 
 def test_injected_failure_precedes_measurement_and_needs_dispatch() -> None:
-    step = _step("representative", "Injected failure (manual verification only)")
+    step = _step("pinned", "Injected failure (manual verification only)")
     assert step["if"] == "github.event_name == 'workflow_dispatch' && inputs.inject_failure"
     assert "exit 1" in step["run"]
-    assert _index("representative", "CUBRID-only Tier 0 smoke") < _index(
-        "representative", "Injected failure (manual verification only)"
+    assert _index("pinned", "CUBRID-only Tier 0 smoke") < _index(
+        "pinned", "Injected failure (manual verification only)"
     )
-    assert _index("representative", "Injected failure (manual verification only)") < _index(
-        "representative", "CUBRID-only Tier 1 pycubrid measurement"
+    assert _index("pinned", "Injected failure (manual verification only)") < _index(
+        "pinned", "CUBRID-only Tier 1 pycubrid measurement"
     )
 
 
@@ -192,17 +227,20 @@ def test_optional_toolchain_setup_cannot_stop_python(setup: str, dependents: lis
 
 
 def test_artifact_names_are_unique_per_attempt() -> None:
-    for job_name in ("representative", "full-suite"):
+    for job_name in ("pinned", "pinned-manifest", "full-suite"):
         for step in _steps(job_name):
             if str(step.get("uses", "")).startswith("actions/upload-artifact@"):
                 assert "${{ github.run_attempt }}" in step["with"]["name"], step["name"]
 
 
 def test_cubrid_only_lanes_do_not_use_mysql() -> None:
-    for job_name in ("cubrid-smoke", "representative"):
+    for job_name in ("cubrid-smoke", "pinned"):
         job = JOBS[job_name]
         assert set(job["services"]) == {"cubrid"}
-        assert job["services"]["cubrid"]["image"] == "cubrid/cubrid:11.4"
+        assert job["services"]["cubrid"]["image"] in (
+            "cubrid/cubrid:11.4",
+            "${{ matrix.cell.image }}",
+        )
         commands = " ".join(str(step.get("run", "")) for step in job["steps"])
         # The repository conftest is CUBRID-only, so no plugin or --noconftest is needed.
         assert "--noconftest" not in commands
@@ -228,18 +266,16 @@ def test_full_suite_required_and_optional_tracks() -> None:
 
 class TestRequiredResults:
     def _complete(self, root: Path) -> None:
-        for relative in check_required_results.REQUIRED["representative"]:
+        for relative in check_required_results.REQUIRED["pinned"]:
             path = root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
             payload = {"benchmarks": [{"name": "x"}]} if relative.endswith(".json") else "x"
             path.write_text(json.dumps(payload), encoding="utf-8")
 
-    def test_complete_representative_results_pass(self, tmp_path: Path) -> None:
+    def test_complete_pinned_results_pass(self, tmp_path: Path) -> None:
         self._complete(tmp_path)
 
-        assert (
-            check_required_results.main(["--lane", "representative", "--dir", str(tmp_path)]) == 0
-        )
+        assert check_required_results.main(["--lane", "pinned", "--dir", str(tmp_path)]) == 0
 
     def test_missing_measurement_fails(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
@@ -247,18 +283,14 @@ class TestRequiredResults:
         self._complete(tmp_path)
         (tmp_path / "python_tier1_pycubrid.json").unlink()
 
-        assert (
-            check_required_results.main(["--lane", "representative", "--dir", str(tmp_path)]) == 1
-        )
+        assert check_required_results.main(["--lane", "pinned", "--dir", str(tmp_path)]) == 1
         assert "::error::missing or empty required result" in capsys.readouterr().out
 
     def test_measurement_without_benchmarks_fails(self, tmp_path: Path) -> None:
         self._complete(tmp_path)
         (tmp_path / "python_tier1_pycubrid.json").write_text('{"benchmarks": []}')
 
-        assert (
-            check_required_results.main(["--lane", "representative", "--dir", str(tmp_path)]) == 1
-        )
+        assert check_required_results.main(["--lane", "pinned", "--dir", str(tmp_path)]) == 1
 
     def test_optional_failures_warn_without_failing(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]

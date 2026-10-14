@@ -1,0 +1,7 @@
+# Exact releases measured by the representative and release lanes (bench.yml).
+# Update deliberately, one release at a time, after the release is published on PyPI.
+# scripts/python_lanes.py verify-install fails the lane if any pin is not what got installed.
+pycubrid==1.12.0
+sqlalchemy-cubrid==1.11.0
+SQLAlchemy==2.1.4
+pytest-benchmark==5.3.0
