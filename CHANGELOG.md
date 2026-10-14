@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Documentation
+- Current-facing docs describe the maintained scope: a same-server regression laboratory for
+  pycubrid and sqlalchemy-cubrid with CUBRIDdb as a reference, not a cross-database race.
+  - `README.md` lists current experiments with their actual statuses and runs, and a separate
+    historical cross-database table with dates, pinned versions, run folders and limitations. It
+    also has a copyable CUBRID-only quick start and explains trials vs rounds and the metric
+    labels.
+  - `AGENTS.md`, `CONTRIBUTING.md`, `docs/METHODOLOGY.md` and `REPRODUCIBILITY.md` drop vanished
+    commands, mark the "4.5–6× slower than MySQL" target and the `pycubrid / PyMySQL` ratio as
+    historical, correct that PyMySQL is pure Python, and separate the current lanes from the
+    historical compose environment.
+  - `BENCHMARK_PLAN.md`, `PRD.md` and `ROADMAP.md` carry historical-status banners. Links and
+    the draft-issue target default (`TARGET_REPO`, `gap_to_issue.py`) use the `cubrid-lab`
+    organization.
+  - `tests/test_docs.py` checks links, documented `make` targets, organization URLs and the
+    historical framing.
+
 ### Changed
 - The maintained Python workloads have explicit scenario contracts (`SCENARIOS` in each module,
   listed in `docs/WORKLOADS.md`, checked by `tests/test_workload_contracts.py`).
