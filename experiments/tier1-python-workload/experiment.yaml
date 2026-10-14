@@ -1,0 +1,28 @@
+id: tier1-python-workload
+title: "Python Tier 1 workload correction (explicit keys, verified rows)"
+status: active
+question: "What does pycubrid Python Tier 1 measure once every SELECT, UPDATE and DELETE is proven to reach the intended rows, and what baseline does the corrected workload start?"
+system_under_test: "pycubrid (python/bench_pycubrid.py)"
+workload:
+  name: "tier1-python"
+  revision: "tier1-explicit-keys-v2"
+  schema: "bench_driver_pycubrid (id INT PRIMARY KEY, name VARCHAR(100), amount INT); no AUTO_INCREMENT"
+  dataset: "10,000 deterministic rows (i, '<op>_<i:05d>', i) for i in 1..10000, re-seeded before every round"
+  operations:
+    insert_sequential: "10,000 single-row INSERTs with explicit keys + 1 commit"
+    select_by_pk: "10,000 SELECT ... WHERE id = ? + fetchone, keys 1..10000"
+    select_full_scan: "1 SELECT of 10,000 rows (no ORDER BY) + fetchall"
+    update_indexed: "1,000 UPDATE ... WHERE id = ?, keys 1..1000, + 1 commit"
+    delete_sequential: "1,000 DELETE ... WHERE id = ?, keys 1..1000, + 1 commit"
+protocol:
+  warmup: "1 pedantic warm-up round discarded (it is seeded and verified like a measured round)"
+  measurement: "pytest-benchmark pedantic, 5 rounds, 1 iteration per round; untimed setup re-seeds, untimed teardown verifies"
+  iterations: 5
+  timed_region: "the measured statements and, for writes, their final commit(); not the re-seed, DELETE of previous contents, verification or DROP"
+  verification: "every SELECT row id+payload, every UPDATE/DELETE rowcount == 1, final COUNT/MIN/MAX/SUM; WorkloadVerificationError fails the run"
+  transaction_mode: "autocommit=False (pycubrid default), explicit commit"
+  metrics: [ops_per_round, median_s, mean_s, stddev_s]
+repro:
+  setup: "docker run -d --name bench26-cubrid-114 -e CUBRID_DB=benchdb -p 33641:33000 cubrid/cubrid:11.4"
+  run: "cd python && CUBRID_PORT=33641 PYTHONPATH=../experiments/tier1-python-workload pytest --noconftest -p cubrid_only_plugin bench_pycubrid.py --benchmark-json=<run-dir>/raw/cubrid114_t<N>.json"
+  proof: "python experiments/tier1-python-workload/auto_increment_proof.py --port 33641"
