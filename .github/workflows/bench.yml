@@ -450,22 +450,35 @@ jobs:
         continue-on-error: true
         run: make tier1-rust
 
-      - name: Normalize and emit benchforge v2 results
+      # Required: normalizing and converting the required Python Tier 1 result.
+      - name: Normalize and emit required benchforge v2 results
         run: |
           mkdir -p results/benchforge_v2
-          emit() {  # input suite tier
-            if [ ! -f "results/$1" ]; then
-              echo "::warning::results/$1 was not produced; skipping $2"
-              return 0
-            fi
-            python3 scripts/emit_benchforge_v2.py --input "results/$1" \
-              --output "results/benchforge_v2/$2.json" --suite-name "${2//_/-}" \
-              --tier "$3" --language python --driver mixed --database mixed
-          }
           python3 scripts/normalize_results.py results/python_tier1.json > results/normalized_python_tier1.json
-          emit python_tier1.json python_tier1 tier1
-          emit python_tier1_extended.json python_tier1_extended tier1-extended
-          emit tier2_python.json python_tier2 tier2
+          python3 scripts/emit_benchforge_v2.py --input results/python_tier1.json \
+            --output results/benchforge_v2/python_tier1.json --suite-name python-tier1 \
+            --tier tier1 --language python --driver mixed --database mixed
+
+      # Optional: converting an optional track only after it succeeded, never failing the job.
+      - name: Emit optional Python Tier 1 Extended benchforge v2 result
+        id: emit_python_tier1_extended
+        if: steps.python_tier1_extended.outcome == 'success'
+        continue-on-error: true
+        run: >-
+          python3 scripts/emit_benchforge_v2.py --input results/python_tier1_extended.json
+          --output results/benchforge_v2/python_tier1_extended.json
+          --suite-name python-tier1-extended --tier tier1-extended
+          --language python --driver mixed --database mixed
+
+      - name: Emit optional Python Tier 2 benchforge v2 result
+        id: emit_python_tier2
+        if: steps.python_tier2.outcome == 'success'
+        continue-on-error: true
+        run: >-
+          python3 scripts/emit_benchforge_v2.py --input results/tier2_python.json
+          --output results/benchforge_v2/python_tier2.json
+          --suite-name python-tier2 --tier tier2
+          --language python --driver mixed --database mixed
 
       - name: Find previous benchforge v2 artifact
         id: previous_benchforge
@@ -638,6 +651,8 @@ jobs:
             go-tier1-extended=${{ steps.go_tier1_extended.outcome }}
             rust-tier0=${{ steps.rust_tier0.outcome }}
             rust-tier1=${{ steps.rust_tier1.outcome }}
+            emit-python-tier1-extended=${{ steps.emit_python_tier1_extended.outcome }}
+            emit-python-tier2=${{ steps.emit_python_tier2.outcome }}
             download-previous-benchforge=${{ steps.download_previous.outcome }}
             benchforge-reports=${{ steps.benchforge_reports.outcome }}
         run: python3 scripts/check_required_results.py --lane outcomes --dir results --outcomes "$OUTCOMES"
