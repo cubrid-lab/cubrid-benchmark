@@ -1,0 +1,19 @@
+id: pycubrid-pinned-lane-demo
+title: "Pinned-release candidate-to-baseline comparison (mechanics demonstration)"
+status: completed
+question: "Does a pinned-release candidate compare against a baseline only when its measured environment and workload identity match, with the driver revision as the only difference?"
+system_under_test: "pycubrid 1.11.0 (baseline) vs 1.12.0 (candidate), both from PyPI, with sqlalchemy-cubrid 1.11.0, SQLAlchemy 2.1.4 and pytest-benchmark 5.3.0 pinned"
+workload:
+  name: "tier1-python"
+  revision: "tier1-explicit-keys-v2"
+  schema: "bench_driver_pycubrid (id INT PRIMARY KEY, name VARCHAR(100), amount INT)"
+  dataset: "10,000 deterministic rows, re-seeded before every round"
+protocol:
+  warmup: "1 pedantic warm-up round"
+  measurement: "pytest-benchmark pedantic, 5 rounds; one trial per run"
+  iterations: 5
+  verification: "every round verified by python/bench_pycubrid.py; installs verified by scripts/python_lanes.py verify-install"
+  metrics: [ops_per_round]
+repro:
+  setup: "docker run -d --name bench30-cubrid-114 -e CUBRID_DB=benchdb -p 33681:33000 cubrid/cubrid:11.4 (and cubrid/cubrid:10.2 on 33682)"
+  run: "one venv per pycubrid release: pip install -r python/requirements.txt -c <constraints with pycubrid==X>; python scripts/python_lanes.py verify-install; pytest python/bench_pycubrid.py; python scripts/run_provenance.py capture --fixed-host devbox-i5-9400F; python scripts/compare_runs.py"

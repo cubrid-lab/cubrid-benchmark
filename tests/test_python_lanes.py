@@ -297,3 +297,7 @@ class TestCellsAndManifest:
         assert generate_manifest.main(args) == 1
         assert f"missing cells ['{cells[-1]['id']}']" in capsys.readouterr().out
         assert not (tmp_path / "manifest.json").exists()
+
+    def test_no_cells_at_all_reports_every_missing_cell(self, tmp_path: Path) -> None:
+        with pytest.raises(ValueError, match="missing cells \\['release-py3.11-cubrid10.2'\\]"):
+            generate_manifest.build_manifest(tmp_path, "*/cell.json", ["release-py3.11-cubrid10.2"])

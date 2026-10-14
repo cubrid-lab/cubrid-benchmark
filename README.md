@@ -21,6 +21,7 @@ Scientific benchmark suite for CUBRID database ecosystem — reproducible experi
 | 6 | pycubrid 1.0 baseline | completed | Official pycubrid 1.0.0 baseline after PR #55 optimizations | 2026-04-12 | [Report](experiments/pycubrid-1.0-baseline/README.md) |
 | 7 | pycubrid release baseline | active | pycubrid main vs 1.10.0 vs CUBRIDdb on CUBRID 11.4 (pycubrid#797) | 2026-10-11 | [Report](experiments/pycubrid-release-baseline/README.md) |
 | 8 | Python Tier 1 workload correction | active | Tier 1 with explicit keys and verified rows; new baseline, not comparable with earlier Tier 1 runs | 2026-10-14 | [Report](experiments/tier1-python-workload/README.md) |
+| 9 | Pinned-release comparison demo | completed | Candidate-to-baseline mechanics for the pinned lanes (not a performance result) | 2026-10-14 | [Report](experiments/pycubrid-pinned-lane-demo/README.md) |
 
 ## Quick Start
 

@@ -84,10 +84,9 @@ def build_manifest(
             entry["result_file"],
         )
     )
-    if not entries:
-        raise ValueError(f"No result JSON files found in {results_dir}")
-
     expected = set(expected_cells)
+    if not entries and not expected:
+        raise ValueError(f"No result JSON files found in {results_dir}")
     if expected:
         present = [entry.get("cell_id", "") for entry in entries]
         duplicated = sorted({cell for cell in present if present.count(cell) > 1})

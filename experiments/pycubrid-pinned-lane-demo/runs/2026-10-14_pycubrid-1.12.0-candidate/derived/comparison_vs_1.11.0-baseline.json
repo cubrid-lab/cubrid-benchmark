@@ -1,0 +1,130 @@
+{
+  "provenance": {
+    "baseline_run_id": "2026-10-14_pycubrid-1.11.0-baseline",
+    "baseline_date": "2026-10-14T04:40:10Z",
+    "baseline_results_path": "experiments/pycubrid-pinned-lane-demo/runs/2026-10-14_pycubrid-1.11.0-baseline/raw/results.json",
+    "baseline_comparable_group": "fixed-cubrid11.4-python-tier1-tier1-explicit-keys-v2-8428ae17b434",
+    "baseline_identity": {
+      "host_class": "fixed:devbox-i5-9400F",
+      "cpu": "Intel(R) Core(TM) i5-9400F CPU @ 2.90GHz",
+      "cores": 6,
+      "os": "Ubuntu 22.04.5 LTS",
+      "kernel": "5.15.0-198-generic",
+      "docker": "29.2.1",
+      "cubrid_image": "cubrid/cubrid:11.4",
+      "cubrid_image_digest": "sha256:1248b77ad39888df9e064655937188ab99fe056ed7e35b57d06155a015dc1791",
+      "cubrid_build": "11.4.6.1963",
+      "python": "CPython 3.12.13",
+      "scenario": "python-tier1",
+      "workload_revision": "tier1-explicit-keys-v2",
+      "schema": "bench_driver_pycubrid (id INT PRIMARY KEY, name VARCHAR(100), amount INT)",
+      "data_count": 10000,
+      "transaction_policy": "autocommit=false; one commit per write round",
+      "measurement_protocol": "pytest-benchmark pedantic; 1 warm-up + 5 rounds; untimed setup/teardown"
+    },
+    "baseline_software_under_test": {
+      "benchmark_source_sha": "829fa366c0ca3cdc0b4d477360a5dcd4f6cf2dcc",
+      "benchmark_source_dirty": "false",
+      "packages": {
+        "pycubrid": "1.11.0",
+        "sqlalchemy-cubrid": "1.11.0",
+        "sqlalchemy": "2.1.4",
+        "pytest-benchmark": "5.3.0"
+      }
+    },
+    "candidate_run_id": "2026-10-14_pycubrid-1.12.0-candidate",
+    "candidate_date": "2026-10-14T04:49:50Z",
+    "candidate_results_path": "experiments/pycubrid-pinned-lane-demo/runs/2026-10-14_pycubrid-1.12.0-candidate/raw/results.json",
+    "candidate_comparable_group": "fixed-cubrid11.4-python-tier1-tier1-explicit-keys-v2-8428ae17b434",
+    "candidate_identity": {
+      "host_class": "fixed:devbox-i5-9400F",
+      "cpu": "Intel(R) Core(TM) i5-9400F CPU @ 2.90GHz",
+      "cores": 6,
+      "os": "Ubuntu 22.04.5 LTS",
+      "kernel": "5.15.0-198-generic",
+      "docker": "29.2.1",
+      "cubrid_image": "cubrid/cubrid:11.4",
+      "cubrid_image_digest": "sha256:1248b77ad39888df9e064655937188ab99fe056ed7e35b57d06155a015dc1791",
+      "cubrid_build": "11.4.6.1963",
+      "python": "CPython 3.12.13",
+      "scenario": "python-tier1",
+      "workload_revision": "tier1-explicit-keys-v2",
+      "schema": "bench_driver_pycubrid (id INT PRIMARY KEY, name VARCHAR(100), amount INT)",
+      "data_count": 10000,
+      "transaction_policy": "autocommit=false; one commit per write round",
+      "measurement_protocol": "pytest-benchmark pedantic; 1 warm-up + 5 rounds; untimed setup/teardown"
+    },
+    "candidate_software_under_test": {
+      "benchmark_source_sha": "829fa366c0ca3cdc0b4d477360a5dcd4f6cf2dcc",
+      "benchmark_source_dirty": "false",
+      "packages": {
+        "pycubrid": "1.12.0",
+        "sqlalchemy-cubrid": "1.11.0",
+        "sqlalchemy": "2.1.4",
+        "pytest-benchmark": "5.3.0"
+      }
+    },
+    "comparable_group": "fixed-cubrid11.4-python-tier1-tier1-explicit-keys-v2-8428ae17b434",
+    "comparison_basis": "measured comparison_identity"
+  },
+  "thresholds": {
+    "alert_regression_percent": 5.0,
+    "fail_regression_percent": 10.0
+  },
+  "summary": {
+    "total_operations": 5,
+    "improved": 3,
+    "neutral": 0,
+    "alert_regressions": 0,
+    "fail_regressions": 2,
+    "overall_status": "fail",
+    "exit_code": 1
+  },
+  "operations": [
+    {
+      "name": "test_bench_delete_sequential",
+      "unit": "ops/sec",
+      "baseline": 0.6001,
+      "candidate": 1.4222,
+      "absolute_delta": 0.8221,
+      "percent_change": 136.99,
+      "status": "improved"
+    },
+    {
+      "name": "test_bench_insert_sequential",
+      "unit": "ops/sec",
+      "baseline": 0.0946,
+      "candidate": 0.0583,
+      "absolute_delta": -0.0363,
+      "percent_change": -38.37,
+      "status": "fail"
+    },
+    {
+      "name": "test_bench_select_by_pk",
+      "unit": "ops/sec",
+      "baseline": 0.1297,
+      "candidate": 0.0897,
+      "absolute_delta": -0.04,
+      "percent_change": -30.84,
+      "status": "fail"
+    },
+    {
+      "name": "test_bench_select_full_scan",
+      "unit": "ops/sec",
+      "baseline": 17.6784,
+      "candidate": 23.9165,
+      "absolute_delta": 6.2381,
+      "percent_change": 35.29,
+      "status": "improved"
+    },
+    {
+      "name": "test_bench_update_indexed",
+      "unit": "ops/sec",
+      "baseline": 0.923,
+      "candidate": 0.9396,
+      "absolute_delta": 0.0166,
+      "percent_change": 1.8,
+      "status": "improved"
+    }
+  ]
+}
