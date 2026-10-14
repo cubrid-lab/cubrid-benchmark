@@ -78,7 +78,7 @@ def _write_run(
             role=role,
             identity=identity,
             software={
-                "benchmark_source_sha": "abc",
+                "benchmark_source_sha": "ab" * 20,
                 "benchmark_source_dirty": "false",
                 "packages": {"pycubrid": pycubrid},
             },

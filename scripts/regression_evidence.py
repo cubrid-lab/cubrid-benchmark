@@ -33,6 +33,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
+import re
 import statistics
 import sys
 from collections.abc import Mapping, Sequence
@@ -59,7 +61,7 @@ EXIT_CODES = {
     "error": 2,
     "not_comparable": 3,
 }
-UNKNOWN = {"", "unknown", "none", "null"}
+GIT_OBJECT_ID = re.compile(r"[0-9a-f]{40}|[0-9a-f]{64}")
 
 
 def _sha256(path: Path) -> str:
@@ -135,8 +137,11 @@ def _pinning_problems(runs: Sequence[Mapping[str, object]], side: str) -> list[s
     for run in runs:
         summary = _trial_summary(run)
         sha = str(summary["benchmark_source_sha"] or "").strip().lower()
-        if sha in UNKNOWN:
-            problems.append(f"{side} trial {summary['run_id']} has no pinned benchmark_source_sha")
+        if not GIT_OBJECT_ID.fullmatch(sha):
+            problems.append(
+                f"{side} trial {summary['run_id']} has no pinned benchmark_source_sha "
+                f"(a full Git object ID is required, got {sha!r})"
+            )
         if str(summary["benchmark_source_dirty"]).strip().lower() != "false":
             problems.append(
                 f"{side} trial {summary['run_id']} is not from a verified clean source tree "
@@ -260,11 +265,19 @@ def evaluate(
     enough = len(baseline) >= min_trials and len(candidate) >= min_trials
     names = sorted(baseline[0]["operations"])
     operations = []
+    invalid: list[str] = []
     for name in names:
         values_b = [float(run["operations"][name]["value"]) for run in baseline]
         values_c = [float(run["operations"][name]["value"]) for run in candidate]
+        bad = [v for v in values_b + values_c if not (math.isfinite(v) and v > 0)]
+        if bad:
+            invalid.append(f"operation {name} has non-finite or non-positive values {bad}")
+            continue
         unit = baseline[0]["operations"][name].get("unit")
         operations.append(_classify(name, unit, values_b, values_c, noise, fail, enough))
+    if invalid:
+        # Invalid throughput is broken evidence, never a measured regression.
+        return _finish("error", invalid)
     report["operations"] = operations
 
     if not enough:

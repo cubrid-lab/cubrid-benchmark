@@ -212,6 +212,7 @@ class TestDecisions:
         ("kwargs", "message"),
         [
             ({"sha": "unknown"}, "no pinned benchmark_source_sha"),
+            ({"sha": "abc"}, "full Git object ID"),
             ({"dirty": "true"}, "not from a verified clean source tree"),
             ({"dirty": None}, "not from a verified clean source tree"),
             ({"dirty": "unknown"}, "not from a verified clean source tree"),
@@ -266,6 +267,16 @@ class TestDecisions:
 
         assert rerun["decision"] == "reproduced_regression"
         assert first["dedup_key"] == rerun["dedup_key"]
+
+    @pytest.mark.parametrize("scale", [0.0, -1.0])
+    def test_non_positive_throughput_is_an_error(self, tmp_path: Path, scale: float) -> None:
+        baseline, candidate = _sides(tmp_path, 3, 3, scale)
+
+        report = evidence.evaluate(baseline, candidate)
+
+        assert report["decision"] == "error"
+        assert report["eligible_for_issue"] is False
+        assert any("non-finite or non-positive" in reason for reason in report["reasons"])
 
     def test_cli_exit_codes_and_report(self, tmp_path: Path) -> None:
         baseline, candidate = _sides(tmp_path, 3, 3, 0.88)
