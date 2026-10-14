@@ -143,8 +143,9 @@ or `python/lanes.json` for cells, then run `gh workflow run bench.yml -f lane=re
 Workload contracts (what one call does, rows per call, timed region and verified protocol) are in
 [docs/WORKLOADS.md](docs/WORKLOADS.md). `ops` is calls per second. `p95_latency`/`p99_latency`
 appear only as observed percentiles with enough samples (`docs/METHODOLOGY.md`). The
-`peak_rss_delta_kb` from `scripts/collect_metrics.py` is a child-process RSS delta whose
-multi-child semantics are still being settled (#32).
+`child_peak_rss_kb` from `scripts/collect_metrics.py` is the peak resident memory of the one
+measured child process, or `null` with a reason when it cannot be derived (see
+[Memory Tracking](docs/METHODOLOGY.md#memory-tracking)).
 
 ## Links
 
