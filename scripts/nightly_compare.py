@@ -2,7 +2,9 @@
 """Compare a captured nightly candidate with a compatible baseline and decide on an alert.
 
 The candidate directory must come from ``scripts/run_provenance.py capture``. The baseline is
-chosen only among ``role: baseline`` runs whose comparison identity equals the candidate's.
+chosen only among baseline-arm runs (``role: baseline``, or a repeat of the baseline condition
+recorded as ``role: candidate`` with ``arm: baseline``) whose comparison identity equals the
+candidate's; every such run is one baseline trial for the evidence decision.
 When none exists, or the comparator finds the pair not comparable, the result is
 ``not comparable / needs fresh baseline`` and no regression verdict (and no issue) is produced.
 

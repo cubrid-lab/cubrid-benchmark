@@ -178,7 +178,11 @@ Comparisons are only valid between runs in the **same comparable group**.
    group; never copy a group string from another run (see `REPRODUCIBILITY.md`, "Measured
    comparison identity")
 3. If hardware or DB version changes, start a new comparable group with a new baseline
-4. The first run in a group has `role: baseline`. Subsequent runs have `role: candidate` with `compares_to: <baseline-run-id>`
+4. The first run in a group has `role: baseline`. Subsequent runs have `role: candidate` with `compares_to: <baseline-run-id>`.
+   `role` is the run's place in that lifecycle. `arm` (`baseline` or `candidate`, default: the role)
+   is the condition it measured: a later repeat of the baseline condition is `role: candidate`,
+   `arm: baseline` (`run_provenance.py capture --arm baseline`) and counts as a baseline trial.
+   A `role: baseline` run is always the baseline arm. Runs without `arm` keep their role as arm.
 5. **Never overwrite a run folder** — every execution creates a new immutable run
 
 **Example lifecycle:**
@@ -186,6 +190,7 @@ Comparisons are only valid between runs in the **same comparable group**.
 ```
 runs/
 ├── 2026-03-27_before-optimization/     # role: baseline
+├── 2026-03-28_before-optimization-2/   # role: candidate, arm: baseline (repeat of the baseline condition)
 ├── 2026-04-10_after-parse-int-fix/     # role: candidate, compares_to: 2026-03-27_before-optimization
 ├── 2026-04-20_after-dispatch-table/    # role: candidate, compares_to: 2026-03-27_before-optimization
 └── 2026-05-01_new-machine-baseline/    # role: baseline (new comparable_group)

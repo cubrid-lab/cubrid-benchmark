@@ -76,6 +76,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   decision, not a claim about MySQL or PyMySQL performance.
 
 ### Fixed
+- Repeated runs of the baseline condition now count as baseline trials. A run records its
+  comparison `arm` (`baseline` or `candidate`) next to its lifecycle `role`. A repeat of the
+  baseline condition is `role: candidate`, `arm: baseline` (`run_provenance.py capture --arm
+  baseline`), so one baseline run plus two repeats are three baseline trials for
+  `regression_evidence.py`. `compare_runs.py`, `select_baselines()`, `regression_evidence.py` and
+  `nightly_compare.py` check the arm. A candidate-arm run on the baseline side, a baseline-arm run
+  on the candidate side, and a `role: baseline` run that claims the candidate arm are rejected as
+  not comparable. Stored runs without `arm` keep their `role` as their arm, and the candidate is
+  never selected as its own baseline.
 - The pinned Python lanes are more self-contained and better labelled:
   - The `archival` lane rejects the `pycubrid_source_sha` dispatch input in the `plan` job, before
     any cell installs, because its cells and manifest name the pycubrid 1.0.0 reproduction.

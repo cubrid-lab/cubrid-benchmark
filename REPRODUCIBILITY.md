@@ -115,7 +115,8 @@ folder whose `run.yaml` holds:
 any of the following holds:
 
 - either run's group is missing or blank
-- the roles are not `baseline` and `candidate`
+- the comparison arms are not `baseline` and `candidate`. A run's arm is its `arm` field, or its
+  `role` when `arm` is absent; a `role: baseline` run must be the baseline arm
 - either run lacks `comparison_identity`, or has an unknown field in it
 - a group does not match the group derived from its own identity (it was copied or edited)
 - any identity field differs
@@ -132,8 +133,11 @@ operator-written group strings; the report marks that basis as legacy. Automated
 that flag.
 
 The scheduled `representative` workflow lane captures its candidate on the runner and selects a
-baseline with `scripts/nightly_compare.py` only among `role: baseline` runs with an identical
-identity. When none exists it reports `not comparable / needs fresh baseline` and keeps the
+baseline with `scripts/nightly_compare.py` only among baseline-arm runs with an identical
+identity: the group's first run (`role: baseline`) and later repeats of the baseline condition
+(`role: candidate`, `arm: baseline`). Each such run is one baseline trial for
+`scripts/regression_evidence.py`, so a group recorded by the lifecycle in `AGENTS.md` can reach
+the three-trial bar without a second `role: baseline` run. When none exists it reports `not comparable / needs fresh baseline` and keeps the
 candidate run and report in the workflow artifacts. No workflow lane opens a regression issue:
 a single scheduled run is not issue evidence.
 
