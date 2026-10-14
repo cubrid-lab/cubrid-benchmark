@@ -153,20 +153,53 @@ historical names (`connect_disconnect`, `prepared_statement`, `batch_insert`,
 
 ## Memory Tracking
 
-Python extended Tier 1 runs are executed via `scripts/collect_metrics.py`, which wraps pytest and captures RSS from `resource.getrusage(resource.RUSAGE_CHILDREN)`.
+Python extended Tier 1 runs are executed via `scripts/collect_metrics.py`, which runs one
+measured command (pytest) as a child process and reads
+`resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss` before and after it.
 
 ```mermaid
 flowchart TD
     Start[collect_metrics.py starts] --> Before[Read RUSAGE_CHILDREN ru_maxrss]
-    Before --> Run[Run pytest benchmark subprocess]
+    Before --> Run[Run one measured child: pytest benchmark]
     Run --> After[Read RUSAGE_CHILDREN ru_maxrss again]
-    After --> Emit[Write *.metrics.json artifact with before/after/delta]
+    After --> Check{Before value is 0 and the unit is known?}
+    Check -->|yes| Peak[child_peak_rss_kb = after value in KiB]
+    Check -->|no| Null[child_peak_rss_kb = null, reason recorded, warning on stderr]
+    Peak --> Emit[Write *.metrics.json artifact]
+    Null --> Emit
 ```
 
-Metrics artifact fields:
-- `rusage_children_before_kb`
-- `rusage_children_after_kb`
-- `peak_rss_delta_kb`
+What the number means. `RUSAGE_CHILDREN.ru_maxrss` is the largest RSS of any waited-for child,
+not a sum and not a per-child counter. In a fresh wrapper the before value is 0, so the after
+value is exactly the measured child's own peak RSS (checked against the child's own
+`RUSAGE_SELF` reading on Linux). If the wrapper already had a child, a smaller measured child
+leaves the value unchanged, and the old `after - before` delta would wrongly report 0. The
+collector then reports `child_peak_rss_kb: null` with `child_peak_rss_unavailable` instead of a
+number. The `Makefile` starts a fresh wrapper per command, so this is the supported case.
+
+Keep these measurements apart:
+- **Child peak RSS** (`child_peak_rss_kb`): peak resident memory of the whole benchmark process
+  (interpreter, pytest, driver, data). It is not allocated bytes and not the database server.
+- **Increase over a measured baseline**: not recorded. It would need a separate baseline run of
+  the same child without the workload.
+- **Python heap allocations** (`tracemalloc`): not recorded by this collector.
+
+Units. Linux reports `ru_maxrss` in KiB and macOS in bytes. The collector converts to KiB and
+records `platform` and `ru_maxrss_unit`. On other platforms the unit is unknown and
+`child_peak_rss_kb` is `null`.
+
+Metrics artifact fields (`metrics.memory`):
+- `child_peak_rss_kb`: the measured child's peak RSS in KiB, or `null`
+- `child_peak_rss_unavailable`: reason, present only when `child_peak_rss_kb` is `null`
+- `measured_children`: always 1
+- `platform`, `ru_maxrss_unit`, `rusage_children_before_raw`, `rusage_children_after_raw`
+- Deprecated compatibility fields: `rusage_children_before_kb`, `rusage_children_after_kb` and
+  `peak_rss_delta_kb` (the after-minus-before delta, valid only when the before value is 0)
+
+Top-level `result_status` is `ok`, `missing` or `invalid_json`. A failing command keeps its own
+exit status. The result file is removed before the command starts, so a stale file from an
+earlier run is never reported as this run's output. A successful command whose result file is
+then missing, not UTF-8 or not valid JSON exits 2.
 
 ## Language-Specific Drivers
 
