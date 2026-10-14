@@ -17,7 +17,7 @@ therefore addressed keys that no longer existed. No result or row count was chec
 misses produced throughput numbers anyway. Every round also timed the re-seed.
 
 `auto_increment_proof.py` replays that shape on a 5-row table. The output on both servers
-(`runs/2026-10-14_explicit-keys-baseline/raw/auto_increment_proof_*.json`):
+(`runs/2026-10-14_explicit-keys-at-457e9f6/raw/auto_increment_proof_*.json`):
 
 | Server | Round | Generated ids | SELECT hits for keys 1-5 | UPDATE rowcount | DELETE rowcount |
 |--------|------:|---------------|------------------------:|----------------:|----------------:|
@@ -50,20 +50,21 @@ misses produced throughput numbers anyway. Every round also timed the re-seed.
 | update_indexed | 1,000 | 1,000 UPDATE + 1 commit |
 | delete_sequential | 1,000 | 1,000 DELETE + 1 commit |
 
-## Results: 2026-10-14_explicit-keys-baseline (CUBRID 11.4)
+## Results: 2026-10-14_explicit-keys-at-457e9f6 (CUBRID 11.4)
 
-pycubrid 1.12.0, CPython 3.12.13, CUBRID 11.4.6.1963. There were 3 trials of 5 measured rounds
-each. The table shows the median of the three per-trial median round times, and rows per second
-at that median. The machine was shared, and trial 2 ran during a load spike (see `run.yaml`), so
-treat the spread as real noise.
+Measured from a clean checkout of benchmark commit `457e9f6` (`run.yaml` records the full SHA
+and the workload file hash), with pycubrid 1.12.0, CPython 3.12.13 and CUBRID 11.4.6.1963. There
+were 3 trials of 5 measured rounds each. The table shows the median of the three per-trial
+median round times, and rows per second at that median. The machine was shared and other work
+disturbed several rounds (see `run.yaml`), so treat the spread as real noise.
 
 | Operation | Per-trial median round (s) | Median (s) | Rows/s at median |
 |-----------|----------------------------|-----------:|-----------------:|
-| insert_sequential | 8.113 / 14.377 / 7.568 | 8.113 | 1,233 |
-| select_by_pk | 7.438 / 11.034 / 6.815 | 7.438 | 1,344 |
-| select_full_scan | 0.0341 / 0.0338 / 0.0483 | 0.0341 | 293,052 |
-| update_indexed | 0.579 / 0.836 / 0.778 | 0.778 | 1,285 |
-| delete_sequential | 0.616 / 0.728 / 0.720 | 0.720 | 1,388 |
+| insert_sequential | 10.907 / 8.210 / 21.113 | 10.907 | 917 |
+| select_by_pk | 11.308 / 10.351 / 11.862 | 11.308 | 884 |
+| select_full_scan | 0.0367 / 0.0466 / 0.0337 | 0.0367 | 272,693 |
+| update_indexed | 0.639 / 0.818 / 0.696 | 0.696 | 1,437 |
+| delete_sequential | 0.756 / 0.646 / 0.774 | 0.756 | 1,322 |
 
 A single correctness smoke on CUBRID 10.2.18.9024 (`raw/cubrid102_smoke_t1.json`) passed every
 verification. Its timings come from another server and are not part of this comparable group.
@@ -72,7 +73,7 @@ verification. Its timings come from another server and are not part of this comp
 
 | Run ID | Date | Label | Comparable Group | Compares To | Key Finding |
 |--------|------|-------|------------------|-------------|-------------|
-| 2026-10-14_explicit-keys-baseline | 2026-10-14 | explicit-keys-baseline | devbox-i5-9400F-linux5.15.0-198-docker29.2.1-cubrid114-tier1-explicit-keys-v2 | — | First baseline of the corrected workload; every round verified |
+| 2026-10-14_explicit-keys-at-457e9f6 | 2026-10-14 | explicit-keys-at-457e9f6 | devbox-i5-9400F-linux5.15.0-198-docker29.2.1-cubrid114-tier1-explicit-keys-v2 | — | First baseline of the corrected workload; every round verified |
 
 ## Not comparable
 
@@ -88,6 +89,7 @@ changed: it is a historical mirror whose active use is being retired separately.
 runs load only the CUBRID fixture in `cubrid_only_plugin.py`:
 
 ```bash
+git checkout 457e9f667a0d15fcf807c6882a6cf303a55e0525   # or the revision under test, clean
 docker run -d --name bench26-cubrid-114 -e CUBRID_DB=benchdb -p 33641:33000 cubrid/cubrid:11.4
 uv venv -p 3.12 .venv && uv pip install -p .venv/bin/python -r python/requirements.txt
 .venv/bin/python experiments/tier1-python-workload/auto_increment_proof.py --port 33641

@@ -1,6 +1,6 @@
-run_id: "2026-10-14_explicit-keys-baseline"
-date: "2026-10-14T10:23:51+09:00"
-label: "explicit-keys-baseline"
+run_id: "2026-10-14_explicit-keys-at-457e9f6"
+date: "2026-10-14T10:55:45+09:00"
+label: "explicit-keys-at-457e9f6"
 role: baseline
 compares_to: null
 comparable_group: "devbox-i5-9400F-linux5.15.0-198-docker29.2.1-cubrid114-tier1-explicit-keys-v2"
@@ -14,7 +14,7 @@ environment:
     memory_gb: 31.3
     os: "Ubuntu 22.04.5 LTS"
     kernel: "5.15.0-198-generic"
-    load: "shared machine (8 logged-in users, other sessions running); 1-min loadavg 1.19-8.27 between trials (raw/loadavg.log). Trial 2 ran during a load spike. Results are noisy."
+    load: "shared machine (8 logged-in users, other sessions running); 1-min loadavg 0.34-6.77 at trial boundaries (raw/loadavg.log); other work on the host disturbed several rounds (for example trial 3 INSERT). Results are noisy."
   software:
     python: "CPython 3.12.13 (uv-managed venv)"
     pytest: "9.1.1"
@@ -30,8 +30,9 @@ environment:
     autocommit: false
 
 benchmark_source:
-  base_sha: "f5510d0b759016b886750815b4b8954b23f59cef"
-  note: "measured from the uncommitted working tree of this run's pull request on top of base_sha (pytest-benchmark records dirty: true); the workload is the committed python/bench_pycubrid.py, revision tier1-explicit-keys-v2"
+  sha: "457e9f667a0d15fcf807c6882a6cf303a55e0525"
+  checkout: "clean detached worktree at sha (pytest-benchmark commit_info dirty: false in every raw file)"
+  workload_file_sha256: "f9a7c8857816358a6cfbc5ad5b40cb5855e3279068aa822ca213adb145dbbf76  python/bench_pycubrid.py"
 
 protocol:
   workload_revision: "tier1-explicit-keys-v2"
