@@ -4,7 +4,7 @@ Artifact uploads in ``bench.yml`` use ``if-no-files-found: warn`` so that an ear
 not followed by misleading "no files found" errors. This check is the separate gate that keeps
 a *successful* required measurement from passing without its evidence.
 
-    python scripts/check_required_results.py --lane representative --dir results/representative
+    python scripts/check_required_results.py --lane pinned --dir results/pinned
     python scripts/check_required_results.py --lane outcomes --dir results --outcomes "a=success"
 
 ``--outcomes`` (full lane) lists optional track outcomes as ``name=outcome`` pairs. Optional
@@ -19,14 +19,16 @@ import os
 from pathlib import Path
 
 REQUIRED: dict[str, tuple[str, ...]] = {
-    "representative": (
+    "pinned": (
         "source.txt",
         "pip-freeze.txt",
+        "versions.json",
         "tier0.xml",
         "python_tier1_pycubrid.json",
         "candidate/run.yaml",
         "candidate/raw/results.json",
         "comparison/regression_report.json",
+        "cell.json",
     ),
     "full": ("python_tier1.json",),
     # Report optional track outcomes only; nothing is required.

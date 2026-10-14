@@ -42,36 +42,32 @@ at the current revision. It needs a MySQL 8.0 server and a prior
 Retiring the active comparison is a project-scope decision, not evidence that MySQL or PyMySQL is
 slow or broken.
 
-## Version Matrix
+## Measured Python Versions
 
-The legacy version-matrix runner lives in `.github/workflows/bench.yml` as the
-`matrix-benchmark` job. It runs only through a manual `workflow_dispatch` with `lane=matrix`
-(it is no longer scheduled) and expands two axes:
+**Supported is not the same as measured.** pycubrid supports Python 3.11-3.15 and CUBRID
+10.2-11.4, and sqlalchemy-cubrid supports SQLAlchemy 2.0-2.1. The workflow measures the pinned
+releases in `python/constraints-current.txt` (currently pycubrid 1.12.0, sqlalchemy-cubrid
+1.11.0, SQLAlchemy 2.1.4) on the cells in `python/lanes.json`:
 
-- `python-version`: `3.10`, `3.11`, `3.12`
-- `driver-version`: `1.0.0` for `pycubrid`
+| Lane | Trigger | Cells (Python × CUBRID) |
+|------|---------|-------------------------|
+| `representative` | weekly schedule and manual dispatch | 3.12 × 11.4 |
+| `release` | manual dispatch | 3.11 and 3.14 × 10.2 and 11.4 |
+| `archival` | manual dispatch | 3.10, 3.11, 3.12 × 11.2 with pycubrid 1.0.0 (legacy reproduction, not current support evidence) |
 
-Each matrix combination runs Tier 1 Python benchmarks against the Docker-backed CUBRID and
-MySQL services, then packages the raw benchmark output into a descriptive result file such as
-`results/python310_pycubrid100.json`.
+Every cell installs the exact pins and verifies them before measuring. The check covers
+`importlib.metadata`, `pycubrid.__version__` and the SQLAlchemy range of the dialect. A
+`pycubrid_source_sha` dispatch input measures a pycubrid commit instead, verified through its
+`direct_url.json`. A silently upgraded package or a failed source install fails the cell.
 
-### Adding New Version Axes
+Each cell measures only the correctness-verified pycubrid Tier 1 workload
+(`python/bench_pycubrid.py`). It then records measured provenance and a report-only baseline
+comparison, and uploads `cell.json`. `pinned-manifest` builds `manifest.json` and fails when a
+planned cell is missing.
 
-1. Edit the `strategy.matrix` block in `.github/workflows/bench.yml`.
-2. Add a new Python version under `python-version` or a new `pycubrid` release under
-   `driver-version`.
-3. Keep the packaging step in sync if you add a brand-new driver axis with a different driver
-   name, so artifact names and manifest metadata stay descriptive.
-4. Run the workflow with `workflow_dispatch` (`lane=matrix`) to validate the new combinations.
-
-### Matrix Results and Manifest
-
-- Per-combination result artifacts are uploaded from `results/` with names like
-  `python-tier1-py3.10-pycubrid-1.0.0`.
-- The `matrix-manifest` job downloads those artifacts back into `results/` and runs
-  `python scripts/generate_manifest.py --results-dir results`.
-- The generated `results/manifest.json` records the `(scenario, version-combo) -> result_file`
-  mapping consumed by downstream reporting.
+To change what is measured, edit `python/constraints-current.txt` for a new published release
+or `python/lanes.json` for cells, then run `gh workflow run bench.yml -f lane=release`. See
+`RUNBOOK.md`, "Scheduled and manual benchmark runs".
 
 ## Drivers Tested
 

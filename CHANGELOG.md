@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Changed
+- The workflow measures pinned current releases instead of only pycubrid 1.0.0.
+  `python/constraints-current.txt` pins pycubrid 1.12.0, sqlalchemy-cubrid 1.11.0, SQLAlchemy
+  2.1.4 and pytest-benchmark 5.3.0, and `python/lanes.json` defines the cells:
+  `representative` (weekly and manual, Python 3.12 × CUBRID 11.4), `release` (manual, Python 3.11
+  and 3.14 × CUBRID 10.2 and 11.4) and `archival` (manual, the legacy pycubrid 1.0.0 matrix,
+  labelled as not current support evidence). The old `matrix` lane is replaced by `archival`.
+- Each cell checks its installed versions before measuring (`scripts/python_lanes.py
+  verify-install`): exact pins, index installs, `pycubrid.__version__` and the dialect's
+  SQLAlchemy range. An optional `pycubrid_source_sha` input measures a pycubrid commit, and its
+  `direct_url.json` commit is checked. Each cell writes `versions.json` and `cell.json`.
+  `scripts/generate_manifest.py --glob/--expect-cell` builds the manifest and fails when a
+  planned cell is missing.
 - The maintained Python track is CUBRID-only. `make tier0`, `tier1-python`,
   `tier1-python-extended`, `tier2-python`, `bench-verify` (and so `make all`) run only the pycubrid
   and sqlalchemy-cubrid modules. `make seed` seeds CUBRID only (`apply_schema.py --with-mysql`

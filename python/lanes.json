@@ -1,0 +1,28 @@
+{
+  "_comment": "Measured Python lanes for .github/workflows/bench.yml; see RUNBOOK.md. Supported is not the same as measured: pycubrid supports more Python and CUBRID versions than these cells.",
+  "scenario": "python-tier1",
+  "workload_module": "bench_pycubrid.py",
+  "lanes": {
+    "representative": {
+      "constraints": "python/constraints-current.txt",
+      "cells": [{"python": "3.12", "cubrid": "11.4"}]
+    },
+    "release": {
+      "constraints": "python/constraints-current.txt",
+      "cells": [
+        {"python": "3.11", "cubrid": "10.2"},
+        {"python": "3.11", "cubrid": "11.4"},
+        {"python": "3.14", "cubrid": "10.2"},
+        {"python": "3.14", "cubrid": "11.4"}
+      ]
+    },
+    "archival": {
+      "constraints": "python/constraints-archival-1.0.0.txt",
+      "cells": [
+        {"python": "3.10", "cubrid": "11.2"},
+        {"python": "3.11", "cubrid": "11.2"},
+        {"python": "3.12", "cubrid": "11.2"}
+      ]
+    }
+  }
+}

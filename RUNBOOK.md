@@ -105,7 +105,7 @@ Tier 2 conclusions must describe the ratio versus the raw driver, not only absol
 
 ## Scheduled and manual benchmark runs
 
-`.github/workflows/bench.yml` has four lanes. Every job has a `timeout-minutes` bound, every
+`.github/workflows/bench.yml` has these lanes. Every job has a `timeout-minutes` bound, every
 action is pinned to a commit SHA, and the workflow token is `contents: read` except in the
 manual full suite (`contents: write` for the gh-pages publish, `actions: read` for the previous
 artifact). No lane opens GitHub issues.
@@ -114,11 +114,16 @@ artifact). No lane opens GitHub issues.
 |------|---------|-----------|-------|
 | `checks` | pull request or push to `main` touching benchmark code | `pytest tests` (offline tests and workflow policy) | 10 min |
 | `cubrid-smoke` | same | CUBRID 11.4 only: Tier 0 plus the verified Tier 1 workload with `--benchmark-disable` (correctness, no timing) | 15 min |
-| `representative` | weekly (`0 4 * * 0`) or `workflow_dispatch` with `lane=representative` | CUBRID 11.4 only: Tier 0 smoke, pycubrid Tier 1 measurement, provenance capture, report-only baseline comparison, required-result check | 40 min |
-| `full-suite` / `matrix` | `workflow_dispatch` with `lane=full` / `lane=matrix` only | the legacy cross-language suite (CUBRID 11.2 + MySQL 8.0) / the legacy pycubrid 1.0.0 matrix | 120 / 45 min |
+| `plan` → `pinned` → `pinned-manifest`, lane `representative` | weekly (`0 4 * * 0`) or `workflow_dispatch` with `lane=representative` | one cell (Python 3.12 × CUBRID 11.4): pinned install and version check, Tier 0 smoke, pycubrid Tier 1 measurement, provenance capture, report-only baseline comparison, `cell.json`, required-result check, then a manifest that fails on a missing cell | 40 min per cell |
+| same jobs, lane `release` | `workflow_dispatch` with `lane=release` only | the same per cell, for Python 3.11 and 3.14 × CUBRID 10.2 and 11.4 | 40 min per cell |
+| same jobs, lane `archival` | `workflow_dispatch` with `lane=archival` only | the legacy pycubrid 1.0.0 cells (Python 3.10-3.12 × CUBRID 11.2), not current support evidence | 40 min per cell |
+| `full-suite` | `workflow_dispatch` with `lane=full` only | the legacy cross-language suite (CUBRID 11.2 + MySQL 8.0) | 120 min |
 
 Docs-only changes trigger nothing. Benchmark throughput is never a pull request gate. The
-full cross-language suite and the version matrix never run on a schedule.
+full cross-language suite and the `release`/`archival` lanes never run on a schedule. The cells
+and pins live in `python/lanes.json` and `python/constraints-current.txt`. A
+`pycubrid_source_sha` dispatch input (a full 40-hex commit) measures that pycubrid commit
+instead of the pinned release, and `python_lanes.py verify-install` checks the installed commit.
 
 Failure handling:
 
@@ -134,13 +139,17 @@ Failure handling:
   preinstalled toolchain) and the benchforge report steps. Their outcomes are listed in the job
   summary and as warnings. The full suite's required-result check runs only after Python Tier 1
   succeeded, so a Tier 1 failure is not followed by a second error.
-- `workflow_dispatch` with `inject_failure=true` makes the representative lane fail right after
-  its Tier 0 smoke, to check this behaviour on demand.
+- `workflow_dispatch` with `inject_failure=true` makes every pinned cell fail right after its
+  Tier 0 smoke, to check this behaviour on demand.
+- `pinned-manifest` runs after failed or cancelled cells too and fails when any planned cell
+  produced no `cell.json`.
 
 Manual runs:
 
 ```bash
 gh workflow run bench.yml -f lane=representative            # bounded CUBRID-only lane
+gh workflow run bench.yml -f lane=release                   # oldest/newest Python x 10.2/11.4
+gh workflow run bench.yml -f lane=representative -f pycubrid_source_sha=<40-hex commit>
 gh workflow run bench.yml -f lane=representative -f inject_failure=true
 gh workflow run bench.yml -f lane=full                      # legacy cross-language suite
 ```

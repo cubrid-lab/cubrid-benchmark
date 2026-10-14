@@ -333,10 +333,12 @@ Skipping any phase requires explicit justification. Trivial changes (typos, sing
 ### Workflow lanes (`bench.yml`)
 - PR / push to `main` (code paths only): offline tests, workflow policy, CUBRID-only Tier 0 and
   verified Tier 1 without timing. Never a throughput gate.
-- Weekly schedule and `workflow_dispatch lane=representative`: bounded CUBRID-only lane
-  (Tier 0, pycubrid Tier 1, provenance, report-only comparison).
-- `workflow_dispatch lane=full` / `lane=matrix`: legacy cross-language suite and matrix, manual
-  only; the full suite publishes to GitHub Pages.
+- Weekly schedule and `workflow_dispatch lane=representative|release|archival`: pinned
+  CUBRID-only lanes (`plan` → `pinned` → `pinned-manifest`; cells in `python/lanes.json`, pins in
+  `python/constraints-current.txt`). Each cell verifies its installs and then runs Tier 0,
+  pycubrid Tier 1, provenance capture and a report-only comparison.
+- `workflow_dispatch lane=full`: legacy cross-language suite, manual only; it publishes to
+  GitHub Pages.
 - Every job has a timeout, actions are SHA-pinned, and no lane opens issues. See `RUNBOOK.md`.
 
 ## Anti-Patterns
