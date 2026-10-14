@@ -211,26 +211,51 @@ Use the following interpretation inside one comparable group:
 - `≥10%` relative delta: significant effect-size threshold for opening a performance issue,
   provided replication and provenance requirements are met
 
-### Threshold tuning for draft issue generation
+### Regression evidence and draft issues
 
-`scripts/gap_to_issue.py` converts `compare_runs.py` JSON output into draft GitHub issue markdown.
-Use it only for fail-level regressions inside one comparable group. `make gap-issues` runs the
-comparator without the legacy flag, so a pair without a matching measured `comparison_identity`
-stops with exit code `3` (not comparable) before any draft is written.
+Every regression-reporting path uses one decision: `scripts/regression_evidence.py`. That covers
+the workflow's `nightly_compare.py`, `make gap-issues` / `scripts/gap_to_issue.py` and
+`scripts/file_regression_issue.py`.
 
-- `--min-effect-size` defaults to `10.0` and should stay aligned with the issue-opening bar above.
-- `--min-replications` defaults to `3`, matching the minimum issue-worthy claim in this runbook.
-- If a benchmark environment is noisy, raise `--min-effect-size` before filing rather than treating
-  a single borderline run as actionable.
-- If provenance does not yet encode replication count, keep the default filing bar in the issue body
-  and treat the draft as a reminder to gather more evidence before opening anything manually.
+- An **independent trial** is one run directory: one complete benchmark command with its own
+  `run.yaml` and raw result file. Pedantic rounds, rows and operations inside one result file
+  are not trials. A run directory that repeats a `run_id` or an identical raw result file is
+  excluded, and the reason goes into `excluded_runs`.
+- Decisions:
+  - `error` (exit `2`): a run or raw result is missing, unreadable or invalid.
+  - `not_comparable` (`3`): the identity, roles, operations or units differ, or one side mixes
+    software or benchmark revisions, or a source revision is unpinned or dirty.
+  - `insufficient_evidence` (`0`): fewer than 3 trials on either side. Per-operation results
+    are marked `advisory:`.
+  - `equivalent` (`0`): within `±5%`.
+  - `investigate` (`0`): beyond `±5%`, but not a reproduced decline.
+  - `reproduced_regression` (`1`): the median dropped by at least `10%` **and** every candidate
+    trial is below every baseline trial, with at least 3 trials on each side.
+- Only `reproduced_regression` sets `eligible_for_issue`. The workflow's pinned lanes have one
+  candidate run per cell, so their comparisons are always advisory and never open an issue.
+- `make gap-issues` takes one or more run directories in `COMPARE_BASELINE_DIR` and
+  `COMPARE_CANDIDATE_DIR` (space-separated). It writes the evidence report
+  (`EVIDENCE_REPORT`, default `results/regression_evidence.json`) and drafts markdown only for
+  operations classified `reproduced_regression`. Each draft names every baseline and candidate
+  run, its date, benchmark source SHA and raw result path, plus the trial values, ranges and a
+  dedup key. A plain `compare_runs.py` report is never accepted as issue evidence.
+- Drafts never file themselves. A draft for another repository (`TARGET_REPO`, for example
+  pycubrid or sqlalchemy-cubrid) needs explicit approval from that repository's owner.
+- `scripts/file_regression_issue.py --evidence <report> [--execute]` files only into this
+  repository and only for an eligible report. Without `--execute` it prints the plan. With
+  `--execute` it comments on the open issue that carries the same dedup key, or creates one
+  titled with the candidate SHA and date. A failed `gh` call exits `2`. No workflow calls it:
+  performance checks stay advisory until a stable runner, calibrated thresholds, a cost budget
+  and a fixed workload are separately approved.
 
 Examples:
 
 ```bash
-python3 scripts/gap_to_issue.py --report results/compare_latest.json
-make gap-issues
-make gap-issues MIN_EFFECT_SIZE=15.0 MIN_REPLICATIONS=4 TARGET_REPO=cubrid-labs/sqlalchemy-cubrid
+make gap-issues COMPARE_BASELINE_DIR="runs/b1 runs/b2 runs/b3" COMPARE_CANDIDATE_DIR="runs/c1 runs/c2 runs/c3"
+python3 scripts/regression_evidence.py --baseline-dir runs/b1 --baseline-dir runs/b2 \
+  --baseline-dir runs/b3 --candidate-dir runs/c1 --candidate-dir runs/c2 --candidate-dir runs/c3 \
+  --output results/regression_evidence.json
+python3 scripts/file_regression_issue.py --evidence results/regression_evidence.json   # plan only
 ```
 
 ## Environment Validation Checklist

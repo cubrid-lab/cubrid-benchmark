@@ -341,6 +341,7 @@ class TestBaselineSelectionAndNightlyDecision:
         assert outputs == {
             "status": "not_comparable",
             "exit_code": str(compare_runs.EXIT_NOT_COMPARABLE),
+            "evidence": "not_comparable",
             "open_issue": "false",
         }
         comment = (tmp_path / "out" / "regression_comment.md").read_text()
@@ -370,7 +371,7 @@ class TestBaselineSelectionAndNightlyDecision:
 
         assert outputs["open_issue"] == "false"
 
-    def test_regression_on_compatible_pair_opens_issue(self, tmp_path: Path) -> None:
+    def test_single_run_regression_on_compatible_pair_stays_advisory(self, tmp_path: Path) -> None:
         experiment = tmp_path / "experiment"
         _write_run(
             experiment / "runs" / "2026-10-01_old",
@@ -403,7 +404,13 @@ class TestBaselineSelectionAndNightlyDecision:
         assert run_provenance.select_baseline(candidate, [experiment])[0] == newest
         outputs = self._decide(tmp_path, candidate, experiment)
 
-        assert outputs == {"status": "fail", "exit_code": "1", "open_issue": "true"}
+        # The threshold alert is reported, but one candidate run is not issue evidence (#34).
+        assert outputs == {
+            "status": "fail",
+            "exit_code": "1",
+            "evidence": "insufficient_evidence",
+            "open_issue": "false",
+        }
 
 
 class TestNightlyMixedResults:

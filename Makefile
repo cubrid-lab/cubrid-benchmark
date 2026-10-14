@@ -52,11 +52,14 @@ report:
 		python3 scripts/generate_report.py --input "$$input" --output-dir "$$output_dir" --format "$(REPORT_FORMAT)"; \
 	fi
 
+# Draft regression issues only from the shared evidence policy (scripts/regression_evidence.py).
+# COMPARE_BASELINE_DIR / COMPARE_CANDIDATE_DIR may each list several run directories: every run
+# directory is one independent trial, and a report needs at least 3 per side.
+EVIDENCE_REPORT ?= results/regression_evidence.json
 gap-issues:
-	mkdir -p "$(dir $(COMPARE_REPORT))"
-	python3 scripts/compare_runs.py --baseline-dir "$(COMPARE_BASELINE_DIR)" --candidate-dir "$(COMPARE_CANDIDATE_DIR)" --output "$(COMPARE_REPORT)"; rc=$$?; if [ $$rc -gt 1 ]; then exit $$rc; fi
-	python3 -c 'import sys; from pathlib import Path; sys.stdout.write(Path(sys.argv[1]).read_text(encoding="utf-8"))' "$(COMPARE_REPORT)"
-	python3 scripts/gap_to_issue.py --report "$(COMPARE_REPORT)" --min-effect-size "$(MIN_EFFECT_SIZE)" --min-replications "$(MIN_REPLICATIONS)" --target-repo "$(TARGET_REPO)" $(if $(GAP_ISSUES_OUTPUT_DIR),--output-dir "$(GAP_ISSUES_OUTPUT_DIR)",); rc=$$?; if [ $$rc -gt 1 ]; then exit $$rc; fi
+	mkdir -p "$(dir $(EVIDENCE_REPORT))"
+	python3 scripts/regression_evidence.py $(foreach d,$(COMPARE_BASELINE_DIR),--baseline-dir "$(d)") $(foreach d,$(COMPARE_CANDIDATE_DIR),--candidate-dir "$(d)") --fail "$(MIN_EFFECT_SIZE)" --min-trials "$(MIN_REPLICATIONS)" --output "$(EVIDENCE_REPORT)"; rc=$$?; if [ $$rc -gt 1 ]; then exit $$rc; fi
+	python3 scripts/gap_to_issue.py --report "$(EVIDENCE_REPORT)" --min-effect-size "$(MIN_EFFECT_SIZE)" --min-replications "$(MIN_REPLICATIONS)" --target-repo "$(TARGET_REPO)" $(if $(GAP_ISSUES_OUTPUT_DIR),--output-dir "$(GAP_ISSUES_OUTPUT_DIR)",); rc=$$?; if [ $$rc -gt 1 ]; then exit $$rc; fi
 
 # Python (maintained track: CUBRID only; no MySQL server or PyMySQL needed)
 tier0:

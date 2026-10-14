@@ -179,6 +179,10 @@ Variance control is mandatory for any claim of improvement or regression.
 
 ### Minimum replication bar
 
+`scripts/regression_evidence.py` enforces this bar for every regression report (see `RUNBOOK.md`,
+"Regression evidence and draft issues"). Only separate run directories count as replications,
+never the pedantic rounds inside one result file.
+
 - Tier 0: one clean pass per language is enough; it is a readiness gate, not a performance claim
 - Tier 1 and Tier 2 exploratory work: at least `2` full command replications
 - Tier 1 and Tier 2 issue-filing or report-worthy claims: at least `3` full command replications

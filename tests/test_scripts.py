@@ -12,7 +12,6 @@ import pytest
 _ = sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 emit_benchforge_v2 = cast(Any, importlib.import_module("scripts.emit_benchforge_v2"))
-gap_to_issue = cast(Any, importlib.import_module("scripts.gap_to_issue"))
 generate_manifest = cast(Any, importlib.import_module("scripts.generate_manifest"))
 generate_report = cast(Any, importlib.import_module("scripts.generate_report"))
 
@@ -302,62 +301,3 @@ class TestGenerateReport:
 
         assert exit_code == 1
         assert "baseline.comparable_group must match input.comparable_group" in captured.err
-
-
-class TestGapToIssue:
-    def test_select_operations_filters_by_status_and_effect_size(self) -> None:
-        report = {
-            "operations": [
-                {"name": "op1", "status": "fail", "percent_change": -15.0},
-                {"name": "op2", "status": "fail", "percent_change": -5.0},
-                {"name": "op3", "status": "alert", "percent_change": -8.0},
-            ]
-        }
-
-        selected = gap_to_issue._select_operations(
-            report, min_effect_size=10.0, min_replications=1
-        )
-
-        assert len(selected) == 1
-        assert selected[0]["name"] == "op1"
-
-    def test_select_operations_fail_closed_no_replications(self) -> None:
-        report = {
-            "operations": [
-                {"name": "op1", "status": "fail", "percent_change": -20.0},
-            ]
-        }
-
-        selected = gap_to_issue._select_operations(
-            report, min_effect_size=10.0, min_replications=3
-        )
-
-        assert len(selected) == 0
-
-    def test_select_operations_with_replications_above_min(self) -> None:
-        report = {
-            "summary": {"replications": 5},
-            "operations": [
-                {"name": "op1", "status": "fail", "percent_change": -20.0},
-            ],
-        }
-
-        selected = gap_to_issue._select_operations(
-            report, min_effect_size=10.0, min_replications=3
-        )
-
-        assert len(selected) == 1
-
-    def test_select_operations_with_replications_below_min(self) -> None:
-        report = {
-            "summary": {"replications": 2},
-            "operations": [
-                {"name": "op1", "status": "fail", "percent_change": -20.0},
-            ],
-        }
-
-        selected = gap_to_issue._select_operations(
-            report, min_effect_size=10.0, min_replications=3
-        )
-
-        assert len(selected) == 0
