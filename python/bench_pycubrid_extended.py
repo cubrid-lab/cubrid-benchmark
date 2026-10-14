@@ -3,7 +3,7 @@
 Every scenario has a contract in ``SCENARIOS`` (also listed in ``docs/WORKLOADS.md``): what one
 benchmarked call does, how many statements and rows it touches, what is timed, and which CAS
 protocol path it is expected to use. The pytest-benchmark ``ops`` value is **calls per second**;
-divide by ``rows_per_call`` for rows per second.
+multiply by ``rows_per_call`` for rows per second.
 
 - Seeding and clean-up run in an untimed pedantic ``setup``; an untimed ``teardown`` verifies
   every fetched row and the final table state, and a mismatch fails the benchmark.

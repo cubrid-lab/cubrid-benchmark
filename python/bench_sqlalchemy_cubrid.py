@@ -15,7 +15,7 @@ verifies row counts and values after every round.
 from __future__ import annotations
 
 import os
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Sequence
 from datetime import datetime, timezone
 from typing import Any
 
@@ -218,7 +218,10 @@ def test_bench_single_row_crud_orm(
     cubrid_session_factory: SessionFactory,
     cubrid_engine: Engine,
 ) -> None:
+    observed: dict[str, object] = {}
+
     def crud() -> None:
+        # Only record what happened; the untimed verify() judges it.
         with cubrid_session_factory() as session:
             user = _build_user(1, "crud")
             session.add(user)
@@ -226,19 +229,25 @@ def test_bench_single_row_crud_orm(
             user_id = user.id
         with cubrid_session_factory() as session:
             selected = session.get(BenchUser, user_id)
+            observed["inserted_age"] = None if selected is None else selected.age
             if selected is None:
-                raise WorkloadVerificationError("single_row_crud_orm: inserted row not found")
-            before = selected.age
+                return
             selected.age += 1
             session.commit()
         with cubrid_session_factory() as session:
             selected = session.get(BenchUser, user_id)
-            if selected is None or selected.age != before + 1:
-                raise WorkloadVerificationError("single_row_crud_orm: update not visible")
+            observed["updated_age"] = None if selected is None else selected.age
+            if selected is None:
+                return
             session.delete(selected)
             session.commit()
 
     def verify() -> None:
+        inserted, updated = observed.pop("inserted_age", None), observed.pop("updated_age", None)
+        if inserted is None:
+            raise WorkloadVerificationError("single_row_crud_orm: inserted row not found")
+        if not isinstance(inserted, int) or updated != inserted + 1:
+            raise WorkloadVerificationError("single_row_crud_orm: update not visible")
         if _count_users(cubrid_engine) != 0:
             raise WorkloadVerificationError("single_row_crud_orm: row left after delete")
 
@@ -281,21 +290,25 @@ def _select_test(
     scenario: str,
     session_factory: SessionFactory,
     engine: Engine,
-    query: Callable[[Session], list[str]],
+    query: Callable[[Session], Sequence[Any]],
+    name_of: Callable[[Any], str],
 ) -> None:
     prefix = scenario
-    observed: list[list[str]] = []
+    observed: list[Sequence[Any]] = []
 
     def run() -> None:
+        # Keep what was fetched; names are extracted and compared in the untimed verify().
         with session_factory() as session:
             observed.append(query(session))
 
     def verify() -> None:
         expected = [f"{prefix}_{index:05d}" for index in range(1, SELECT_ROWS + 1)]
-        if not observed or observed[-1] != expected:
-            got = len(observed[-1]) if observed else 0
-            raise WorkloadVerificationError(f"{scenario}: expected {SELECT_ROWS} rows, got {got}")
+        got = [name_of(item) for item in observed[-1]] if observed else []
         observed.clear()
+        if got != expected:
+            raise WorkloadVerificationError(
+                f"{scenario}: expected {SELECT_ROWS} rows, got {len(got)}"
+            )
 
     _seed_users(session_factory, engine, SELECT_ROWS, prefix)
     _measure(benchmark, scenario, engine, run, lambda: None, verify)
@@ -306,11 +319,17 @@ def test_bench_orm_select_all_entities(
     cubrid_session_factory: SessionFactory,
     cubrid_engine: Engine,
 ) -> None:
-    def query(session: Session) -> list[str]:
-        users = session.execute(select(BenchUser).order_by(BenchUser.id)).scalars().all()
-        return [user.name for user in users]
+    def query(session: Session) -> Sequence[Any]:
+        return session.execute(select(BenchUser).order_by(BenchUser.id)).scalars().all()
 
-    _select_test(benchmark, "orm_select_all_entities", cubrid_session_factory, cubrid_engine, query)
+    _select_test(
+        benchmark,
+        "orm_select_all_entities",
+        cubrid_session_factory,
+        cubrid_engine,
+        query,
+        lambda user: user.name,
+    )
 
 
 def test_bench_text_select_all_rows(
@@ -318,13 +337,19 @@ def test_bench_text_select_all_rows(
     cubrid_session_factory: SessionFactory,
     cubrid_engine: Engine,
 ) -> None:
-    def query(session: Session) -> list[str]:
-        rows = session.execute(
+    def query(session: Session) -> Sequence[Any]:
+        return session.execute(
             text("SELECT id, name, email, age, created_at FROM bench_users ORDER BY id")
         ).all()
-        return [row[1] for row in rows]
 
-    _select_test(benchmark, "text_select_all_rows", cubrid_session_factory, cubrid_engine, query)
+    _select_test(
+        benchmark,
+        "text_select_all_rows",
+        cubrid_session_factory,
+        cubrid_engine,
+        query,
+        lambda row: row[1],
+    )
 
 
 @pytest.mark.skip(

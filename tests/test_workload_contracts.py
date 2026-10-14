@@ -211,3 +211,19 @@ def test_offline_smoke_of_all_maintained_workloads(tmp_path: Path) -> None:
     # 5 Tier 1 + 4 extended (the opt-in prepared batch skips) + 5 Tier 2 (+ 1 TODO skip).
     assert "14 passed" in summary and "2 skipped" in summary, summary
     assert not out.exists() or json.loads(out.read_text()).get("benchmarks") == []
+
+
+def test_scenario_manifests_point_at_existing_benchmarks() -> None:
+    modules = {"python/bench_sqlalchemy_cubrid.py": TIER2, "python/bench_pycubrid.py": TIER1}
+    modules["python/bench_pycubrid_extended.py"] = EXTENDED
+    checked = 0
+    for manifest in sorted((ROOT / "scenarios").rglob("*.yaml")):
+        for line in manifest.read_text(encoding="utf-8").splitlines():
+            worker = line.strip().removeprefix("worker:").strip()
+            path, _, node = worker.partition("::")
+            if path not in modules:
+                continue
+            function = node.split("[", 1)[0]
+            assert hasattr(modules[path], function), f"{manifest.name}: {worker}"
+            checked += 1
+    assert checked >= 5
