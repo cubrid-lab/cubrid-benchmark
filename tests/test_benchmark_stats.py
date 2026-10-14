@@ -50,6 +50,19 @@ def _normal_model(samples: list[float], z: float) -> float:
     return statistics.fmean(samples) + z * statistics.stdev(samples)
 
 
+class TestRangePercent:
+    def test_formats_a_finite_ratio(self) -> None:
+        assert benchmark_stats.range_percent("op", 0.001, 0.01) == "+/- 10.0%"
+        assert benchmark_stats.range_percent("op", 0.0, 0.01) == "+/- 0.0%"
+
+    @pytest.mark.parametrize(
+        ("stddev_value", "mean"), [(1e308, 5e-324), (0.0, 0.0), (0.001, -0.01)]
+    )
+    def test_rejects_non_finite_or_undefined_ratio(self, stddev_value: float, mean: float) -> None:
+        with pytest.raises(benchmark_stats.InvalidBenchmarkStats):
+            benchmark_stats.range_percent("op", stddev_value, mean)
+
+
 class TestEmpiricalQuantile:
     def test_matches_statistics_inclusive_method(self) -> None:
         expected = statistics.quantiles(SYMMETRIC, n=100, method="inclusive")
@@ -115,6 +128,8 @@ class TestValidation:
             {"ops": 10**400},
             {"data": [0.01, 10**400]},
             {"ops": None, "mean": 5e-324},
+            # Each value is finite, but stddev / mean overflows to +/- inf%.
+            {"mean": 5e-324, "ops": 1.0, "stddev": 1e308},
         ],
     )
     def test_invalid_stats_fail_explicitly(self, overrides: dict[str, object]) -> None:
@@ -126,6 +141,23 @@ class TestValidation:
             emit_benchforge_v2._results(
                 payload, tier="t", language="python", driver="d", database="db"
             )
+
+    def test_non_finite_range_exits_2_from_the_normalizer(self, tmp_path: Path) -> None:
+        raw = tmp_path / "raw.json"
+        raw.write_text(
+            json.dumps({"benchmarks": [_entry(None, mean=5e-324, ops=1.0, stddev=1e308)]}),
+            encoding="utf-8",
+        )
+        completed = subprocess.run(
+            [sys.executable, str(ROOT / "scripts" / "normalize_results.py"), str(raw)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        assert completed.returncode == 2
+        assert "stddev / mean is not finite" in completed.stderr
+        assert "inf" not in completed.stdout
 
     def test_empty_input_fails(self) -> None:
         with pytest.raises(benchmark_stats.InvalidBenchmarkStats):

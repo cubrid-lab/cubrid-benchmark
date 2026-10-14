@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from benchmark_stats import (  # noqa: E402
     InvalidBenchmarkStats,
     observed_latency,
+    range_percent,
     stddev,
     throughput,
 )
@@ -19,13 +20,6 @@ def _read_input(path_arg: str | None) -> dict[str, object]:
     if path_arg:
         return json.loads(Path(path_arg).read_text(encoding="utf-8"))
     return json.load(sys.stdin)
-
-
-def _to_percent(stddev: float, mean: float) -> str:
-    if mean == 0:
-        return "+/- 0.0%"
-    value = abs((stddev / mean) * 100.0)
-    return "+/- {:.1f}%".format(value)
 
 
 def normalize(pytest_benchmark_json: Mapping[str, object]) -> list[dict[str, object]]:
@@ -56,7 +50,7 @@ def normalize(pytest_benchmark_json: Mapping[str, object]) -> list[dict[str, obj
             "name": name,
             "unit": "ops/sec",
             "value": round(value, 4),
-            "range": _to_percent(stddev(name, stats), mean),
+            "range": range_percent(name, stddev(name, stats), mean),
         }
         result.update(observed_latency(name, stats))
         result["extra"] = "language=python tier=1 framework=pytest-benchmark"
