@@ -235,6 +235,50 @@ def _verify_delete(cursor: DBCursor, observed: list[object]) -> None:
     )
 
 
+# Scenario contracts (also listed in docs/WORKLOADS.md). ``ops`` is calls (rounds) per second.
+SCENARIOS: dict[str, dict[str, object]] = {
+    "insert_sequential": {
+        "call": f"{ROW_COUNT} single-row INSERTs with explicit keys + 1 commit",
+        "rows_per_call": ROW_COUNT,
+        "timed": "the INSERT loop and the commit",
+        "setup": "empty table, untimed",
+        "commit_in_timed_region": True,
+        "verification": "row count, key range, sum and every row's values",
+    },
+    "select_by_pk": {
+        "call": f"{ROW_COUNT}x SELECT ... WHERE id = ? + fetchone",
+        "rows_per_call": ROW_COUNT,
+        "timed": "the SELECT loop",
+        "setup": f"{ROW_COUNT} rows seeded, untimed",
+        "commit_in_timed_region": False,
+        "verification": "every fetched row's id and payload",
+    },
+    "select_full_scan": {
+        "call": f"1 SELECT of {ROW_COUNT} rows + fetchall",
+        "rows_per_call": ROW_COUNT,
+        "timed": "the query and the fetch",
+        "setup": f"{ROW_COUNT} rows seeded, untimed",
+        "commit_in_timed_region": False,
+        "verification": "all rows' ids and payloads",
+    },
+    "update_indexed": {
+        "call": f"{UPDATE_COUNT}x UPDATE ... WHERE id = ? + 1 commit",
+        "rows_per_call": UPDATE_COUNT,
+        "timed": "the UPDATE loop and the commit",
+        "setup": f"{ROW_COUNT} rows seeded, untimed",
+        "commit_in_timed_region": True,
+        "verification": "every rowcount == 1 and the updated values",
+    },
+    "delete_sequential": {
+        "call": f"{DELETE_COUNT}x DELETE ... WHERE id = ? + 1 commit",
+        "rows_per_call": DELETE_COUNT,
+        "timed": "the DELETE loop and the commit",
+        "setup": f"{ROW_COUNT} rows seeded, untimed",
+        "commit_in_timed_region": True,
+        "verification": "every rowcount == 1 and the remaining rows",
+    },
+}
+
 RunFn = Callable[[DBCursor, DBConnection, range, list[object]], None]
 VerifyFn = Callable[[DBCursor, list[object]], None]
 

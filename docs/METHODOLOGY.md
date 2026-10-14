@@ -141,19 +141,15 @@ metrics.
 
 ## Extended Workloads
 
-Nightly Tier 1 extended runs include four additional workloads in Python, TypeScript, and Go.
-
-```mermaid
-flowchart LR
-    CD[connect_disconnect] --> PREP[prepared_statement]
-    PREP --> BATCH[batch_insert]
-    BATCH --> CONC[concurrent_select]
-```
-
-- `connect_disconnect`: 100 connect/ping/close cycles to isolate connection overhead
-- `prepared_statement`: Reuse one prepared cursor/statement for 1000 point-select operations
-- `batch_insert`: Insert 1000 rows with batched APIs (`executemany`/prepared statement loops)
-- `concurrent_select`: Four parallel workers executing point-select ranges
+The Python extended workloads (`python/bench_pycubrid_extended.py`, revision
+`tier1-extended-v2`) are `connect_query_close`, `execute_parameterized_loop`,
+`executemany_literal_batch`, the opt-in `executemany_prepared_batch` and
+`concurrent_select_4_threads`. Their exact contracts (what one call does, rows per call, the
+timed region, commit inclusion, the verified result and the CAS protocol path proven by an
+untimed packet probe) are in [Python Workload Contracts](WORKLOADS.md), together with the Tier 1
+and SQLAlchemy Tier 2 contracts. The TypeScript and Go extended suites keep their own
+historical names (`connect_disconnect`, `prepared_statement`, `batch_insert`,
+`concurrent_select`), which do not follow these contracts.
 
 ## Memory Tracking
 

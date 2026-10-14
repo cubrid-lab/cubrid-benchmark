@@ -7,6 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Changed
+- The maintained Python workloads have explicit scenario contracts (`SCENARIOS` in each module,
+  listed in `docs/WORKLOADS.md`, checked by `tests/test_workload_contracts.py`).
+  - **Extended workloads (`tier1-extended-v2`).** `prepared_statement` is now
+    `execute_parameterized_loop`: it was an ordinary `execute` loop, not prepared-statement
+    reuse. `batch_insert` is now `executemany_literal_batch` (FC20), and there is a new opt-in
+    `executemany_prepared_batch` (`executemany(prepared=True)`, FC2 + FC21, with
+    `BENCH_EXECUTEMANY_PREPARED=1`). `connect_disconnect` is now `connect_query_close` and
+    `concurrent_select` is now `concurrent_select_4_threads`. Seeding is untimed, every row
+    is verified, and an untimed packet probe proves each claimed protocol path and records the
+    counts in `extra_info`.
+  - **SQLAlchemy Tier 2 (`tier2-sqlalchemy-v2`).** Clearing is untimed, results are verified,
+    and a statement probe records the SQL each scenario issued. On the current dialect, ORM
+    bulk inserts send one INSERT per row. The scenarios are renamed to say what they compare,
+    and they are not equivalent pairs.
+  - Results under the old names are a historical series.
 - Regression reports now go through one evidence decision, `scripts/regression_evidence.py`.
   Every run directory is one independent trial, and repeated runs or copies are excluded. The
   decision is one of `error`, `not_comparable` (including unpinned or dirty source and mixed
