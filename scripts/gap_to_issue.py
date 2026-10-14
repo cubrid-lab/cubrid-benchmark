@@ -26,7 +26,7 @@ EXIT_NO_ISSUES = 0
 EXIT_ISSUES_GENERATED = 1
 EXIT_ERROR = 2
 
-DEFAULT_TARGET_REPO = "cubrid-labs/pycubrid"
+DEFAULT_TARGET_REPO = "cubrid-lab/pycubrid"
 
 
 def _load_report(path_arg: str | None) -> dict[str, object]:
