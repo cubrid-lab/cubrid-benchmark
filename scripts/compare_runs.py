@@ -347,15 +347,15 @@ ARMS = ("baseline", "candidate")
 
 
 def run_arm(run: Mapping[str, object]) -> object:
-    """The comparison arm of a run: ``arm`` when recorded, otherwise its ``role``.
+    """The comparison arm of a run: ``arm`` when the key is present, otherwise its ``role``.
 
     ``role`` is the run's place in its group's lifecycle (the first run is ``baseline``, every
     later run is ``candidate``). ``arm`` is the condition it measured, so a later repeat of the
     baseline condition is ``role: candidate`` with ``arm: baseline``. Runs recorded before
-    ``arm`` existed keep their ``role`` as their arm.
+    ``arm`` existed keep their ``role`` as their arm. Only an absent key falls back: an explicit
+    ``arm: null`` or empty value is returned as is, so ``arm_problems()`` rejects it.
     """
-    arm = run.get("arm")
-    return run.get("role") if arm is None else arm
+    return run["arm"] if "arm" in run else run.get("role")
 
 
 def arm_problems(run: Mapping[str, object], label: str) -> list[str]:
