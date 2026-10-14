@@ -61,7 +61,7 @@ SCENARIOS: dict[str, dict[str, object]] = {
     "orm_select_all_entities": {
         "call": f"ORM select(BenchUser).order_by(id), {SELECT_ROWS} entities",
         "rows_per_call": SELECT_ROWS,
-        "timed": "query, fetch and entity construction",
+        "timed": "session open, query, fetch, entity construction and session close (rollback)",
         "setup": f"{SELECT_ROWS} rows seeded, untimed",
         "commit_in_timed_region": False,
         "sql_shape": "one SELECT; entity identity map work included",
@@ -70,7 +70,7 @@ SCENARIOS: dict[str, dict[str, object]] = {
     "text_select_all_rows": {
         "call": f"session.execute(text(SELECT ... ORDER BY id)), {SELECT_ROWS} rows",
         "rows_per_call": SELECT_ROWS,
-        "timed": "query and fetch of plain rows",
+        "timed": "session open, query, fetch of plain rows and session close (rollback)",
         "setup": f"{SELECT_ROWS} rows seeded, untimed",
         "commit_in_timed_region": False,
         "sql_shape": "one SELECT; no entity construction (not equivalent to the ORM select)",

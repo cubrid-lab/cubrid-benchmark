@@ -53,8 +53,8 @@ in `extra_info` (`sql_statements`, `executemany_calls`).
 | `single_row_crud_orm` | ORM insert, get, update, get, delete; 3 sessions, 3 commits | 1 | the sessions and commits | yes | unit of work (5 statements observed on CUBRID 11.4/10.2) | row found, age + 1, row gone |
 | `bulk_insert_orm_100` | session.add_all(100) + commit | 100 | add_all, flush, commit | yes | one INSERT per row observed (100 statements, 0 executemany) | 100 rows with the expected names |
 | `bulk_insert_orm_1000` | session.add_all(1000) + commit | 1,000 | add_all, flush, commit | yes | one INSERT per row observed (1,000 statements, 0 executemany) | 1,000 rows with the expected names |
-| `orm_select_all_entities` | select(BenchUser).order_by(id), 1,000 entities | 1,000 | query, fetch, entity construction | no | 1 SELECT plus identity-map work | 1,000 entities in order |
-| `text_select_all_rows` | session.execute(text(SELECT ... ORDER BY id)), 1,000 rows | 1,000 | query and fetch of plain rows | no | 1 SELECT, no entities | 1,000 rows in order |
+| `orm_select_all_entities` | select(BenchUser).order_by(id), 1,000 entities | 1,000 | session open, query, fetch, entity construction, session close (rollback) | no | 1 SELECT plus identity-map work | 1,000 entities in order |
+| `text_select_all_rows` | session.execute(text(SELECT ... ORDER BY id)), 1,000 rows | 1,000 | session open, query, fetch of plain rows, session close (rollback) | no | 1 SELECT, no entities | 1,000 rows in order |
 
 These are **not equivalent pairs**. `orm_select_all_entities` builds entities and
 `text_select_all_rows` does not. The ORM bulk insert sends one INSERT per row through the
