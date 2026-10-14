@@ -76,6 +76,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   decision, not a claim about MySQL or PyMySQL performance.
 
 ### Fixed
+- The manual full suite (`lane=full`) no longer fails because an optional track's benchforge v2
+  conversion fails. Normalizing and converting the required Python Tier 1 result stays required.
+  The Python Tier 1 Extended and Tier 2 conversions are separate optional steps that run only
+  after their track succeeded, and their outcomes are reported with the other optional tracks.
 - `scripts/collect_metrics.py` no longer reports a misleading peak-RSS delta. It records
   `child_peak_rss_kb`, the measured child's own peak RSS, only when the wrapper had no earlier
   child. Otherwise the value is `null` with a reason and a warning. It also converts macOS bytes

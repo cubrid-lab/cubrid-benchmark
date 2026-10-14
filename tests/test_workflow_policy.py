@@ -264,6 +264,27 @@ def test_full_suite_required_and_optional_tracks() -> None:
             assert f"steps.{step['id']}.outcome" in reported, step["name"]
 
 
+def test_full_suite_optional_benchforge_conversions_cannot_fail_the_job() -> None:
+    required = _step("full-suite", "Normalize and emit required benchforge v2 results")
+    assert "continue-on-error" not in required and "if" not in required
+    assert "results/python_tier1.json" in required["run"]
+    # The required step converts only the required Tier 1 result.
+    assert "python_tier1_extended" not in required["run"]
+    assert "tier2_python" not in required["run"]
+    steps = {step.get("id"): step for step in _steps("full-suite")}
+    for emit_id, track_id, source in (
+        ("emit_python_tier1_extended", "python_tier1_extended", "python_tier1_extended.json"),
+        ("emit_python_tier2", "python_tier2", "tier2_python.json"),
+    ):
+        step = steps[emit_id]
+        assert step["continue-on-error"] is True, emit_id
+        assert step["if"] == f"steps.{track_id}.outcome == 'success'", emit_id
+        assert f"results/{source}" in step["run"], emit_id
+    reported = str(_step("full-suite", "Report optional track outcomes")["env"]["OUTCOMES"])
+    assert "emit-python-tier1-extended=${{ steps.emit_python_tier1_extended.outcome }}" in reported
+    assert "emit-python-tier2=${{ steps.emit_python_tier2.outcome }}" in reported
+
+
 class TestRequiredResults:
     def _complete(self, root: Path) -> None:
         for relative in check_required_results.REQUIRED["pinned"]:
