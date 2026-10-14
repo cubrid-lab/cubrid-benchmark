@@ -7,7 +7,6 @@ import sys
 from collections.abc import Mapping
 from pathlib import Path
 
-
 STATUS_ICON = {
     "improved": "✅",
     "neutral": "✅",
@@ -58,10 +57,31 @@ def _render_comment(report: Mapping[str, object]) -> str:
     summary = report.get("summary", {})
     operations = report.get("operations", [])
 
-    if not isinstance(provenance, Mapping) or not isinstance(summary, Mapping) or not isinstance(
-        operations, list
+    if (
+        not isinstance(provenance, Mapping)
+        or not isinstance(summary, Mapping)
+        or not isinstance(operations, list)
     ):
         raise ValueError("Invalid compare report structure")
+
+    if summary.get("overall_status") == "not_comparable":
+        lines = [
+            "## Benchmark Comparison: not comparable",
+            "",
+            "**Not comparable / needs fresh baseline.** No regression or improvement verdict.",
+            (
+                f"Candidate `{provenance.get('candidate_run_id', 'unknown')}` "
+                f"(`{provenance.get('candidate_comparable_group', 'unknown-group')}`), baseline "
+                f"`{provenance.get('baseline_run_id') or 'none selected'}`."
+            ),
+            "",
+            "Reasons:",
+            "",
+        ]
+        reasons = summary.get("reasons", [])
+        if isinstance(reasons, list):
+            lines.extend(f"- {reason}" for reason in reasons)
+        return "\n".join(lines) + "\n"
 
     improved = _as_int(summary.get("improved", 0))
     total = _as_int(summary.get("total_operations", 0))
@@ -110,8 +130,12 @@ def _render_comment(report: Mapping[str, object]) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Render a GitHub PR comment from compare_runs output.")
-    parser.add_argument("report", nargs="?", help="Path to the compare_runs JSON report (defaults to stdin)")
+    parser = argparse.ArgumentParser(
+        description="Render a GitHub PR comment from compare_runs output."
+    )
+    parser.add_argument(
+        "report", nargs="?", help="Path to the compare_runs JSON report (defaults to stdin)"
+    )
     args = parser.parse_args()
 
     try:

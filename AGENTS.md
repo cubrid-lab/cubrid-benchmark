@@ -166,7 +166,10 @@ Comparisons are only valid between runs in the **same comparable group**.
 **Rules:**
 
 1. A `comparable_group` is a string identifying: machine + CPU + OS + Docker + DB version
-2. Runs with the same `comparable_group` can be compared directly
+2. Runs with the same `comparable_group` and an identical measured `comparison_identity` can be
+   compared directly. `scripts/run_provenance.py capture` measures the identity and derives the
+   group; never copy a group string from another run (see `REPRODUCIBILITY.md`, "Measured
+   comparison identity")
 3. If hardware or DB version changes, start a new comparable group with a new baseline
 4. The first run in a group has `role: baseline`. Subsequent runs have `role: candidate` with `compares_to: <baseline-run-id>`
 5. **Never overwrite a run folder** — every execution creates a new immutable run

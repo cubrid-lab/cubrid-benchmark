@@ -320,100 +320,44 @@ jobs:
             fi
           done
 
-      - name: Compare nightly run against latest baseline
-        id: compare_regression
+      - name: Capture candidate provenance
+        id: candidate
         run: |
-          baseline_dir="$(python3 - <<'PY'
-          from pathlib import Path
-          import sys
+          # Measured on this runner. Never copy comparable_group or identity from a baseline.
+          candidate_dir="$RUNNER_TEMP/nightly-python-tier1"
+          workload_revision="$(cd python && python3 -c 'import bench_pycubrid as b; print(b.WORKLOAD_REVISION)')"
+          python3 scripts/run_provenance.py capture \
+            --out-dir "$candidate_dir" \
+            --label nightly-python-tier1 \
+            --role candidate \
+            --results results/python_tier1.json \
+            --scenario python-tier1 \
+            --workload-revision "$workload_revision" \
+            --schema "bench_driver_pycubrid (id INT PRIMARY KEY, name VARCHAR(100), amount INT)" \
+            --data-count 10000 \
+            --transaction-policy "autocommit=false; one commit per write round" \
+            --measurement-protocol "pytest-benchmark pedantic; 1 warm-up + 5 rounds; untimed setup/teardown" \
+            --cubrid-image cubrid/cubrid:11.2
+          mkdir -p results/reports/regression
+          cp "$candidate_dir/run.yaml" results/reports/regression/candidate_run.yaml
+          printf 'dir=%s\n' "$candidate_dir" >> "$GITHUB_OUTPUT"
 
-          experiment_dir = Path("experiments/baseline-multilang")
-          baseline_runs = []
-          for run_yaml in experiment_dir.glob("runs/*/run.yaml"):
-              role = None
-              for line in run_yaml.read_text(encoding="utf-8").splitlines():
-                  if line.startswith("role:"):
-                      role = line.split(":", 1)[1].strip().split("#", 1)[0].strip().strip('"')
-                      break
-              if role == "baseline":
-                  baseline_runs.append(run_yaml.parent)
-
-          if not baseline_runs:
-              raise SystemExit("No baseline run found in experiments/baseline-multilang")
-
-          baseline_runs.sort()
-          sys.stdout.write(str(baseline_runs[-1]))
-          PY
-          )"
-          candidate_dir="$(mktemp -d)"
-          python3 - "$baseline_dir" "$candidate_dir" results/normalized_python_tier1.json <<'PY'
-          from __future__ import annotations
-
-          import sys
-          from datetime import datetime, timezone
-          from pathlib import Path
-
-          baseline_dir = Path(sys.argv[1])
-          candidate_dir = Path(sys.argv[2])
-          source_results = Path(sys.argv[3])
-
-          baseline_meta: dict[str, str] = {}
-          for line in baseline_dir.joinpath("run.yaml").read_text(encoding="utf-8").splitlines():
-              if ":" not in line:
-                  continue
-              key, value = line.split(":", 1)
-              key = key.strip()
-              if key in {"run_id", "date", "comparable_group"}:
-                  baseline_meta[key] = value.strip().strip('"')
-
-          if not baseline_meta.get("run_id") or not baseline_meta.get("comparable_group"):
-              raise SystemExit("Baseline run.yaml is missing required comparison metadata")
-
-          raw_dir = candidate_dir / "raw"
-          raw_dir.mkdir(parents=True, exist_ok=True)
-          raw_dir.joinpath("results.json").write_text(
-              source_results.read_text(encoding="utf-8"),
-              encoding="utf-8",
-          )
-
-          now = datetime.now(timezone.utc).replace(microsecond=0)
-          run_id = f"{now.date().isoformat()}_nightly-python-tier1"
-          candidate_dir.joinpath("run.yaml").write_text(
-              "\n".join(
-                  [
-                      f'run_id: "{run_id}"',
-                      f'date: "{now.isoformat().replace("+00:00", "Z")}"',
-                      'label: "nightly-python-tier1"',
-                      'role: candidate',
-                      f'compares_to: "{baseline_meta["run_id"]}"',
-                      f'comparable_group: "{baseline_meta["comparable_group"]}"',
-                      '',
-                      'artifacts:',
-                      '  raw_dir: raw/',
-                      '',
-                      f'notes: "Generated from results/normalized_python_tier1.json; baseline={baseline_meta["run_id"]}"',
-                      '',
-                  ]
-              ),
-              encoding="utf-8",
-          )
-          PY
-
-          compare_exit_code=0
-          python3 scripts/compare_runs.py \
-            --baseline-dir "$baseline_dir" \
-            --candidate-dir "$candidate_dir" \
-            --output results/regression_report.json || compare_exit_code=$?
-
-          if [ "$compare_exit_code" -eq 2 ]; then
-            exit 1
-          fi
-
-          python3 scripts/pr_comment.py results/regression_report.json > results/regression_comment.md
-          printf 'exit_code=%s\n' "$compare_exit_code" >> "$GITHUB_OUTPUT"
+      - name: Compare nightly run against a compatible baseline
+        id: compare_regression
+        env:
+          CANDIDATE_DIR: ${{ steps.candidate.outputs.dir }}
+        run: |
+          # A missing or incompatible baseline yields "not comparable / needs fresh baseline"
+          # with open_issue=false; only an input error fails this step.
+          python3 scripts/nightly_compare.py \
+            --candidate-dir "$CANDIDATE_DIR" \
+            --search experiments/tier1-python-workload \
+            --output-dir results/reports/regression \
+            --github-output "$GITHUB_OUTPUT"
+          cat results/reports/regression/regression_comment.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Create issue for nightly regression
-        if: steps.compare_regression.outputs.exit_code == '1'
+        if: steps.compare_regression.outputs.open_issue == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -421,11 +365,11 @@ jobs:
             --search "Nightly benchmark regression detected: Python Tier 1 in:title" \
             --state open --json number --jq '.[0].number // empty')
           if [ -n "$existing" ]; then
-            gh issue comment "$existing" --body-file results/regression_comment.md
+            gh issue comment "$existing" --body-file results/reports/regression/regression_comment.md
           else
             gh issue create \
               --title "Nightly benchmark regression detected: Python Tier 1" \
-              --body-file results/regression_comment.md
+              --body-file results/reports/regression/regression_comment.md
           fi
 
       - name: Save results and clean working tree

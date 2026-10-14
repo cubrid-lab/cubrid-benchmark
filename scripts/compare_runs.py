@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
+import re
 import sys
 from collections.abc import Mapping
 from pathlib import Path
@@ -11,6 +13,30 @@ from pathlib import Path
 EXIT_PASS = 0
 EXIT_REGRESSION = 1
 EXIT_ERROR = 2
+EXIT_NOT_COMPARABLE = 3
+
+UNKNOWN = "unknown"
+
+# Fields that must be equal for two runs to be compared directly. Driver versions and the
+# benchmark source SHA are expected to differ in a regression comparison and are not listed.
+IDENTITY_KEYS = (
+    "host_class",
+    "cpu",
+    "cores",
+    "os",
+    "kernel",
+    "docker",
+    "cubrid_image",
+    "cubrid_image_digest",
+    "cubrid_build",
+    "python",
+    "scenario",
+    "workload_revision",
+    "schema",
+    "data_count",
+    "transaction_policy",
+    "measurement_protocol",
+)
 
 RESULT_PRIORITY = (
     "results.json",
@@ -74,6 +100,34 @@ def _parse_run_yaml(path: Path) -> dict[str, object]:
     return root
 
 
+def _slug(value: object) -> str:
+    return re.sub(r"[^a-z0-9.]+", "-", str(value).lower()).strip("-") or UNKNOWN
+
+
+def derive_comparable_group(identity: Mapping[str, object]) -> str:
+    """Return a readable prefix plus a hash over every identity field.
+
+    Two runs share a group only when every identity field is equal, so a group string copied
+    from another run does not match unless the copying run's measured identity also matches.
+    """
+    missing = [key for key in IDENTITY_KEYS if key not in identity]
+    if missing:
+        raise ValueError(f"comparison_identity is missing: {', '.join(missing)}")
+    canonical = json.dumps(
+        {key: str(identity[key]) for key in IDENTITY_KEYS}, sort_keys=True, separators=(",", ":")
+    )
+    digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:12]
+    prefix = "-".join(
+        [
+            _slug(str(identity["host_class"]).split(":", 1)[0]),
+            _slug(identity["cubrid_image"]).replace("cubrid-cubrid-", "cubrid"),
+            _slug(identity["scenario"]),
+            _slug(identity["workload_revision"]),
+        ]
+    )
+    return f"{prefix}-{digest}"
+
+
 def _coerce_float(value: object) -> float | None:
     if isinstance(value, bool):
         return None
@@ -134,7 +188,10 @@ def _extract_custom_results(payload: Mapping[str, object]) -> dict[str, dict[str
 
         value = None
         unit = "ops/sec"
-        for metric_name, metric_unit in (("ops_per_sec", "ops/sec"), ("scans_per_sec", "scans/sec")):
+        for metric_name, metric_unit in (
+            ("ops_per_sec", "ops/sec"),
+            ("scans_per_sec", "scans/sec"),
+        ):
             metric_value = _coerce_float(metrics.get(metric_name))
             if metric_value is not None:
                 value = metric_value
@@ -170,6 +227,11 @@ def _extract_pytest_results(payload: Mapping[str, object]) -> dict[str, dict[str
         value = _pytest_ops_value(stats)
         if value is None:
             continue
+        if name in operations:
+            raise ValueError(
+                f"Ambiguous operation name {name!r}: several benchmarks in one result file share "
+                "it (for example the same test name from two benchmark modules)"
+            )
 
         operations[name] = {
             "name": name,
@@ -184,7 +246,9 @@ def _extract_pytest_results(payload: Mapping[str, object]) -> dict[str, dict[str
 def _load_operations(path: Path) -> dict[str, dict[str, object]]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if isinstance(payload, list):
-        operations = _normalize_named_results([entry for entry in payload if isinstance(entry, dict)])
+        operations = _normalize_named_results(
+            [entry for entry in payload if isinstance(entry, dict)]
+        )
     elif isinstance(payload, Mapping):
         operations = _extract_custom_results(payload)
         if not operations:
@@ -223,7 +287,8 @@ def _find_results_json(run_dir: Path, run_meta: Mapping[str, object]) -> Path:
         return candidates[0]
 
     raise ValueError(
-        f"Ambiguous raw result file in {raw_dir}; expected one JSON file or one of {RESULT_PRIORITY}"
+        f"Ambiguous raw result file in {raw_dir}; "
+        f"expected one JSON file or one of {RESULT_PRIORITY}"
     )
 
 
@@ -245,7 +310,158 @@ def _load_run(run_dir: Path) -> dict[str, object]:
         "role": run_meta.get("role"),
         "compares_to": run_meta.get("compares_to"),
         "comparable_group": run_meta.get("comparable_group"),
+        "comparison_identity": run_meta.get("comparison_identity"),
+        "software_under_test": run_meta.get("software_under_test"),
         "operations": operations,
+    }
+
+
+def _blank(value: object) -> bool:
+    return (
+        not isinstance(value, str)
+        or not value.strip()
+        or value.strip().lower()
+        in {
+            UNKNOWN,
+            "null",
+            "none",
+        }
+    )
+
+
+def _comparability_problems(
+    baseline: Mapping[str, object], candidate: Mapping[str, object], allow_legacy: bool
+) -> tuple[list[str], str]:
+    """Return (reasons the runs are not comparable, comparison basis)."""
+    problems: list[str] = []
+    for label, run, role in (
+        ("baseline", baseline, "baseline"),
+        ("candidate", candidate, "candidate"),
+    ):
+        if run.get("role") != role:
+            problems.append(f"{label} run has role {run.get('role')!r}, expected {role!r}")
+        if _blank(run.get("comparable_group")):
+            problems.append(f"{label} comparable_group is missing or blank")
+
+    baseline_identity = baseline.get("comparison_identity")
+    candidate_identity = candidate.get("comparison_identity")
+    has_baseline_identity = isinstance(baseline_identity, Mapping)
+    has_candidate_identity = isinstance(candidate_identity, Mapping)
+
+    if not has_baseline_identity and not has_candidate_identity and allow_legacy:
+        basis = "legacy comparable_group string (operator-asserted, no measured identity)"
+        if baseline.get("comparable_group") != candidate.get("comparable_group"):
+            problems.append(
+                "comparable_group mismatch "
+                f"({baseline.get('comparable_group')!r} != {candidate.get('comparable_group')!r})"
+            )
+        return problems, basis
+
+    basis = "measured comparison_identity"
+    for label, run, identity in (
+        ("baseline", baseline, baseline_identity),
+        ("candidate", candidate, candidate_identity),
+    ):
+        if not isinstance(identity, Mapping):
+            problems.append(f"{label} run.yaml has no comparison_identity")
+            continue
+        blank = [key for key in IDENTITY_KEYS if _blank(str(identity.get(key, "")))]
+        if blank:
+            problems.append(
+                f"{label} comparison_identity is missing or unknown: {', '.join(blank)}"
+            )
+            continue
+        derived = derive_comparable_group(identity)
+        if run.get("comparable_group") != derived:
+            problems.append(
+                f"{label} comparable_group {run.get('comparable_group')!r} does not match the "
+                f"group derived from its comparison_identity ({derived!r}); it was copied or edited"
+            )
+
+    if isinstance(baseline_identity, Mapping) and isinstance(candidate_identity, Mapping):
+        differing = [
+            key
+            for key in IDENTITY_KEYS
+            if str(baseline_identity.get(key)) != str(candidate_identity.get(key))
+        ]
+        for key in differing:
+            problems.append(
+                f"comparison_identity.{key} differs (baseline "
+                f"{baseline_identity.get(key)!r}, candidate {candidate_identity.get(key)!r})"
+            )
+    return problems, basis
+
+
+def _operation_problems(
+    baseline_ops: Mapping[str, object], candidate_ops: Mapping[str, object]
+) -> list[str]:
+    problems: list[str] = []
+    baseline_names = set(baseline_ops)
+    candidate_names = set(candidate_ops)
+    if baseline_names != candidate_names:
+        missing_in_candidate = sorted(baseline_names - candidate_names)
+        missing_in_baseline = sorted(candidate_names - baseline_names)
+        if missing_in_candidate:
+            problems.append(f"operations missing in candidate: {', '.join(missing_in_candidate)}")
+        if missing_in_baseline:
+            problems.append(f"operations missing in baseline: {', '.join(missing_in_baseline)}")
+    for name in sorted(baseline_names & candidate_names):
+        baseline_entry = baseline_ops[name]
+        candidate_entry = candidate_ops[name]
+        if not isinstance(baseline_entry, Mapping) or not isinstance(candidate_entry, Mapping):
+            problems.append(f"operation {name} has no result entry")
+            continue
+        baseline_unit = baseline_entry.get("unit") or "ops/sec"
+        candidate_unit = candidate_entry.get("unit") or "ops/sec"
+        if baseline_unit != candidate_unit:
+            problems.append(
+                f"operation {name} unit differs (baseline {baseline_unit!r}, "
+                f"candidate {candidate_unit!r})"
+            )
+    return problems
+
+
+def _not_comparable_report(
+    baseline: Mapping[str, object],
+    candidate: Mapping[str, object],
+    problems: list[str],
+    basis: str,
+) -> dict[str, object]:
+    return {
+        "provenance": _provenance(baseline, candidate, basis),
+        "summary": {
+            "total_operations": 0,
+            "improved": 0,
+            "neutral": 0,
+            "alert_regressions": 0,
+            "fail_regressions": 0,
+            "overall_status": "not_comparable",
+            "exit_code": EXIT_NOT_COMPARABLE,
+            "verdict": "not comparable / needs fresh baseline; no regression verdict",
+            "reasons": problems,
+        },
+        "operations": [],
+    }
+
+
+def _provenance(
+    baseline: Mapping[str, object], candidate: Mapping[str, object], basis: str
+) -> dict[str, object]:
+    return {
+        "baseline_run_id": baseline.get("run_id"),
+        "baseline_date": baseline.get("date"),
+        "baseline_results_path": baseline.get("results_path"),
+        "baseline_comparable_group": baseline.get("comparable_group"),
+        "baseline_identity": baseline.get("comparison_identity"),
+        "baseline_software_under_test": baseline.get("software_under_test"),
+        "candidate_run_id": candidate.get("run_id"),
+        "candidate_date": candidate.get("date"),
+        "candidate_results_path": candidate.get("results_path"),
+        "candidate_comparable_group": candidate.get("comparable_group"),
+        "candidate_identity": candidate.get("comparison_identity"),
+        "candidate_software_under_test": candidate.get("software_under_test"),
+        "comparable_group": baseline.get("comparable_group"),
+        "comparison_basis": basis,
     }
 
 
@@ -264,32 +480,19 @@ def _compare_runs(
     candidate: Mapping[str, object],
     alert_threshold: float,
     fail_threshold: float,
+    allow_legacy: bool = False,
 ) -> dict[str, object]:
-    baseline_group = baseline.get("comparable_group")
-    candidate_group = candidate.get("comparable_group")
-    if baseline_group != candidate_group:
-        raise ValueError(
-            "Runs are not comparable: comparable_group mismatch "
-            f"({baseline_group!r} != {candidate_group!r})"
-        )
-
     baseline_ops = baseline["operations"]
     candidate_ops = candidate["operations"]
     if not isinstance(baseline_ops, dict) or not isinstance(candidate_ops, dict):
         raise ValueError("Invalid operation data extracted from run results")
 
-    baseline_names = set(baseline_ops)
-    candidate_names = set(candidate_ops)
-    if baseline_names != candidate_names:
-        missing_in_candidate = sorted(baseline_names - candidate_names)
-        missing_in_baseline = sorted(candidate_names - baseline_names)
-        details: list[str] = []
-        if missing_in_candidate:
-            details.append(f"missing in candidate: {', '.join(missing_in_candidate)}")
-        if missing_in_baseline:
-            details.append(f"missing in baseline: {', '.join(missing_in_baseline)}")
-        raise ValueError(f"Run operations do not match ({'; '.join(details)})")
+    problems, basis = _comparability_problems(baseline, candidate, allow_legacy)
+    problems.extend(_operation_problems(baseline_ops, candidate_ops))
+    if problems:
+        return _not_comparable_report(baseline, candidate, problems, basis)
 
+    baseline_names = set(baseline_ops)
     operations: list[dict[str, object]] = []
     counts = {"improved": 0, "neutral": 0, "alert": 0, "fail": 0}
 
@@ -301,7 +504,9 @@ def _compare_runs(
         if baseline_value is None or candidate_value is None:
             raise ValueError(f"Operation {name} has a non-numeric benchmark value")
         if baseline_value == 0:
-            raise ValueError(f"Operation {name} has a zero baseline value; cannot compute percent change")
+            raise ValueError(
+                f"Operation {name} has a zero baseline value; cannot compute percent change"
+            )
 
         absolute_delta = candidate_value - baseline_value
         percent_change = (absolute_delta / baseline_value) * 100.0
@@ -330,15 +535,7 @@ def _compare_runs(
         exit_code = EXIT_REGRESSION
 
     return {
-        "provenance": {
-            "baseline_run_id": baseline.get("run_id"),
-            "baseline_date": baseline.get("date"),
-            "baseline_results_path": baseline.get("results_path"),
-            "candidate_run_id": candidate.get("run_id"),
-            "candidate_date": candidate.get("date"),
-            "candidate_results_path": candidate.get("results_path"),
-            "comparable_group": baseline_group,
-        },
+        "provenance": _provenance(baseline, candidate, basis),
         "thresholds": {
             "alert_regression_percent": alert_threshold,
             "fail_regression_percent": fail_threshold,
@@ -371,8 +568,10 @@ def _print_summary(report: Mapping[str, object]) -> None:
     provenance = report.get("provenance", {})
     summary = report.get("summary", {})
     operations = report.get("operations", [])
-    if not isinstance(provenance, Mapping) or not isinstance(summary, Mapping) or not isinstance(
-        operations, list
+    if (
+        not isinstance(provenance, Mapping)
+        or not isinstance(summary, Mapping)
+        or not isinstance(operations, list)
     ):
         return
 
@@ -383,6 +582,12 @@ def _print_summary(report: Mapping[str, object]) -> None:
             group=provenance.get("comparable_group", "unknown-group"),
         )
     )
+    if summary.get("overall_status") == "not_comparable":
+        sys.stderr.write("NOT COMPARABLE / needs fresh baseline; no regression verdict:\n")
+        reasons = summary.get("reasons", [])
+        for reason in reasons if isinstance(reasons, list) else []:
+            sys.stderr.write(f"- {reason}\n")
+        return
     sys.stderr.write(
         "Summary: {improved} improved, {neutral} neutral, {alert} alerts, {fail} fails\n".format(
             improved=summary.get("improved", 0),
@@ -408,8 +613,12 @@ def _print_summary(report: Mapping[str, object]) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Compare two experiment runs for regressions.")
-    parser.add_argument("--baseline-dir", required=True, help="Path to the baseline experiment run directory")
-    parser.add_argument("--candidate-dir", required=True, help="Path to the candidate experiment run directory")
+    parser.add_argument(
+        "--baseline-dir", required=True, help="Path to the baseline experiment run directory"
+    )
+    parser.add_argument(
+        "--candidate-dir", required=True, help="Path to the candidate experiment run directory"
+    )
     parser.add_argument("--output", help="Write JSON report to this path instead of stdout")
     parser.add_argument(
         "--alert-threshold",
@@ -422,6 +631,14 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=10.0,
         help="Regression fail threshold in percent (default: 10.0)",
+    )
+    parser.add_argument(
+        "--allow-legacy-group-match",
+        action="store_true",
+        help=(
+            "Accept two historical runs that both lack comparison_identity when their "
+            "operator-written comparable_group strings are equal. Never use for automated alerts."
+        ),
     )
     return parser
 
@@ -440,7 +657,13 @@ def main() -> int:
     try:
         baseline = _load_run(Path(args.baseline_dir).resolve())
         candidate = _load_run(Path(args.candidate_dir).resolve())
-        report = _compare_runs(baseline, candidate, args.alert_threshold, args.fail_threshold)
+        report = _compare_runs(
+            baseline,
+            candidate,
+            args.alert_threshold,
+            args.fail_threshold,
+            allow_legacy=args.allow_legacy_group_match,
+        )
         _write_output(report, args.output)
         _print_summary(report)
         summary = report.get("summary", {})
