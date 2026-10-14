@@ -76,6 +76,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   decision, not a claim about MySQL or PyMySQL performance.
 
 ### Fixed
+- `scripts/normalize_results.py` and `scripts/emit_benchforge_v2.py` no longer write
+  `"range": "+/- inf%"` when finite but extreme `stddev` and `mean` values overflow their ratio.
+  Both converters format the range with the shared `benchmark_stats.range_percent()`, which
+  raises `InvalidBenchmarkStats` for a non-finite ratio. `normalize_results.py` then exits 2 and
+  `emit_benchforge_v2.py` exits 1, as for other invalid statistics.
 - The manual full suite (`lane=full`) no longer fails because an optional track's benchforge v2
   conversion fails. Normalizing and converting the required Python Tier 1 result stays required.
   The Python Tier 1 Extended and Tier 2 conversions are separate optional steps that run only

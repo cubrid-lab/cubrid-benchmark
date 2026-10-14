@@ -15,7 +15,8 @@ Output contract shared by ``normalize_results.py`` and ``emit_benchforge_v2.py``
   states why. No value is ever derived from mean and standard deviation, and pytest-benchmark's
   own summary fields (``q1``/``q3``/``iqr``) are not reinterpreted as tail percentiles.
 - Invalid statistics (non-finite or non-positive mean, non-finite or negative throughput or
-  samples) raise ``InvalidBenchmarkStats`` instead of producing a number.
+  samples, or a stddev-to-mean ``range`` that is not finite) raise ``InvalidBenchmarkStats``
+  instead of producing a number. Both converters format ``range`` with ``range_percent``.
 """
 
 from __future__ import annotations
@@ -67,6 +68,21 @@ def stddev(name: str, stats: Mapping[str, object]) -> float:
     if value is None or value < 0:
         raise InvalidBenchmarkStats(f"{name}: stddev must be finite and >= 0, got {raw!r}")
     return value
+
+
+def range_percent(name: str, stddev_value: float, mean: float) -> str:
+    """Format ``stddev / mean`` as the ``"+/- N.N%"`` range; reject a non-finite ratio."""
+    if not mean > 0:
+        raise InvalidBenchmarkStats(f"{name}: mean must be positive for the range, got {mean!r}")
+    try:
+        percent = stddev_value / mean * 100.0
+    except OverflowError:
+        percent = math.inf
+    if not math.isfinite(percent):
+        raise InvalidBenchmarkStats(
+            f"{name}: stddev / mean is not finite (stddev {stddev_value!r}, mean {mean!r})"
+        )
+    return "+/- {:.1f}%".format(abs(percent))
 
 
 def empirical_quantile(samples: Sequence[float], percent: float) -> float:

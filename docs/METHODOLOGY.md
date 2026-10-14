@@ -111,7 +111,8 @@ From `pytest-benchmark` output (`scripts/benchmark_stats.py`, shared by `normali
 1. `stats.mean` must be finite and positive, and `stats.stddev` finite and non-negative
 2. If `stats.ops` is present it must be finite and positive and is used directly; otherwise
    compute `1 / mean`
-3. Include `stddev` as `+/- X%` range
+3. Include `stddev / mean` as the `+/- X%` range (`range_percent`); the ratio must be finite,
+   so finite but extreme inputs whose ratio overflows fail instead of writing `+/- inf%`
 4. Observed p95/p99 from `stats.data` as described above; every sample must be finite and
    non-negative
 5. Any invalid value fails the conversion (`normalize_results.py` exits `2`) instead of

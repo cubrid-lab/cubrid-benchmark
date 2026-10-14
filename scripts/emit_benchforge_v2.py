@@ -60,12 +60,6 @@ def _as_float(value: object, default: float = 0.0) -> float:
     return default
 
 
-def _to_percent(stddev: float, mean: float) -> str:
-    if mean == 0:
-        return "+/- 0.0%"
-    return "+/- {:.1f}%".format(abs((stddev / mean) * 100.0))
-
-
 def _run_command(*command: str) -> str:
     try:
         completed = subprocess.run(
@@ -246,7 +240,7 @@ def _results(
             "name": name,
             "unit": "ops/sec",
             "value": round(value, 4),
-            "range": _to_percent(stddev, mean),
+            "range": benchmark_stats.range_percent(name, stddev, mean),
             "tier": tier,
             "language": language,
             "driver": driver,
