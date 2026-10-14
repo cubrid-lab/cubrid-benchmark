@@ -57,7 +57,8 @@ def _run(
     identity: dict[str, object] | None = None,
     pycubrid: str = "1.12.0",
     sha: str = "a" * 40,
-    dirty: str = "false",
+    dirty: str | None = "false",
+    extra_software: dict[str, object] | None = None,
 ) -> Path:
     run_dir = root / name
     (run_dir / "raw").mkdir(parents=True)
@@ -71,10 +72,15 @@ def _run(
         identity=identity or _identity(),
         software={
             "benchmark_source_sha": sha,
-            "benchmark_source_dirty": dirty,
+            **({"benchmark_source_dirty": dirty} if dirty is not None else {}),
+            **(extra_software or {}),
             "packages": {"pycubrid": pycubrid},
         },
         notes="",
+        measurement={
+            "command": f"pytest bench_pycubrid.py  # {name}",
+            "artifact_url": "https://x/1",
+        },
     )
     (run_dir / "run.yaml").write_text(text, encoding="utf-8")
     return run_dir
@@ -204,10 +210,15 @@ class TestDecisions:
 
     @pytest.mark.parametrize(
         ("kwargs", "message"),
-        [({"sha": "unknown"}, "no pinned benchmark_source_sha"), ({"dirty": "true"}, "dirty")],
+        [
+            ({"sha": "unknown"}, "no pinned benchmark_source_sha"),
+            ({"dirty": "true"}, "not from a verified clean source tree"),
+            ({"dirty": None}, "not from a verified clean source tree"),
+            ({"dirty": "unknown"}, "not from a verified clean source tree"),
+        ],
     )
     def test_unpinned_source_is_not_comparable(
-        self, tmp_path: Path, kwargs: dict[str, str], message: str
+        self, tmp_path: Path, kwargs: dict[str, Any], message: str
     ) -> None:
         baseline, candidate = _sides(tmp_path, 3, 3, 0.80, **kwargs)
 
@@ -241,6 +252,21 @@ class TestDecisions:
         assert report["exit_code"] == 2
         assert report["eligible_for_issue"] is False
 
+    def test_dedup_key_ignores_per_run_fields(self, tmp_path: Path) -> None:
+        first = evidence.evaluate(*_sides(tmp_path / "1", 3, 3, 0.88))
+        rerun = evidence.evaluate(
+            *_sides(
+                tmp_path / "2",
+                3,
+                3,
+                0.88,
+                extra_software={"github_run": "https://x/runs/99", "verified_versions_file": "v"},
+            )
+        )
+
+        assert rerun["decision"] == "reproduced_regression"
+        assert first["dedup_key"] == rerun["dedup_key"]
+
     def test_cli_exit_codes_and_report(self, tmp_path: Path) -> None:
         baseline, candidate = _sides(tmp_path, 3, 3, 0.88)
         out = tmp_path / "evidence.json"
@@ -267,6 +293,8 @@ class TestDraftsAgreeWithEvidence:
         for run in ("base-0", "base-1", "base-2", "cand-0", "cand-1", "cand-2"):
             assert f"`{run}`" in body
         assert "raw/results.json" in body
+        assert "pytest bench_pycubrid.py  # cand-2" in body
+        assert "https://x/1" in body
         assert "explicit approval" in body
         assert report["dedup_key"] in body
 
@@ -285,6 +313,20 @@ class TestDraftsAgreeWithEvidence:
         }
 
         assert gap_to_issue._select_operations(compare_report, 10.0, 1) == []
+
+    def test_nightly_evidence_uses_the_caller_thresholds(self, tmp_path: Path) -> None:
+        experiment = tmp_path / "experiment"
+        for i in range(3):
+            _run(experiment / "runs", f"base-{i}", "baseline", BASE_OPS, pycubrid="1.11.0")
+        candidate = _run(tmp_path, "cand", "candidate", {k: v * 0.94 for k, v in BASE_OPS.items()})
+
+        report = nightly_compare.decide(candidate, [experiment], 8.0, 12.0)
+
+        assert report["summary"]["overall_status"] == "pass"
+        assert report["evidence"]["thresholds"]["noise_percent"] == 8.0
+        assert {op["classification"] for op in report["evidence"]["operations"]} == {
+            "advisory:equivalent"
+        }
 
     def test_nightly_single_candidate_never_opens_an_issue(self, tmp_path: Path) -> None:
         experiment = tmp_path / "experiment"
@@ -344,6 +386,20 @@ class TestFiling:
         outcome = filer.file_issue(self._eligible(tmp_path), self.REPO, execute=False, runner=gh)
 
         assert outcome["action"] == "plan"
+        assert gh.calls == []
+
+    def test_running_in_another_repository_is_refused(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("GITHUB_REPOSITORY", "cubrid-lab/pycubrid")
+        gh = FakeGh()
+
+        outcome = filer.file_issue(self._eligible(tmp_path), self.REPO, execute=True, runner=gh)
+        other = filer.file_issue(
+            self._eligible(tmp_path / "o"), "cubrid-lab/pycubrid", execute=True, runner=gh
+        )
+
+        assert outcome["action"] == "refused" and other["action"] == "refused"
         assert gh.calls == []
 
     def test_cross_repository_filing_is_refused(self, tmp_path: Path) -> None:

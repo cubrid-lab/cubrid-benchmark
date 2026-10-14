@@ -28,7 +28,6 @@ from compare_runs import (  # noqa: E402
     EXIT_NOT_COMPARABLE,
     _compare_runs,
     _load_run,
-    _parse_run_yaml,
 )
 from pr_comment import _render_comment  # noqa: E402
 from regression_evidence import evaluate  # noqa: E402
@@ -41,10 +40,11 @@ def decide(
     alert_threshold: float,
     fail_threshold: float,
 ) -> dict[str, object]:
+    # Load (and so validate) the candidate first: a missing or corrupt result is an error
+    # (exit 2), never "not comparable".
+    candidate = _load_run(candidate_dir)
     baselines, reason = select_baselines(candidate_dir, search_roots)
     if not baselines:
-        # Without a compatible baseline the candidate's results are not read at all.
-        candidate = _parse_run_yaml(candidate_dir / "run.yaml")
         return {
             "provenance": {
                 "candidate_run_id": candidate.get("run_id"),
@@ -67,12 +67,13 @@ def decide(
             },
             "operations": [],
         }
-    candidate = _load_run(candidate_dir)
     baseline = _load_run(baselines[-1])
     report = _compare_runs(baseline, candidate, alert_threshold, fail_threshold)
     # The issue decision is the shared evidence policy: every compatible baseline run and this
     # one candidate run each count as one independent trial.
-    report["evidence"] = evaluate(baselines, [candidate_dir], fail=fail_threshold)
+    report["evidence"] = evaluate(
+        baselines, [candidate_dir], noise=alert_threshold, fail=fail_threshold
+    )
     return report
 
 

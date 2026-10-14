@@ -184,6 +184,7 @@ def render_run_yaml(
     identity: Mapping[str, object],
     software: Mapping[str, object],
     notes: str,
+    measurement: Mapping[str, object] | None = None,
 ) -> str:
     lines = [
         f"run_id: {_yaml_value(run_id)}",
@@ -206,6 +207,10 @@ def render_run_yaml(
             lines.extend(f"    {inner}: {_yaml_value(v)}" for inner, v in value.items())
         else:
             lines.append(f"  {key}: {_yaml_value(value)}")
+    if measurement:
+        # How this one independent run was produced (the command and where its artifacts live).
+        lines.extend(["", "measurement:"])
+        lines.extend(f"  {key}: {_yaml_value(value)}" for key, value in measurement.items())
     lines.extend(["", "artifacts:", "  raw_dir: raw/", "", f"notes: {_yaml_value(notes)}", ""])
     return "\n".join(lines)
 
@@ -284,6 +289,10 @@ def _cmd_capture(args: argparse.Namespace) -> int:
             identity=identity,
             software=software,
             notes=notes,
+            measurement={
+                "command": args.command or "not recorded",
+                "artifact_url": software.get("github_run", "not recorded"),
+            },
         ),
         encoding="utf-8",
     )
@@ -367,6 +376,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--fixed-host", help="Name of a fixed benchmark machine (otherwise detected)"
     )
     capture.add_argument("--notes", default="")
+    capture.add_argument("--command", default="", help="The benchmark command this run executed")
     capture.add_argument(
         "--versions-file",
         help="versions.json from python_lanes.py verify-install (records source commits)",

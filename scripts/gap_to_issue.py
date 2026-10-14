@@ -79,11 +79,15 @@ def _select_operations(
 
 
 def _trial_rows(trials: list[Mapping[str, object]]) -> list[str]:
-    rows = ["| Run | Date | Benchmark source SHA | Raw results |", "| --- | --- | --- | --- |"]
+    rows = [
+        "| Run | Date | Benchmark source SHA | Command | Artifacts | Raw results |",
+        "| --- | --- | --- | --- | --- | --- |",
+    ]
     for trial in trials:
         rows.append(
             f"| `{trial.get('run_id')}` | {trial.get('date')} | "
-            f"`{trial.get('benchmark_source_sha')}` | `{trial.get('results_path')}` |"
+            f"`{trial.get('benchmark_source_sha')}` | `{trial.get('command', 'not recorded')}` | "
+            f"{trial.get('artifact_url', 'not recorded')} | `{trial.get('results_path')}` |"
         )
     return rows
 

@@ -235,7 +235,8 @@ jobs:
             --transaction-policy "autocommit=false; one commit per write round" \
             --measurement-protocol "pytest-benchmark pedantic; 1 warm-up + 5 rounds; untimed setup/teardown" \
             --cubrid-image "$IMAGE" \
-            --versions-file "$OUT/versions.json"
+            --versions-file "$OUT/versions.json" \
+            --command "cd python && python -m pytest -p no:cacheprovider bench_pycubrid.py -v --benchmark-json=../$OUT/python_tier1_pycubrid.json"
 
       - name: Compare against a compatible baseline (report only)
         run: |

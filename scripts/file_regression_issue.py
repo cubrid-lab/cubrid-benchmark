@@ -56,12 +56,17 @@ def file_issue(
 ) -> dict[str, object]:
     # Resolved at call time, so a replaced module-level _run (tests) is always honoured.
     runner = runner or _run
-    allowed = os.environ.get("GITHUB_REPOSITORY") or BENCHMARK_REPO
-    if repo != allowed:
+    if repo != BENCHMARK_REPO:
         return {
             "action": "refused",
-            "reason": f"only {allowed} may be filed automatically; a draft for {repo} needs "
-            "explicit approval from that repository's owner",
+            "reason": f"only {BENCHMARK_REPO} may be filed automatically; a draft for {repo} "
+            "needs explicit approval from that repository's owner",
+        }
+    running_in = os.environ.get("GITHUB_REPOSITORY")
+    if execute and running_in and running_in != BENCHMARK_REPO:
+        return {
+            "action": "refused",
+            "reason": f"refusing to file from {running_in}; only {BENCHMARK_REPO} may file",
         }
     operations = _select_operations(report, min_effect_size, min_replications)
     if not operations:

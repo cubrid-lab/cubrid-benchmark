@@ -44,6 +44,7 @@ from compare_runs import (  # noqa: E402
     _comparability_problems,
     _load_run,
     _operation_problems,
+    _parse_run_yaml,
 )
 
 SCHEMA = "regression-evidence/1"
@@ -65,9 +66,21 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+VOLATILE_SOFTWARE_KEYS = ("github_run", "benchmark_source_dirty", "verified_versions_file")
+
+
+def _tested_software(software: Mapping[str, object]) -> dict[str, object]:
+    """The software a trial measured, without per-run fields (CI run URL, dirty flag)."""
+    return {k: v for k, v in software.items() if k not in VOLATILE_SOFTWARE_KEYS}
+
+
 def _trial_summary(run: Mapping[str, object]) -> dict[str, object]:
     software = run.get("software_under_test")
     software = software if isinstance(software, Mapping) else {}
+    measurement: object = {}
+    if run.get("run_yaml_path"):
+        measurement = _parse_run_yaml(Path(str(run["run_yaml_path"]))).get("measurement", {})
+    measurement = measurement if isinstance(measurement, Mapping) else {}
     return {
         "run_id": run.get("run_id"),
         "date": run.get("date"),
@@ -77,6 +90,8 @@ def _trial_summary(run: Mapping[str, object]) -> dict[str, object]:
         "benchmark_source_sha": software.get("benchmark_source_sha"),
         "benchmark_source_dirty": software.get("benchmark_source_dirty"),
         "software_under_test": dict(software),
+        "command": measurement.get("command", "not recorded"),
+        "artifact_url": measurement.get("artifact_url", "not recorded"),
     }
 
 
@@ -122,12 +137,13 @@ def _pinning_problems(runs: Sequence[Mapping[str, object]], side: str) -> list[s
         sha = str(summary["benchmark_source_sha"] or "").strip().lower()
         if sha in UNKNOWN:
             problems.append(f"{side} trial {summary['run_id']} has no pinned benchmark_source_sha")
-        if str(summary["benchmark_source_dirty"]).lower() == "true":
-            problems.append(f"{side} trial {summary['run_id']} ran from a dirty source tree")
+        if str(summary["benchmark_source_dirty"]).strip().lower() != "false":
+            problems.append(
+                f"{side} trial {summary['run_id']} is not from a verified clean source tree "
+                f"(benchmark_source_dirty={summary['benchmark_source_dirty']!r})"
+            )
         shas.add(sha)
-        tested = dict(summary["software_under_test"])
-        for volatile in ("github_run", "benchmark_source_dirty", "verified_versions_file"):
-            tested.pop(volatile, None)
+        tested = _tested_software(summary["software_under_test"])
         software.add(json.dumps(tested, sort_keys=True, default=str))
     if len(shas) > 1:
         problems.append(f"{side} trials mix benchmark source revisions: {sorted(shas)}")
@@ -181,7 +197,7 @@ def dedup_key(report: Mapping[str, object]) -> str:
     def _software(side: list[Mapping[str, object]]) -> str:
         if not side:
             return "none"
-        tested = side[0].get("software_under_test") or {}
+        tested = _tested_software(side[0].get("software_under_test") or {})
         return hashlib.sha256(
             json.dumps(tested, sort_keys=True, default=str).encode("utf-8")
         ).hexdigest()[:12]
