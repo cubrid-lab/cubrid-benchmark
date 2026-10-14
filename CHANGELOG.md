@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Fixed
+- `scripts/normalize_results.py` and `scripts/emit_benchforge_v2.py` no longer write
+  `mean + z * stddev` normal-model estimates as `p95_latency` / `p99_latency`. Those keys now hold
+  observed percentiles of pytest-benchmark's per-round samples (`stats.data`, seconds per call
+  within a round; Hyndman-Fan type 7), only with at least 20 (p95) or 100 (p99) samples. Each
+  result records
+  `latency_samples`, `latency_sample_source` and `latency_quantile_method`, or
+  `latency_percentiles_unavailable` (Python Tier 1 has 5 rounds, so it reports unavailable).
+  Non-finite or non-positive means and throughput, negative stddev and invalid samples now fail
+  the conversion (`normalize_results.py` exits `2`). Compatibility: consumers must treat a missing
+  `p95_latency` / `p99_latency` as unavailable. Historical values under these names were
+  estimates and stay unchanged in their run folders.
 - The benchmark workflow runs on a bounded schedule again. The daily cross-language nightly and
   the weekly matrix are replaced by one weekly CUBRID-only `representative` lane (CUBRID 11.4:
   Tier 0, pycubrid Tier 1, provenance, report-only comparison). The cross-language suite

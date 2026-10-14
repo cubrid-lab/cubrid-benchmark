@@ -1,10 +1,18 @@
 from __future__ import annotations
 
 import json
-import math
 import sys
 from collections.abc import Mapping
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from benchmark_stats import (  # noqa: E402
+    InvalidBenchmarkStats,
+    observed_latency,
+    stddev,
+    throughput,
+)
 
 
 def _read_input(path_arg: str | None) -> dict[str, object]:
@@ -20,38 +28,19 @@ def _to_percent(stddev: float, mean: float) -> str:
     return "+/- {:.1f}%".format(value)
 
 
-def _to_value(entry: Mapping[str, object]) -> float:
-    stats = entry.get("stats", {})
-    if not isinstance(stats, Mapping):
-        return 0.0
-    ops = stats.get("ops")
-    if isinstance(ops, (int, float)) and math.isfinite(ops):
-        return float(ops)
-    mean = stats.get("mean")
-    if isinstance(mean, (int, float)) and mean > 0:
-        return 1.0 / float(mean)
-    return 0.0
-
-
-def _as_float(value: object, default: float = 0.0) -> float:
-    if isinstance(value, (int, float)):
-        return float(value)
-    return default
-
-
-def _approx_percentile_latency(mean: float, stddev: float, z_score: float) -> float:
-    estimate = mean + (z_score * stddev)
-    if estimate < 0:
-        return 0.0
-    return estimate
-
-
 def normalize(pytest_benchmark_json: Mapping[str, object]) -> list[dict[str, object]]:
+    """Convert pytest-benchmark JSON to github-action-benchmark style entries.
+
+    ``p95_latency`` / ``p99_latency`` appear only as observed percentiles of the recorded
+    per-round samples (see ``scripts/benchmark_stats.py``); otherwise they are omitted and
+    ``latency_percentiles_unavailable`` says why. Invalid statistics raise
+    ``InvalidBenchmarkStats``.
+    """
     benchmarks = pytest_benchmark_json.get("benchmarks", [])
     output: list[dict[str, object]] = []
 
     if not isinstance(benchmarks, list):
-        return output
+        raise InvalidBenchmarkStats("input has no pytest-benchmark 'benchmarks' list")
 
     for entry in benchmarks:
         if not isinstance(entry, Mapping):
@@ -59,28 +48,33 @@ def normalize(pytest_benchmark_json: Mapping[str, object]) -> list[dict[str, obj
         stats = entry.get("stats", {})
         if not isinstance(stats, Mapping):
             continue
-        mean = _as_float(stats.get("mean", 0.0), 0.0)
-        stddev = _as_float(stats.get("stddev", 0.0), 0.0)
+        name = str(entry.get("name", "unknown"))
+        value = throughput(name, stats)
+        mean = float(stats["mean"])  # validated by throughput()
 
-        output.append(
-            {
-                "name": entry.get("name", "unknown"),
-                "unit": "ops/sec",
-                "value": round(_to_value(entry), 4),
-                "range": _to_percent(stddev, mean),
-                "p95_latency": round(_approx_percentile_latency(mean, stddev, 1.645), 9),
-                "p99_latency": round(_approx_percentile_latency(mean, stddev, 2.326), 9),
-                "extra": "language=python tier=1 framework=pytest-benchmark",
-            }
-        )
+        result: dict[str, object] = {
+            "name": name,
+            "unit": "ops/sec",
+            "value": round(value, 4),
+            "range": _to_percent(stddev(name, stats), mean),
+        }
+        result.update(observed_latency(name, stats))
+        result["extra"] = "language=python tier=1 framework=pytest-benchmark"
+        output.append(result)
 
+    if not output:
+        raise InvalidBenchmarkStats("no benchmark entries could be normalized")
     return output
 
 
 def main() -> int:
     path_arg = sys.argv[1] if len(sys.argv) > 1 else None
     payload = _read_input(path_arg)
-    normalized = normalize(payload)
+    try:
+        normalized = normalize(payload)
+    except InvalidBenchmarkStats as exc:
+        sys.stderr.write(f"ERROR: {exc}\n")
+        return 2
     json.dump(normalized, sys.stdout, indent=2)
     sys.stdout.write("\n")
     return 0

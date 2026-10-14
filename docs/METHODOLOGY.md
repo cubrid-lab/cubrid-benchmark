@@ -87,18 +87,35 @@ flowchart LR
 
 ### Secondary Metrics: Tail Latency and Memory
 
-- `p95_latency` and `p99_latency` are estimated from benchmark mean/stddev
+- `p95_latency` and `p99_latency` are **observed** sample percentiles, in seconds, of the
+  per-round samples pytest-benchmark records in `stats.data`. pytest-benchmark stores each
+  round's duration divided by its `iterations`, so a sample is the mean time of one call of the
+  benchmarked function within a round. Python Tier 1 uses `iterations == 1`, so there a sample
+  is one whole call, for example the 10,000 statements of one operation. It is never the latency
+  of a single SQL statement. They use linear interpolation between the two closest
+  ranks (Hyndman-Fan type 7, the `numpy.percentile` default) and are reported only with at least
+  20 samples (p95) or 100 samples (p99). Otherwise the key is omitted and
+  `latency_percentiles_unavailable` gives the sample count and reason. Python Tier 1 runs 5 rounds,
+  so its outputs report p95/p99 as unavailable.
+- No value is derived from mean and standard deviation. Earlier outputs (before this rule) wrote
+  `mean + 1.645 * stddev` / `mean + 2.326 * stddev` normal-model estimates under the same
+  `p95_latency` / `p99_latency` names. Treat those historical values as estimates, never as
+  observed tail latency.
 - Child-process peak RSS is captured for Python benchmark commands
 - Extended benchmark artifacts include both throughput and memory metadata
 
 ### Conversion Logic
 
-From `pytest-benchmark` output:
-1. If `stats.ops` is available → use directly
-2. If only `stats.mean` is available → compute `1 / mean`
+From `pytest-benchmark` output (`scripts/benchmark_stats.py`, shared by `normalize_results.py` and
+`emit_benchforge_v2.py`):
+1. `stats.mean` must be finite and positive, and `stats.stddev` finite and non-negative
+2. If `stats.ops` is present it must be finite and positive and is used directly; otherwise
+   compute `1 / mean`
 3. Include `stddev` as `+/- X%` range
-4. Approximate P95 latency: `mean + 1.645 * stddev`
-5. Approximate P99 latency: `mean + 2.326 * stddev`
+4. Observed p95/p99 from `stats.data` as described above; every sample must be finite and
+   non-negative
+5. Any invalid value fails the conversion (`normalize_results.py` exits `2`) instead of
+   producing a number
 
 ### Result Format
 
@@ -109,11 +126,18 @@ Normalized results follow the `github-action-benchmark` schema:
     "unit": "ops/sec",
     "value": 95.4321,
     "range": "+/- 3.2%",
-    "p95_latency": 0.024112341,
-    "p99_latency": 0.028873441,
+    "latency_samples": 5,
+    "latency_sample_source": "pytest-benchmark stats.data (seconds per call: round duration / iterations)",
+    "latency_quantile_method": "linear interpolation between closest ranks (Hyndman-Fan type 7)",
+    "latency_percentiles_unavailable": "5 samples; p95 needs >= 20 samples, p99 needs >= 100 samples",
     "extra": "language=python tier=1 framework=pytest-benchmark"
 }
 ```
+
+With enough samples, `p95_latency` / `p99_latency` replace `latency_percentiles_unavailable`
+(p95 alone appears between 20 and 99 samples). benchforge v2 results carry the same fields in
+`extra`. The required benchforge v2 schema is unchanged, because these are optional `extra`
+metrics.
 
 ## Extended Workloads
 
