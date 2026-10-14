@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- The maintained Python track is CUBRID-only. `make tier0`, `tier1-python`,
+  `tier1-python-extended`, `tier2-python`, `bench-verify` (and so `make all`) run only the pycubrid
+  and sqlalchemy-cubrid modules. `make seed` seeds CUBRID only (`apply_schema.py --with-mysql`
+  also seeds MySQL). `python/conftest.py` no longer opens a MySQL connection or creates MySQL
+  tables for every session; `mysql_conn` is created only when a historical module requests it.
+  PyMySQL left `python/requirements.txt`. The historical PyMySQL sources stay at their paths and
+  run only through the opt-in `make historical-python-mysql`, which installs from
+  `python/requirements-historical-mysql.txt`. The CUBRID-only workflow lanes now use the
+  repository conftest. Historical cross-database experiments are unchanged. This is a scope
+  decision, not a claim about MySQL or PyMySQL performance.
+
 ### Fixed
 - `scripts/normalize_results.py` and `scripts/emit_benchforge_v2.py` no longer write
   `mean + z * stddev` normal-model estimates as `p95_latency` / `p99_latency`. Those keys now hold

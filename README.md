@@ -25,10 +25,17 @@ Scientific benchmark suite for CUBRID database ecosystem — reproducible experi
 ## Quick Start
 
 ```bash
-make up        # Start CUBRID + MySQL Docker containers
-make seed      # Apply schema
+make up        # Start CUBRID + MySQL Docker containers (MySQL serves the TypeScript/Go tracks)
+make seed      # Apply schema to CUBRID
 make all       # Run all benchmarks
 ```
+
+The maintained Python track measures pycubrid and sqlalchemy-cubrid on the same CUBRID server and
+needs neither MySQL nor PyMySQL. The earlier pycubrid-vs-PyMySQL runs stay as historical
+experiments. `make historical-python-mysql` (MySQL 8.0 plus
+`python/requirements-historical-mysql.txt`) reproduces them. It is opt-in, is not part of
+`make all` or CI, and its results are not a current comparison. Retiring the active comparison
+is a project-scope decision, not evidence that MySQL or PyMySQL is slow or broken.
 
 ## Version Matrix
 
@@ -65,8 +72,8 @@ MySQL services, then packages the raw benchmark output into a descriptive result
 
 | Language | CUBRID Driver | MySQL Driver |
 |----------|--------------|--------------|
-| Python | [pycubrid](https://github.com/cubrid-labs/pycubrid) v0.6.0 | PyMySQL |
-| Python | [CUBRIDdb](https://github.com/cubrid/cubrid-python) v9.3.0.1 (C ext) | — |
+| Python | [pycubrid](https://github.com/cubrid-labs/pycubrid) and sqlalchemy-cubrid | — (PyMySQL: historical reproduction only) |
+| Python | [CUBRIDdb](https://github.com/cubrid/cubrid-python) (C ext, same-server reference driver) | — |
 | TypeScript | [cubrid-client](https://github.com/cubrid-labs/cubrid-client) v1.1.0 | mysql2 |
 | Go | [cubrid-go](https://github.com/cubrid-labs/cubrid-go) v0.2.1 | go-sql-driver/mysql |
 

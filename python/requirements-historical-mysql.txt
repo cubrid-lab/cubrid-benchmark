@@ -1,0 +1,4 @@
+# Historical cross-database reproduction only (experiments/baseline-multilang,
+# experiments/benchforge-pycubrid-vs-pymysql). Not part of the maintained CUBRID Python track.
+-r requirements.txt
+PyMySQL>=1.1

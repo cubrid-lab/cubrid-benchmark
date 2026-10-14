@@ -54,7 +54,7 @@ flowchart TD
 |--------|------|
 | `docker/compose.yml` | Spin up CUBRID 11.2 and MySQL 8.0 with health checks |
 | `schema/` | Create tables and seed deterministic data for both DBs |
-| `python/` | pytest-benchmark based benchmarks for pycubrid, PyMySQL, SQLAlchemy |
+| `python/` | pytest-benchmark based benchmarks for pycubrid and sqlalchemy-cubrid on CUBRID; `bench_pymysql*.py` / `bench_sqlalchemy_mysql.py` are kept only for `make historical-python-mysql` |
 | `go/` | `go test -bench` based benchmarks for cubrid-go, go-sql-driver/mysql, GORM |
 | `ts/` | tinybench based benchmarks for cubrid-client, mysql2, Drizzle |
 | `experiments/` | Self-contained experiment folders with metadata, raw data, and reports |

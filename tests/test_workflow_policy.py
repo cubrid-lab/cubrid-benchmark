@@ -204,7 +204,8 @@ def test_cubrid_only_lanes_do_not_use_mysql() -> None:
         assert set(job["services"]) == {"cubrid"}
         assert job["services"]["cubrid"]["image"] == "cubrid/cubrid:11.4"
         commands = " ".join(str(step.get("run", "")) for step in job["steps"])
-        assert "--noconftest -p cubrid_only_plugin" in commands
+        # The repository conftest is CUBRID-only, so no plugin or --noconftest is needed.
+        assert "--noconftest" not in commands
         assert "wait_for_db.sh" not in commands
         assert "pymysql" not in commands.lower()
 
