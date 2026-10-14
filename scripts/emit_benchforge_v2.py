@@ -14,6 +14,10 @@ from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import benchmark_stats  # noqa: E402
+
 SCHEMA_PATH = Path(__file__).resolve().parent.parent / "schemas" / "benchforge_v2.json"
 KNOWN_DRIVER_PACKAGES = (
     "pycubrid",
@@ -60,20 +64,6 @@ def _to_percent(stddev: float, mean: float) -> str:
     if mean == 0:
         return "+/- 0.0%"
     return "+/- {:.1f}%".format(abs((stddev / mean) * 100.0))
-
-
-def _ops_value(stats: Mapping[str, object]) -> float:
-    ops = stats.get("ops")
-    if isinstance(ops, (int, float)) and math.isfinite(ops):
-        return float(ops)
-    mean = _as_float(stats.get("mean"))
-    if mean > 0:
-        return 1.0 / mean
-    return 0.0
-
-
-def _approx_latency(mean: float, stddev: float, z_score: float) -> float:
-    return round(max(0.0, mean + (z_score * stddev)), 9)
 
 
 def _run_command(*command: str) -> str:
@@ -237,28 +227,31 @@ def _results(
         if not isinstance(stats, Mapping):
             continue
 
+        name = str(entry.get("name", "unknown"))
+        value = benchmark_stats.throughput(name, stats)
         mean = _as_float(stats.get("mean"))
-        stddev = _as_float(stats.get("stddev"))
+        stddev = benchmark_stats.stddev(name, stats)
+        extra: dict[str, object] = {
+            "min": round(_as_float(stats.get("min")), 9),
+            "max": round(_as_float(stats.get("max")), 9),
+            "mean": round(mean, 9),
+            "stddev": round(stddev, 9),
+            "rounds": int(_as_float(stats.get("rounds"), 0.0)),
+            "iterations": int(_as_float(stats.get("iterations"), 0.0)),
+        }
+        # Observed percentiles only; never a mean/stddev normal-model estimate.
+        extra.update(benchmark_stats.observed_latency(name, stats))
+        extra["framework"] = "pytest-benchmark"
         result = {
-            "name": str(entry.get("name", "unknown")),
+            "name": name,
             "unit": "ops/sec",
-            "value": round(_ops_value(stats), 4),
+            "value": round(value, 4),
             "range": _to_percent(stddev, mean),
             "tier": tier,
             "language": language,
             "driver": driver,
             "database": database,
-            "extra": {
-                "min": round(_as_float(stats.get("min")), 9),
-                "max": round(_as_float(stats.get("max")), 9),
-                "mean": round(mean, 9),
-                "stddev": round(stddev, 9),
-                "rounds": int(_as_float(stats.get("rounds"), 0.0)),
-                "iterations": int(_as_float(stats.get("iterations"), 0.0)),
-                "p95_latency": _approx_latency(mean, stddev, 1.645),
-                "p99_latency": _approx_latency(mean, stddev, 2.326),
-                "framework": "pytest-benchmark",
-            },
+            "extra": extra,
         }
         results.append(result)
 

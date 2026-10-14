@@ -167,7 +167,9 @@ All reports must aggregate repeated measurements using:
 
 - primary statistic: median throughput or median latency
 - dispersion: standard deviation or percentage range emitted by the benchmark framework
-- supporting latencies where available: `p50`, `p95`, `p99`
+- supporting latencies where available: `p50`, `p95`, `p99`, as observed sample percentiles with
+  their method and sample count (`docs/METHODOLOGY.md`, "Secondary Metrics"); never a
+  normal-model estimate from mean and standard deviation
 
 Do not headline a single best run. The reported conclusion must reflect the aggregated result.
 
