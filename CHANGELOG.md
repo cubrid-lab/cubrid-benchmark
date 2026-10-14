@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Changed
+- Regression reports now go through one evidence decision, `scripts/regression_evidence.py`.
+  Every run directory is one independent trial, and repeated runs or copies are excluded. The
+  decision is one of `error`, `not_comparable` (including unpinned or dirty source and mixed
+  software), `insufficient_evidence` (fewer than 3 trials a side), `equivalent`, `investigate`
+  or `reproduced_regression`. A reproduced regression is a median decline of at least 10% with
+  every candidate trial below every baseline trial. `nightly_compare.py` reports the decision
+  (`evidence=`) and sets `open_issue` only for a reproduced regression, so a single run never
+  qualifies. `make gap-issues` and `gap_to_issue.py` draft only from an eligible evidence
+  report and no longer accept a compare report that merely claims replications. The new
+  `scripts/file_regression_issue.py` plans by default, files only into this repository with
+  dedup by key, and treats a `gh` failure as an error. No workflow calls it.
 - The workflow measures pinned current releases instead of only pycubrid 1.0.0.
   `python/constraints-current.txt` pins pycubrid 1.12.0, sqlalchemy-cubrid 1.11.0, SQLAlchemy
   2.1.4 and pytest-benchmark 5.3.0, and `python/lanes.json` defines the cells:

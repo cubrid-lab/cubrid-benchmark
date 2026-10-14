@@ -77,7 +77,11 @@ def _write_run(
             label=run_dir.name,
             role=role,
             identity=identity,
-            software={"benchmark_source_sha": "abc", "packages": {"pycubrid": pycubrid}},
+            software={
+                "benchmark_source_sha": "ab" * 20,
+                "benchmark_source_dirty": "false",
+                "packages": {"pycubrid": pycubrid},
+            },
             notes="",
         )
         if group is not None:
@@ -341,6 +345,7 @@ class TestBaselineSelectionAndNightlyDecision:
         assert outputs == {
             "status": "not_comparable",
             "exit_code": str(compare_runs.EXIT_NOT_COMPARABLE),
+            "evidence": "not_comparable",
             "open_issue": "false",
         }
         comment = (tmp_path / "out" / "regression_comment.md").read_text()
@@ -358,19 +363,25 @@ class TestBaselineSelectionAndNightlyDecision:
         assert baseline is None
         assert reason.startswith("not comparable / needs fresh baseline")
 
-    def test_ambiguous_candidate_results_are_not_read_without_baseline(
+    def test_corrupt_candidate_results_are_an_error_even_without_baseline(
         self, tmp_path: Path
     ) -> None:
         candidate = _write_run(
             tmp_path / "candidate", role="candidate", identity=_identity(), ops=OPS
         )
         (candidate / "raw" / "results.json").write_text("not json", encoding="utf-8")
+        output = tmp_path / "github_output"
 
-        outputs = self._decide(tmp_path, candidate, tmp_path / "empty")
+        rc = nightly_compare.main(
+            ["--candidate-dir", str(candidate), "--search", str(tmp_path / "empty")]
+            + ["--output-dir", str(tmp_path / "out"), "--github-output", str(output)]
+        )
 
-        assert outputs["open_issue"] == "false"
+        # A corrupt raw result is an error (#34), never "not comparable" with a green exit.
+        assert rc == compare_runs.EXIT_ERROR
+        assert not output.exists()
 
-    def test_regression_on_compatible_pair_opens_issue(self, tmp_path: Path) -> None:
+    def test_single_run_regression_on_compatible_pair_stays_advisory(self, tmp_path: Path) -> None:
         experiment = tmp_path / "experiment"
         _write_run(
             experiment / "runs" / "2026-10-01_old",
@@ -403,7 +414,13 @@ class TestBaselineSelectionAndNightlyDecision:
         assert run_provenance.select_baseline(candidate, [experiment])[0] == newest
         outputs = self._decide(tmp_path, candidate, experiment)
 
-        assert outputs == {"status": "fail", "exit_code": "1", "open_issue": "true"}
+        # The threshold alert is reported, but one candidate run is not issue evidence (#34).
+        assert outputs == {
+            "status": "fail",
+            "exit_code": "1",
+            "evidence": "insufficient_evidence",
+            "open_issue": "false",
+        }
 
 
 class TestNightlyMixedResults:

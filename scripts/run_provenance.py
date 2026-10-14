@@ -184,6 +184,7 @@ def render_run_yaml(
     identity: Mapping[str, object],
     software: Mapping[str, object],
     notes: str,
+    measurement: Mapping[str, object] | None = None,
 ) -> str:
     lines = [
         f"run_id: {_yaml_value(run_id)}",
@@ -206,6 +207,10 @@ def render_run_yaml(
             lines.extend(f"    {inner}: {_yaml_value(v)}" for inner, v in value.items())
         else:
             lines.append(f"  {key}: {_yaml_value(value)}")
+    if measurement:
+        # How this one independent run was produced (the command and where its artifacts live).
+        lines.extend(["", "measurement:"])
+        lines.extend(f"  {key}: {_yaml_value(value)}" for key, value in measurement.items())
     lines.extend(["", "artifacts:", "  raw_dir: raw/", "", f"notes: {_yaml_value(notes)}", ""])
     return "\n".join(lines)
 
@@ -284,6 +289,10 @@ def _cmd_capture(args: argparse.Namespace) -> int:
             identity=identity,
             software=software,
             notes=notes,
+            measurement={
+                "command": args.command or "not recorded",
+                "artifact_url": software.get("github_run", "not recorded"),
+            },
         ),
         encoding="utf-8",
     )
@@ -291,12 +300,15 @@ def _cmd_capture(args: argparse.Namespace) -> int:
     return 0
 
 
-def select_baseline(candidate_dir: Path, search_roots: list[Path]) -> tuple[Path | None, str]:
-    """Return the newest compatible ``role: baseline`` run, or ``None`` with the reason."""
+def select_baselines(candidate_dir: Path, search_roots: list[Path]) -> tuple[list[Path], str]:
+    """Every compatible ``role: baseline`` run, oldest first, or ``[]`` with the reason.
+
+    Each returned run directory is one independent baseline trial.
+    """
     candidate = _parse_run_yaml(candidate_dir / "run.yaml")
     identity = candidate.get("comparison_identity")
     if not isinstance(identity, Mapping):
-        return None, "candidate run.yaml has no comparison_identity"
+        return [], "candidate run.yaml has no comparison_identity"
     group = candidate.get("comparable_group")
     matches: list[tuple[str, Path]] = []
     for root in search_roots:
@@ -310,13 +322,19 @@ def select_baseline(candidate_dir: Path, search_roots: list[Path]) -> tuple[Path
                 continue
             matches.append((str(meta.get("date", "")), run_yaml.parent))
     if not matches:
-        return None, (
+        return [], (
             f"not comparable / needs fresh baseline: no role=baseline run with comparable_group "
             f"{group!r} and an identical comparison_identity under "
             f"{', '.join(str(root) for root in search_roots)}"
         )
     matches.sort()
-    return matches[-1][1], "compatible baseline found"
+    return [path for _, path in matches], "compatible baseline found"
+
+
+def select_baseline(candidate_dir: Path, search_roots: list[Path]) -> tuple[Path | None, str]:
+    """Return the newest compatible ``role: baseline`` run, or ``None`` with the reason."""
+    baselines, reason = select_baselines(candidate_dir, search_roots)
+    return (baselines[-1] if baselines else None), reason
 
 
 def _cmd_select(args: argparse.Namespace) -> int:
@@ -358,6 +376,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--fixed-host", help="Name of a fixed benchmark machine (otherwise detected)"
     )
     capture.add_argument("--notes", default="")
+    capture.add_argument("--command", default="", help="The benchmark command this run executed")
     capture.add_argument(
         "--versions-file",
         help="versions.json from python_lanes.py verify-install (records source commits)",

@@ -7,7 +7,9 @@ When none exists, or the comparator finds the pair not comparable, the result is
 ``not comparable / needs fresh baseline`` and no regression verdict (and no issue) is produced.
 
 Writes ``<output-dir>/regression_report.json`` and ``<output-dir>/regression_comment.md``, and
-appends ``status=``, ``exit_code=`` and ``open_issue=`` to ``--github-output`` when given.
+appends ``status=``, ``exit_code=``, ``evidence=`` and ``open_issue=`` to ``--github-output``.
+``open_issue`` is true only for a ``reproduced_regression`` evidence decision, which needs at least
+three independent trials on each side; a single candidate run never qualifies.
 Exit status: 0 when a decision was made (including regressions and non-comparability),
 2 when the inputs could not be read.
 """
@@ -24,13 +26,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from compare_runs import (  # noqa: E402
     EXIT_ERROR,
     EXIT_NOT_COMPARABLE,
-    EXIT_REGRESSION,
     _compare_runs,
     _load_run,
-    _parse_run_yaml,
 )
 from pr_comment import _render_comment  # noqa: E402
-from run_provenance import select_baseline  # noqa: E402
+from regression_evidence import evaluate  # noqa: E402
+from run_provenance import select_baselines  # noqa: E402
 
 
 def decide(
@@ -39,10 +40,11 @@ def decide(
     alert_threshold: float,
     fail_threshold: float,
 ) -> dict[str, object]:
-    baseline_dir, reason = select_baseline(candidate_dir, search_roots)
-    if baseline_dir is None:
-        # Without a compatible baseline the candidate's results are not read at all.
-        candidate = _parse_run_yaml(candidate_dir / "run.yaml")
+    # Load (and so validate) the candidate first: a missing or corrupt result is an error
+    # (exit 2), never "not comparable".
+    candidate = _load_run(candidate_dir)
+    baselines, reason = select_baselines(candidate_dir, search_roots)
+    if not baselines:
         return {
             "provenance": {
                 "candidate_run_id": candidate.get("run_id"),
@@ -65,9 +67,14 @@ def decide(
             },
             "operations": [],
         }
-    candidate = _load_run(candidate_dir)
-    baseline = _load_run(baseline_dir)
-    return _compare_runs(baseline, candidate, alert_threshold, fail_threshold)
+    baseline = _load_run(baselines[-1])
+    report = _compare_runs(baseline, candidate, alert_threshold, fail_threshold)
+    # The issue decision is the shared evidence policy: every compatible baseline run and this
+    # one candidate run each count as one independent trial.
+    report["evidence"] = evaluate(
+        baselines, [candidate_dir], noise=alert_threshold, fail=fail_threshold
+    )
+    return report
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -97,8 +104,11 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_ERROR
     exit_code = summary["exit_code"]
     status = summary["overall_status"]
-    # Only a regression between runs with an identical measured identity may open an issue.
-    open_issue = exit_code == EXIT_REGRESSION and status != "not_comparable"
+    # Only the shared evidence policy may open an issue (scripts/regression_evidence.py): a
+    # threshold alert from one candidate run is advisory, never a confirmed regression.
+    evidence = report.get("evidence")
+    decision = evidence.get("decision") if isinstance(evidence, dict) else "not_comparable"
+    open_issue = isinstance(evidence, dict) and evidence.get("eligible_for_issue") is True
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -114,6 +124,7 @@ def main(argv: list[str] | None = None) -> int:
         with open(args.github_output, "a", encoding="utf-8") as handle:
             handle.write(f"status={status}\n")
             handle.write(f"exit_code={exit_code}\n")
+            handle.write(f"evidence={decision}\n")
             handle.write(f"open_issue={'true' if open_issue else 'false'}\n")
     return 0
 
