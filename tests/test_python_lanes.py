@@ -387,6 +387,8 @@ def test_demo_runner_reproduces_the_pinned_lane_capture() -> None:
     assert _flags(capture_step["run"]) <= _flags(script)
     assert {"--cubrid-port", "--fixed-host", "--versions-file"} <= _flags(script)
     assert "verify-install --constraints" in script
+    # Only compare_runs.py report outcomes (0, 1, 3) are tolerated; an error (2) fails the run.
+    assert "0 | 1 | 3) ;;" in script and 'exit "$status"' in script
     # One complete command per recorded run: run-dir, version, role and, for a candidate, the
     # baseline, with the server port it used.
     recorded = sorted(path.name.split("_", 1)[1] for path in (demo / "runs").iterdir())

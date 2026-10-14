@@ -76,10 +76,15 @@ cp "$WORK/loadavg.log" "$RUN_DIR/raw/loadavg.log"
 
 if [ -n "$BASELINE" ]; then
   mkdir -p "$RUN_DIR/derived"
-  # Exit 3 (not comparable) is a recorded outcome of this demonstration, not a script failure.
+  # Report outcomes are recorded results of this demonstration, not script failures: 0 pass,
+  # 1 regression beyond the threshold, 3 not comparable. Anything else (2: error) fails the run.
   status=0
   "$VPY" "$ROOT/scripts/compare_runs.py" --baseline-dir "$BASELINE" --candidate-dir "$RUN_DIR" \
     --output "$RUN_DIR/derived/comparison_vs_$(basename "$BASELINE" | sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}_pycubrid-//').json" \
     || status=$?
   echo "compare_runs.py exit status: $status"
+  case $status in
+    0 | 1 | 3) ;;
+    *) echo "compare_runs.py failed (exit $status); see the message above" >&2; exit "$status" ;;
+  esac
 fi
