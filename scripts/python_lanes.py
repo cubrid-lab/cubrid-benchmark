@@ -3,7 +3,9 @@
 
 Subcommands:
 
-    plan            print/emit the matrix cells of a lane (``representative`` by default)
+    plan            print/emit the matrix cells of a lane (``representative`` by default); a
+                    ``--source-sha`` override is rejected for a lane with
+                    ``"source_override": false`` (archival), before any cell installs
     verify-install  check that the installed packages are exactly the pinned releases (or the
                     requested pycubrid source commit) and write versions.json
     package-cell    write cell.json, the manifest entry of one measured cell
@@ -45,12 +47,18 @@ def cell_id(lane: str, python: str, cubrid: str) -> str:
     return f"{lane}-py{python}-cubrid{cubrid}"
 
 
-def plan(lane: str, lanes: dict[str, object]) -> list[dict[str, str]]:
+def plan(lane: str, lanes: dict[str, object], source_sha: str = "") -> list[dict[str, str]]:
     lane = lane or DEFAULT_LANE
     definitions = lanes.get("lanes")
     if not isinstance(definitions, dict) or lane not in definitions:
         raise LaneError(f"unknown lane {lane!r}")
     definition = definitions[lane]
+    if source_sha and definition.get("source_override", True) is not True:
+        # The lane's cells and manifest name its pinned release; a source build is not it.
+        raise LaneError(
+            f"lane {lane!r} measures only its pinned releases ({definition.get('constraints')}); "
+            "pycubrid_source_sha is not accepted"
+        )
     constraints = definition.get("constraints")
     if not isinstance(constraints, str) or not (ROOT / constraints).is_file():
         raise LaneError(f"lane {lane!r} has no constraints file {constraints!r}")
@@ -192,6 +200,7 @@ def main(argv: list[str] | None = None) -> int:
     plan_parser = sub.add_parser("plan")
     plan_parser.add_argument("--lane", default="")
     plan_parser.add_argument("--github-output")
+    plan_parser.add_argument("--source-sha", default="")
 
     verify = sub.add_parser("verify-install")
     verify.add_argument("--constraints", required=True)
@@ -209,7 +218,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.command == "plan":
-            cells = plan(args.lane, load_lanes())
+            cells = plan(args.lane, load_lanes(), args.source_sha)
             payload = json.dumps(cells, separators=(",", ":"))
             print(payload)
             if args.github_output:

@@ -37,5 +37,13 @@ captured with `--fixed-host devbox-i5-9400F`.
   differ, so no verdict is produced
   (`2026-10-14_pycubrid-1.12.0-cubrid102-candidate/derived/comparison_vs_1.11.0-baseline.json`).
 
+## Reproduction
+
+`run.sh` runs one measurement end to end. The exact commands for the three runs are in
+`experiment.yaml` (`repro`). It needs one CUBRID container per server
+(`cubrid/cubrid:11.4` on port 33681 and `cubrid/cubrid:10.2` on 33682, database `benchdb`) and
+Python 3.12. A re-run on another host or day is a new run with its own identity and is not
+expected to repeat these numbers.
+
 A real release-to-release comparison needs repeated trials on a quiet, fixed host, or on one
 GitHub-hosted runner image, under the replication rules in `REPRODUCIBILITY.md`.

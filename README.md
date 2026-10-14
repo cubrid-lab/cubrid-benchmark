@@ -110,7 +110,9 @@ releases in `python/constraints-current.txt` (currently pycubrid 1.12.0, sqlalch
 Every cell installs the exact pins and verifies them before measuring. The check covers
 `importlib.metadata`, `pycubrid.__version__` and the SQLAlchemy range of the dialect. A
 `pycubrid_source_sha` dispatch input measures a pycubrid commit instead, verified through its
-`direct_url.json`. A silently upgraded package or a failed source install fails the cell.
+`direct_url.json`. The `archival` lane rejects it, because its cells are labelled as the pycubrid
+1.0.0 reproduction, and also pins pytest-benchmark. A silently upgraded package or a failed
+source install fails the cell.
 
 Each cell measures only the correctness-verified pycubrid Tier 1 workload
 (`python/bench_pycubrid.py`). It then records measured provenance and a report-only baseline

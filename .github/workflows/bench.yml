@@ -132,8 +132,12 @@ jobs:
         id: plan
         env:
           LANE: ${{ inputs.lane }}
-        # A schedule has no inputs, so it plans the representative lane.
-        run: python3 scripts/python_lanes.py plan --lane "$LANE" --github-output "$GITHUB_OUTPUT"
+          SOURCE_SHA: ${{ inputs.pycubrid_source_sha }}
+        # A schedule has no inputs, so it plans the representative lane. A source override for a
+        # lane that measures only pinned releases (archival) fails here, before any cell installs.
+        run: >-
+          python3 scripts/python_lanes.py plan --lane "$LANE" --source-sha "$SOURCE_SHA"
+          --github-output "$GITHUB_OUTPUT"
 
   pinned:
     needs: plan

@@ -113,6 +113,13 @@ def test_only_one_bounded_weekly_schedule() -> None:
     assert '--lane "$LANE"' in _step("plan", "Plan the lane's cells")["run"]
 
 
+def test_plan_job_receives_the_source_override() -> None:
+    # The planner rejects a source override for the archival lane before any cell installs.
+    step = _step("plan", "Plan the lane's cells")
+    assert step["env"]["SOURCE_SHA"] == "${{ inputs.pycubrid_source_sha }}"
+    assert '--source-sha "$SOURCE_SHA"' in step["run"]
+
+
 def test_manual_dispatch_is_kept_with_lane_choice() -> None:
     inputs = TRIGGERS["workflow_dispatch"]["inputs"]
     assert inputs["lane"]["default"] == "representative"

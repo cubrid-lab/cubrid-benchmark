@@ -76,6 +76,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   decision, not a claim about MySQL or PyMySQL performance.
 
 ### Fixed
+- The pinned Python lanes are more self-contained and better labelled:
+  - The `archival` lane rejects the `pycubrid_source_sha` dispatch input in the `plan` job, before
+    any cell installs, because its cells and manifest name the pycubrid 1.0.0 reproduction.
+  - `python/constraints-archival-1.0.0.txt` pins `pytest-benchmark==5.3.0`, which
+    `verify-install` checks like every pin.
+  - `run_provenance.py capture --versions-file` copies the verified file to the run's
+    `raw/versions.json`, so `verified_versions_file: raw/versions.json` no longer points outside
+    the run folder.
+  - `experiments/pycubrid-pinned-lane-demo` ships `run.sh`, and its `experiment.yaml` lists the
+    complete commands for each recorded run.
 - `scripts/normalize_results.py` and `scripts/emit_benchforge_v2.py` no longer write
   `"range": "+/- inf%"` when finite but extreme `stddev` and `mean` values overflow their ratio.
   Both converters format the range with the shared `benchmark_stats.range_percent()`, which

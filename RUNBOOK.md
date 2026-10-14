@@ -124,6 +124,10 @@ full cross-language suite and the `release`/`archival` lanes never run on a sche
 and pins live in `python/lanes.json` and `python/constraints-current.txt`. A
 `pycubrid_source_sha` dispatch input (a full 40-hex commit) measures that pycubrid commit
 instead of the pinned release, and `python_lanes.py verify-install` checks the installed commit.
+The `archival` lane (`"source_override": false` in `python/lanes.json`) rejects that input in the
+`plan` job, before any cell installs. Its constraints (`python/constraints-archival-1.0.0.txt`)
+pin pytest-benchmark as well as pycubrid 1.0.0. Each captured run folder holds its verified
+`raw/versions.json`, which `run.yaml` names as `verified_versions_file`.
 
 Failure handling:
 

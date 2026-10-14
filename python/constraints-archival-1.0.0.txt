@@ -1,2 +1,4 @@
 # Archival reproduction lane only: the legacy pycubrid 1.0.0 matrix. Not current support evidence.
+# scripts/python_lanes.py verify-install fails the lane if any pin is not what got installed.
 pycubrid==1.0.0
+pytest-benchmark==5.3.0
