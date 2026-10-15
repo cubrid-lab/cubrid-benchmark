@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Documentation
+- Agent PR review route (maintainer decision, 2026-10-15): `AGENTS.md` and `CONTRIBUTING.md`
+  now say that a standalone agent's PR needs a substantive submitted Copilot review or a review
+  by a maintainer other than its author, recorded on the PR. Reviews by other people or by other
+  AI agents do not satisfy the route, and AI review is limited to two published rounds per PR.
+  Under every route, changes to `.github/workflows/bench.yml` and `scripts/file_regression_issue.py`,
+  which write to GitHub, need a review that explicitly assesses them, confirmed by a maintainer.
 - Current-facing docs describe the maintained scope: a same-server regression laboratory for
   pycubrid and sqlalchemy-cubrid with CUBRIDdb as a reference, not a cross-database race.
   - `README.md` lists current experiments with their actual statuses and runs, and a separate
