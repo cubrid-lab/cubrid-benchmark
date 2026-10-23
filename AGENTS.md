@@ -287,45 +287,25 @@ Examples:
 
 ## Development Workflow (cubrid-lab org standard)
 
-All non-trivial work across cubrid-lab repositories MUST follow this 4-phase cycle:
+Use the same PR review and merge criteria for human work and any AI coding
+tool (OpenCode, Codex, Claude Code, ChatGPT, Copilot and others).
+There is no tool-specific Oracle/Copilot mandatory approval route.
 
-1. **Oracle Design Review** — Consult Oracle before implementation to validate architecture, API surface, and approach. Raise concerns early.
-2. **Implementation** — Build the feature/fix with tests. Follow existing codebase patterns.
-3. **Documentation Update** — Update ALL affected docs (README, CHANGELOG, ROADMAP, API docs, SUPPORT_MATRIX, PRD, etc.) in the same PR or as an immediate follow-up. Code without doc updates is incomplete.
-4. **Oracle Post-Implementation Review** — Consult Oracle to review the completed work for correctness, edge cases, and consistency before merging.
+1. Implement one focused change with tests and affected documentation.
+2. Use required GitHub Actions CI checks as the authoritative evidence at the
+   final PR head. Local tests and lint are encouraged, not another merge gate.
+   Preserve the project's CUBRID functional Tier 0 and relevant benchmark
+   validation without substituting timing data for functional correctness.
+3. Review correctness, safety, maintainability and benchmark reproducibility.
+   Oracle, Copilot and `agent-review` are optional advisory sources.
+4. Resolve or disposition findings and have the responsible maintainer decide
+   whether to merge after validating required CI and relevant evidence.
 
-Skipping any phase requires explicit justification. Trivial changes (typos, single-line fixes) may skip phases 1 and 4.
-The two Oracle reviews satisfy this route for OpenCode work; a GitHub Copilot review is not
-additionally required.
-
-### Review route for standalone agents and humans
-
-**Standalone agents (Claude Code, Codex, ChatGPT, or other agent tools):** implement and test,
-open a PR, then **wait for a substantive submitted GitHub Copilot review or a review by a
-maintainer**, recorded on the PR, before merging (maintainer decision, 2026-10-15). A
-maintainer is a repository collaborator with the admin or maintain role other than the PR's
-author. Reviews by other people, and reviews by AI agents other than Copilot, are welcome but
-do not satisfy this route. A submitted Copilot COMMENTED review with an actual code assessment
-counts; it is not formal APPROVED status. Requested/pending reviews, a boilerplate approval
-suggestion, self-review and passing CI do not qualify. Evaluate findings against the final
-relevant head; without the required review, leave the PR unmerged. No CI check enforces this.
-
-**Human contributions:** follow the normal PR and review process. This is not a fallback for
-standalone agent tools. No OpenCode, Oracle, Copilot, Claude Code or Codex installation is a
-contribution prerequisite.
-
-**Security-sensitive paths, under every route:** changes to `.github/workflows/bench.yml` (its
-full-suite job holds `contents: write` and pushes results to `gh-pages`) and to
-`scripts/file_regression_issue.py` (it files and comments on issues with a GitHub token) get
-stricter scrutiny. Their review must explicitly assess what they
-can write or publish, and a maintainer confirms that disposition before merge.
-
-**Review budget:** default to two published AI review rounds per scoped PR (the initial review
-and one corrective re-review). New commits do not reset the budget; further rounds need explicit
-maintainer direction. If a qualifying review is missing or a critical/security finding is
-unresolved at the limit, keep the PR Draft and report it. Record the route, the reviewer, the
-reviewed head SHA and each finding's disposition (fixed, rejected with a reason, or deferred to
-an issue) in the PR.
+**Security-sensitive paths:** changes to `.github/workflows/bench.yml`
+(which may write to `gh-pages`) and `scripts/file_regression_issue.py`
+(which writes GitHub issues) require explicit review of write permissions
+and published output, confirmed by an independent maintainer regardless
+of implementation tool. Keep existing release and security controls.
 
 ## Benchmark Tiers
 
