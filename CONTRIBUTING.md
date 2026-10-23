@@ -91,13 +91,12 @@ ruff format --check <changed files>
    `REPRODUCIBILITY.md` (same measured identity; at least three independent runs before any
    regression claim). Do not present a comparison with another database engine as a goal.
 5. Update `CHANGELOG.md` for user-visible changes.
-6. Agent-authored PRs follow the review route in [`AGENTS.md`](AGENTS.md#review-route-for-standalone-agents-and-humans):
-   a standalone agent's PR needs a substantive submitted GitHub Copilot review or a review by a
-   maintainer other than the author, recorded on the PR (maintainer decision, 2026-10-15). Other
-   people's and other AI agents' reviews do not satisfy that route, and AI review is limited to
-   two published rounds per PR. Changes to `.github/workflows/bench.yml` and to
-   `scripts/file_regression_issue.py`, which write to GitHub, need a review that explicitly
-   assesses them, confirmed by a maintainer. Human contributors follow the normal review process and need no AI tools.
+6. Apply identical review criteria to every author and coding tool.
+   Required GitHub CI is authoritative; local checks are recommended,
+   and Oracle/Copilot/`agent-review` are optional advisory feedback.
+   The responsible maintainer verifies final results and decides on merge.
+   For `.github/workflows/bench.yml` and `scripts/file_regression_issue.py`,
+   require explicit independent security/write-permissions assessment.
 
 ## Reporting Issues
 
