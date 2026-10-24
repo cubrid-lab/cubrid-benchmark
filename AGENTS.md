@@ -410,3 +410,27 @@ All optimization work in pycubrid and sqlalchemy-cubrid must be validated here.
   MySQL") are **historical**. They mixed DBMS and driver differences, are not optimization
   targets, and live only in `experiments/baseline-multilang` and
   `experiments/benchforge-pycubrid-vs-pymysql`.
+
+## Issue triage lifecycle
+
+New issues in **this repository** enter `status: needs triage`, including
+issues opened by maintainers or agents. GitHub's `issues: opened` workflow
+applies this label to external submissions; issue forms set it immediately.
+Automation using `GITHUB_TOKEN` must add it at creation because its own
+issue events may not retrigger Actions.
+
+1. Inspect problem evidence and unknowns, existing issues and open PRs,
+   validity, duplicates, issue type, scope/non-goals and real dependencies.
+   Explain closures of duplicates and invalid requests.
+2. Examine **all open issues in this repository** (including later API pages)
+   before setting relative priority, considering impact, active work and
+   blocking prerequisites rather than issue age or ID.
+3. Use exactly one `priority: critical/high/medium/low` and exactly one
+   existing `size: XS/S/M/L/XL`. Size is effort, not urgency. Split tasks
+   too large for independent verification; preserve contributors and owners.
+4. Fetch saved GitHub labels to confirm type, priority and size together
+   with scope and duplication status. Only after that check, remove
+   `status: needs triage`; keep it if further review is required.
+
+No automation chooses a severity or marks triage complete. This routine is
+not a new CI gate and leaves existing validation, security and releases alone.
