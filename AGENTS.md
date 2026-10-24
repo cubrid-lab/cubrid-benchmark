@@ -410,3 +410,33 @@ All optimization work in pycubrid and sqlalchemy-cubrid must be validated here.
   MySQL") are **historical**. They mixed DBMS and driver differences, are not optimization
   targets, and live only in `experiments/baseline-multilang` and
   `experiments/benchforge-pycubrid-vs-pymysql`.
+
+## Issue triage lifecycle
+
+New issues begin as `status: needs triage`, even when the author supplies
+priority and size labels. The issue-opened workflow marks external reports;
+automated issues created using `GITHUB_TOKEN` must supply the label at
+creation since those events do not trigger another workflow. Maintainers,
+not submitters or AI severity summaries, decide relative priority.
+
+1. Confirm the actual problem and evidence (or say what is unverified),
+   duplicate open/closed issues and open PRs, repository scope, issue type,
+   dependencies and a testable completion boundary. Close duplicates or
+   invalid issues with a concise reason.
+2. Compare impact and urgency with **all open issues in this repository**;
+   re-evaluate relative order rather than granting new issues automatic
+   precedence. Choose exactly one of `priority: critical`, `priority: high`,
+   `priority: medium` and `priority: low`.
+3. Estimate effort with exactly one of `size: small` (focused edit),
+   `size: medium` (several related files) or `size: large`
+   (cross-cutting). Split large implementation work into independently
+   verifiable issues when appropriate, retaining parent acceptance.
+4. Read GitHub's *persisted* labels, confirm type, one valid priority and
+   one valid size along with the completed backlog comparison, then remove
+   `status: needs triage`. Do not auto-remove it based on labels alone.
+
+For existing open work, migrate legacy XS/S → small, M → medium, L/XL →
+large; preserve priority, claims, other labels and closed issue history.
+Unclear labels stay queued for manual triage. Keep existing CI and release
+review boundaries intact; this is not a new merge gate.
+
