@@ -107,3 +107,27 @@ When filing an issue, include:
 - pycubrid / sqlalchemy-cubrid versions (or source commit) and Python version
 - The run folder or workflow run with raw results
 - What you expected and what you measured
+
+## Working with issues and coding agents
+
+An observed slow run is **not automatically a regression**. Before filing a
+correctness or performance issue, check the current code, overlapping open
+issues and PRs, and the actual run artifacts. Distinguish hypotheses from
+reproduced defects; a regression verdict requires comparable
+`comparison_identity` values and at least three independent trials per side
+as specified in `REPRODUCIBILITY.md`. Do not treat one timed sample, an
+AI summary, or the advisory report job as a required CI throughput gate.
+
+New issues start as `status: needs triage`. Maintainers verify type, scope,
+duplicates and urgency against this repository's open queue before finalizing
+one `priority: critical/high/medium/low` and one `size: XS/S/M/L/XL`.
+The status is removed only after reviewing the persisted GitHub labels. Priority
+means urgency, size means estimated effort; neither implies PR approval.
+
+Human contributors may work on unclaimed tasks without an AI tool or a mandatory
+pre-approval. Maintainer-operated autonomous agents must have authorization and
+a confirmed implementer assignment before taking reserved tasks. Coordinate
+with active PR owners, keep one independent change per PR, and report which
+tests, benchmark lanes and actual runs were **not** performed. Required final-head
+GitHub CI and maintainer review remain authoritative. Historical plans in
+`AGENTS.md` are context, not new fixed deadlines for everyday development.
