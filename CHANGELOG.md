@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Documentation
+- Add the CUBRID Lab brand icon to the README.
 - Agent PR review route (maintainer decision, 2026-10-15): `AGENTS.md` and `CONTRIBUTING.md`
   now say that a standalone agent's PR needs a substantive submitted Copilot review or a review
   by a maintainer other than its author, recorded on the PR. Reviews by other people or by other
