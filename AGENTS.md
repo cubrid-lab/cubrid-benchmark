@@ -1,5 +1,10 @@
 # AGENTS.md
 
+## Shared issue, PR, and commit standard
+
+See the [cubrid-lab organization standard](https://github.com/cubrid-lab/.github/blob/main/docs/ISSUE_PR_COMMIT_STANDARD.md). Issue titles use only a type prefix (`feat:`, `bug:`, `docs:`, etc.), not a required module scope. Describe the human-readable goal or observed defect, relevant evidence and verifiable acceptance criteria. Triage determines validity, duplication, scope, priority and size; PR and commit titles retain the existing Conventional Commits requirements and CI. Avoid personal comments, opaque internal IDs and agent narration.
+
+
 Project knowledge base for AI coding agents.
 
 ## Project Overview
