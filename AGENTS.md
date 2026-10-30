@@ -418,6 +418,16 @@ All optimization work in pycubrid and sqlalchemy-cubrid must be validated here.
 
 ## Human-readable communication (all agents)
 
+The canonical rule is section 6 of the organization standard,
+[Explanations in code, tests, reviews and agent-written text](https://github.com/cubrid-lab/.github/blob/main/docs/ISSUE_PR_COMMIT_STANDARD.md#6-explanations-in-code-tests-reviews-and-agent-written-text).
+Here it covers code comments, test names and assertions, benchmark tier
+labels, experiment metadata and PR or review claims: say what is measured or
+checked, against which baseline, why the check matters and its limits, before
+any tier code, issue number or scenario label. This repository's benchmark,
+provenance, statistical and CI rules keep precedence; do not change results,
+thresholds or hard-coded counts for wording alone. The notes below are the
+local application of that rule.
+
 Use this rule for text authored or edited by Codex, Claude Code, OpenCode,
 ChatGPT, Copilot, or any other agent. It applies to issues, PRs, reviews,
 comments, checklists, status updates, commit summaries, release notes,

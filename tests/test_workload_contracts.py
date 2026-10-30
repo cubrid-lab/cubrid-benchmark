@@ -208,7 +208,12 @@ def test_offline_smoke_of_all_maintained_workloads(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stdout[-4000:] + result.stderr[-2000:]
     summary = result.stdout.strip().splitlines()[-1]
-    # 5 Tier 1 + 4 extended (the opt-in prepared batch skips) + 5 Tier 2 (+ 1 TODO skip).
+    # Every maintained workload must run end to end, so a renamed, dropped or newly
+    # failing benchmark changes these counts. 14 pass: the 5 pycubrid driver
+    # workloads (Tier 1), 4 of the 5 extended pycubrid workloads, and 5 SQLAlchemy
+    # runs (Tier 2; the ORM bulk insert runs at 100 and 1000 rows). 2 skip on
+    # purpose: executemany(prepared=True) is opt-in via BENCH_EXECUTEMANY_PREPARED,
+    # and the relationship/join loading benchmark waits for a schema with foreign keys.
     assert "14 passed" in summary and "2 skipped" in summary, summary
     assert not out.exists() or json.loads(out.read_text()).get("benchmarks") == []
 
