@@ -441,7 +441,7 @@ documentation, presentations, and other maintainer-facing writing.
   Do not substitute `P1`/`P2` for repository priority labels.
 - When an internal identifier is necessary for accurate cross-reference,
   **describe the subject first**, then add the identifier in context:
-  `pycubrid introduction (0:20; storyboard shot P1)`. Use descriptive
+  `benchmark overview (0:20; section 1)`. Use descriptive
   names and timestamps, section titles, or paths wherever practical.
 - Use natural, actionable wording. Prefer `Listen to the full narration and
   verify the pronunciation of each project name` to `Maintainer full listen`.
@@ -458,3 +458,9 @@ documentation, presentations, and other maintainer-facing writing.
 
 This is a shared writing convention, not a new CI check, reviewer approval,
 or merge gate. Keep existing repository-specific technical and safety rules.
+
+## Repository-specific issue and PR evidence
+
+This repository owns **reproducible performance experiments and their measured datasets**. Issue and PR titles, bodies, ADR/design discussions and release or publication claims must start with **this repository's** affected files and observable behavior. Check experiment.yaml/run.yaml, pinned workloads, repeat runs, machines, SQL queries, and the exact benchmark comparison method. Do not reuse the rationale, issue tracker, implementation plan, test command, supported version claim or release schedule of another CUBRID Lab repository.
+
+Other driver packages or databases may be named as **measured subjects**, never used as proof of results or as a release authority. When an external link represents a real integration, specification or independent comparison, explain why it is needed and distinguish external context from locally tested evidence. Before review, scan the issue/PR title and description, contributor/agent guidance, documentation and published notes for incorrect project names or cross-language tooling. Keep the existing local CI, security and maintainer approval rules unchanged; this is a manual writing check, not an additional CI gate.
