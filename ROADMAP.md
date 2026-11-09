@@ -7,14 +7,11 @@
 > "Measured Python Versions"). Cross-database items (Track A efficiency ratios against
 > PyMySQL, Track B CUBRID vs MySQL) are historical or separate research, not current targets.
 >
-> This roadmap reflects current priorities. For the ecosystem-wide view, see the
-> [CUBRID Lab Ecosystem Roadmap](https://github.com/cubrid-lab/.github/blob/main/ROADMAP.md).
+> This roadmap reflects current priorities.
 
 ## Links
 
 - 📋 [GitHub Milestones](https://github.com/cubrid-lab/cubrid-benchmark/milestones)
-- 🗂️ [Org Project Board](https://github.com/orgs/cubrid-lab/projects/2)
-- 🌐 [Ecosystem Roadmap](https://github.com/cubrid-lab/.github/blob/main/ROADMAP.md)
 - 📝 [Benchmark Plan](BENCHMARK_PLAN.md)
 
 ## Next Release — v1.0 — Comprehensive Benchmarks
