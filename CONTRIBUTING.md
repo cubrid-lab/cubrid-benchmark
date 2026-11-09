@@ -1,6 +1,6 @@
 # Contributing to cubrid-benchmark
 
-**Issue title policy:** use type-only `feat:`, `bug:`, etc. with observable acceptance criteria. PR and commit messages follow local Conventional Commits rules. Separate issue triage from PR CI; see [organization standard](https://github.com/cubrid-lab/.github/blob/main/docs/ISSUE_PR_COMMIT_STANDARD.md).
+**Issue title policy:** use type-only `feat:`, `bug:`, etc. with observable acceptance criteria. PR and commit messages follow local Conventional Commits rules. Separate issue triage from PR CI; see [AGENTS.md](AGENTS.md).
 
 Thank you for your interest in contributing to `cubrid-benchmark`. The maintained track measures
 the CUBRID Python stack (pycubrid, sqlalchemy-cubrid, with CUBRIDdb as a same-server reference) on
