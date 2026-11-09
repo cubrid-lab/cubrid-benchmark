@@ -388,7 +388,6 @@ general tier definitions.
 ## Project Context — Performance Loop System
 
 > This repo is the **measurement backbone** of the Performance Loop.
-> Board: [CUBRID Ecosystem Roadmap](https://github.com/orgs/cubrid-lab/projects/2)
 
 ### Role
 
