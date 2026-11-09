@@ -158,7 +158,6 @@ measured child process, or `null` with a reason when it cannot be derived (see
 ## Links
 
 - [Roadmap](ROADMAP.md)
-- [Project Board](https://github.com/orgs/cubrid-lab/projects/2)
 - [CUBRID Lab](https://github.com/cubrid-lab)
 
 ## Docs
