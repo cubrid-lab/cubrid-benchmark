@@ -1,8 +1,8 @@
 # AGENTS.md
 
-## Shared issue, PR, and commit standard
+## Issue and pull request guidance (cubrid-benchmark)
 
-See the [cubrid-lab organization standard](https://github.com/cubrid-lab/.github/blob/main/docs/ISSUE_PR_COMMIT_STANDARD.md). Issue titles use only a type prefix (`feat:`, `bug:`, `docs:`, etc.), not a required module scope. Describe the human-readable goal or observed defect, relevant evidence and verifiable acceptance criteria. Triage determines validity, duplication, scope, priority and size; PR and commit titles retain the existing Conventional Commits requirements and CI. Avoid personal comments, opaque internal IDs and agent narration.
+See the [local contribution guidelines](CONTRIBUTING.md). Issue titles use only a type prefix (`feat:`, `bug:`, `docs:`, etc.), not a required module scope. Describe the human-readable goal or observed defect, relevant evidence and verifiable acceptance criteria. Triage determines validity, duplication, scope, priority and size; PR and commit titles retain the existing Conventional Commits requirements and CI. Avoid personal comments, opaque internal IDs and agent narration.
 
 
 Project knowledge base for AI coding agents.
@@ -417,8 +417,7 @@ All optimization work in pycubrid and sqlalchemy-cubrid must be validated here.
 
 ## Human-readable communication (all agents)
 
-The canonical rule is section 6 of the organization standard,
-[Explanations in code, tests, reviews and agent-written text](https://github.com/cubrid-lab/.github/blob/main/docs/ISSUE_PR_COMMIT_STANDARD.md#6-explanations-in-code-tests-reviews-and-agent-written-text).
+For this repository, use the human-readable communication rules below.
 Here it covers code comments, test names and assertions, benchmark tier
 labels, experiment metadata and PR or review claims: say what is measured or
 checked, against which baseline, why the check matters and its limits, before
@@ -455,7 +454,7 @@ documentation, presentations, and other maintainer-facing writing.
   separate lookup table. Edit an existing editable comment to correct unclear
   wording rather than adding redundant follow-up comments.
 
-This is a shared writing convention, not a new CI check, reviewer approval,
+This is a local writing convention, not a new CI check, reviewer approval,
 or merge gate. Keep existing repository-specific technical and safety rules.
 
 ## Repository-specific issue and PR evidence
