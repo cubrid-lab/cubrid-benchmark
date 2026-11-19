@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- Use the current organization name everywhere: "CUBRID Lab" in prose and the license, and
+  `cubrid-lab` in URLs (repository links, the Rust `cubrid-rs` git dependency at the same pinned
+  rev, and the `benchforge_v2.json` schema `$id`). The Go benchmark module path is now
+  `github.com/cubrid-lab/cubrid-benchmark/go`. The Go benchmarks still require
+  `github.com/cubrid-labs/cubrid-go v0.2.1`, because cubrid-go has not yet published a release
+  under `github.com/cubrid-lab/cubrid-go`; switch the `require` and imports once it does.
+
 ### Documentation
 - Add the CUBRID Lab brand icon to the README.
 - Agent PR review route (maintainer decision, 2026-10-15): `AGENTS.md` and `CONTRIBUTING.md`

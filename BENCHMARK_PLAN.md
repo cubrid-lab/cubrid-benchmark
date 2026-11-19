@@ -10,7 +10,7 @@
 > **Created**: 2026-03-22
 >
 > This plan defines the two-track benchmark strategy for cubrid-benchmark,
-> covering all cubrid-labs driver/ORM stacks across Python, Go, TypeScript, and Rust.
+> covering all CUBRID Lab driver/ORM stacks across Python, Go, TypeScript, and Rust.
 
 ## Table of Contents
 
@@ -34,7 +34,7 @@ cubrid-benchmark serves two distinct audiences with shared infrastructure:
 | | Track A | Track B |
 |---|---|---|
 | **Goal** | Measure driver/ORM quality over time | Fair CUBRID vs MySQL engine comparison |
-| **Audience** | cubrid-labs internal developers | External developers, decision makers |
+| **Audience** | CUBRID Lab internal developers | External developers, decision makers |
 | **Output** | Regression data → driver repo improvement backlog | Cross-DB performance positioning |
 | **Key Metric** | Efficiency ratio vs reference driver (e.g., `pycubrid / PyMySQL`; *retired 2026-10: cross-engine, cannot isolate driver overhead*) | Absolute ops/s with compiled-language drivers |
 | **Caveats** | Client overhead included intentionally | Client overhead minimized via compiled stacks |

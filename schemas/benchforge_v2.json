@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://cubrid-labs.github.io/cubrid-benchmark/schemas/benchforge_v2.json",
+  "$id": "https://cubrid-lab.github.io/cubrid-benchmark/schemas/benchforge_v2.json",
   "title": "Benchforge Result Schema v2",
   "type": "object",
   "additionalProperties": false,

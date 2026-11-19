@@ -8,7 +8,7 @@
 ## Overview
 
 **cubrid-benchmark** is a unified, multi-language benchmark suite that measures CUBRID database
-performance against MySQL across the entire cubrid-labs ecosystem: Python (pycubrid, SQLAlchemy),
+performance against MySQL across the entire CUBRID Lab ecosystem: Python (pycubrid, SQLAlchemy),
 Go (cubrid-go, GORM), and TypeScript (cubrid-client, Drizzle).
 
 ## Goals

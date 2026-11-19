@@ -291,7 +291,7 @@ The primary optimization target remains **bulk row parsing** (`_parse_row_data` 
 
 | Component | Version | Source |
 |-----------|---------|--------|
-| pycubrid | v0.5.0 | `pip install pycubrid` (includes fetchall fix [`bb687dc`](https://github.com/cubrid-labs/pycubrid/commit/bb687dc)) |
+| pycubrid | v0.5.0 | `pip install pycubrid` (includes fetchall fix [`bb687dc`](https://github.com/cubrid-lab/pycubrid/commit/bb687dc)) |
 | CUBRIDdb | v9.3.0.1 | `pip install CUBRIDdb` |
 | CUBRID Server | 11.2 | Docker `benchforge-cubrid-1`, port 33000 |
 | Python | CPython 3.12.8 | |
@@ -396,7 +396,7 @@ Comparable group: `devbox-i5-4200M-linux5.15-docker-cubrid112`
 
 ### Changes Applied
 
-Commit [`16a8634`](https://github.com/cubrid-labs/pycubrid/commit/16a8634):
+Commit [`16a8634`](https://github.com/cubrid-lab/pycubrid/commit/16a8634):
 
 1. **packet.py**: Pre-compiled `struct.Struct` objects at module level; removed `typing.cast` overhead
 2. **protocol.py**: Replaced 15+ `if/elif` chain in `_read_value()` with `_TYPE_READERS` dict dispatch table (O(1) lookup); optimized `_parse_row_data()` with pre-extracted column types and local-bound methods
