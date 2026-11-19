@@ -6,7 +6,7 @@
 
 ## ⚠️ Important Updates Since Initial Baseline
 
-1. **fetchall bug fixed** ([pycubrid@bb687dc](https://github.com/cubrid-labs/pycubrid/commit/bb687dc)): pycubrid's `fetchall()` only returned the first CAS batch (~477 rows out of 10K). SELECT results below are affected. The ratios for INSERT/UPDATE/DELETE remain valid.
+1. **fetchall bug fixed** ([pycubrid@bb687dc](https://github.com/cubrid-lab/pycubrid/commit/bb687dc)): pycubrid's `fetchall()` only returned the first CAS batch (~477 rows out of 10K). SELECT results below are affected. The ratios for INSERT/UPDATE/DELETE remain valid.
 2. **Autocommit mismatch discovered**: CUBRIDdb defaults `autocommit=True`, pycubrid defaults `autocommit=False`. This was not controlled in the initial baseline.
 3. **Driver comparison completed**: See [DRIVER_COMPARISON.md](../driver-comparison/README.md) for corrected pycubrid vs CUBRIDdb results with proper controls.
 4. **Current optimization focus**: Bulk row parsing (SELECT 10K rows) — pycubrid is 2.82× slower than CUBRIDdb. See [README.md](../../README.md) for the optimization roadmap.
@@ -27,9 +27,9 @@
 
 | Language | CUBRID Driver | MySQL Driver | Runtime |
 |----------|--------------|--------------|---------|
-| Python | [pycubrid](https://github.com/cubrid-labs/pycubrid) v0.5.0 | PyMySQL | CPython 3.10.12 (GCC 11.4.0) |
-| TypeScript | [cubrid-client](https://github.com/cubrid-labs/cubrid-client) v1.1.0 | mysql2 | Node.js 18+ |
-| Go | [cubrid-go](https://github.com/cubrid-labs/cubrid-go) v0.2.1 | go-sql-driver/mysql | Go 1.21+ · linux/amd64 |
+| Python | [pycubrid](https://github.com/cubrid-lab/pycubrid) v0.5.0 | PyMySQL | CPython 3.10.12 (GCC 11.4.0) |
+| TypeScript | [cubrid-client](https://github.com/cubrid-lab/cubrid-client) v1.1.0 | mysql2 | Node.js 18+ |
+| Go | [cubrid-go](https://github.com/cubrid-lab/cubrid-go) v0.2.1 | go-sql-driver/mysql | Go 1.21+ · linux/amd64 |
 
 ### Schema & Seed
 
@@ -268,11 +268,11 @@ Cross-language comparison chart: panel (a) shows CUBRID/MySQL latency ratios acr
 
 This baseline directly blocks the following issues:
 
-- [#8 Add Tier 2 ORM benchmark scenarios](https://github.com/cubrid-labs/cubrid-benchmark/issues/8)
-- [#9 Document benchmark reproducibility policy](https://github.com/cubrid-labs/cubrid-benchmark/issues/9)
-- [#6 Benchmark runbook and reproducibility controls](https://github.com/cubrid-labs/cubrid-benchmark/issues/6)
-- [#10 Complete regression detection compare script](https://github.com/cubrid-labs/cubrid-benchmark/issues/10)
-- [pycubrid#19 Execute cProfile/line_profiler hot path analysis](https://github.com/cubrid-labs/pycubrid/issues/19)
+- [#8 Add Tier 2 ORM benchmark scenarios](https://github.com/cubrid-lab/cubrid-benchmark/issues/8)
+- [#9 Document benchmark reproducibility policy](https://github.com/cubrid-lab/cubrid-benchmark/issues/9)
+- [#6 Benchmark runbook and reproducibility controls](https://github.com/cubrid-lab/cubrid-benchmark/issues/6)
+- [#10 Complete regression detection compare script](https://github.com/cubrid-lab/cubrid-benchmark/issues/10)
+- [pycubrid#19 Execute cProfile/line_profiler hot path analysis](https://github.com/cubrid-lab/pycubrid/issues/19)
 
 ---
 
