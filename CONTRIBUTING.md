@@ -6,6 +6,28 @@ Thank you for your interest in contributing to `cubrid-benchmark`. The maintaine
 the CUBRID Python stack (pycubrid, sqlalchemy-cubrid, with CUBRIDdb as a same-server reference) on
 CUBRID only; see `README.md` for the scope.
 
+
+## Share improvement ideas and recognize problem discovery
+
+Noticed confusing documentation, onboarding friction, a missing test,
+unexpected behavior, or an improvement while using this project? File an
+**Improvement Idea** through [New issue](https://github.com/cubrid-lab/cubrid-benchmark/issues/new/choose).
+A short observed problem is enough: you do **not** need to know the cause,
+design the fix or provide full acceptance criteria to suggest it. Maintainers
+triage evidence, duplicates, type, priority and scope before authorizing work.
+
+Check for related issues when practical; keep credentials, sensitive logs,
+user data and undisclosed vulnerabilities out of public reports. Proposals
+do not bypass the project's existing code ownership, safety, CI or release
+rules. A small direct PR needs no additional issue merely for ceremony if
+the repository already permits it; check ownership and open PRs first.
+
+When an issue leads to a PR, link the origin and acknowledge a **verified
+reporter as a reporter**, distinct from verified code author/co-author
+credits. Where the release-note style permits it, use separate
+`reported by @handle` wording when useful. Never fabricate reporter
+identity or dilute project release-note provenance requirements.
+
 ## Development Setup
 
 ### Prerequisites
