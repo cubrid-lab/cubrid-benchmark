@@ -144,6 +144,53 @@ class TestWrapper:
         assert payload["metrics"]["memory"]["child_peak_rss_kb"] is None
         assert "unavailable" in capsys.readouterr().err
 
+    @pytest.mark.parametrize(
+        ("result", "expected_status"),
+        [
+            ('{"value": NaN}', "invalid_json"),
+            ('{"value": Infinity}', "invalid_json"),
+            ('{"value": -Infinity}', "invalid_json"),
+            ('{"stats": {"mean": 1e999}}', "invalid_json"),
+            ('{"nested": {"inner": [NaN, 1, 2]}}', "invalid_json"),
+            ('{"valid": 42}', "ok"),
+            ('{"stats": {"mean": 42.5}}', "ok"),
+        ],
+    )
+    def test_non_finite_values_rejected(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        result: str,
+        expected_status: str,
+    ) -> None:
+        rc, payload = _run(
+            tmp_path, monkeypatch, before=0, after=900, returncode=0, result=result
+        )
+
+        if expected_status == "invalid_json":
+            assert rc == collect_metrics.EXIT_RESULT_MISSING
+            assert payload["result_status"] == "invalid_json"
+            assert "non-finite values found" in payload["result_error"]
+        else:
+            assert rc == 0
+            assert payload["result_status"] == "ok"
+
+    def test_child_failure_preserves_finite_json(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        rc, payload = _run(
+            tmp_path,
+            monkeypatch,
+            before=0,
+            after=900,
+            returncode=5,
+            result='{"valid": {"nested": {"number": 42}}}',
+        )
+
+        assert rc == 5
+        assert payload["result_status"] == "ok"
+        assert payload["result"]["valid"]["nested"]["number"] == 42
+
 
 def test_real_child_peak_matches_the_childs_own_reading(tmp_path: Path) -> None:
     """End to end on this host: one fresh wrapper, one child that reports its own maxrss."""
