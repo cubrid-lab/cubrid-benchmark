@@ -36,11 +36,29 @@ EXIT_RESULT_MISSING = 2
 RU_MAXRSS_UNITS = {"linux": ("KiB", 1), "darwin": ("bytes", 1024)}
 
 
+def _check_finite_values(obj: object) -> bool:
+    """Recursively check for non-finite values (NaN, Infinity, -Infinity)."""
+    if isinstance(obj, dict):
+        for value in obj.values():
+            if not _check_finite_values(value):
+                return False
+    elif isinstance(obj, list):
+        for item in obj:
+            if not _check_finite_values(item):
+                return False
+    elif isinstance(obj, (int, float)):
+        if not (obj == obj and obj != float('inf') and obj != float('-inf')):  # Check for NaN, Inf, -Inf
+            return False
+    return True
+
 def _read_result(path: Path) -> tuple[str, object]:
     if not path.exists():
         return "missing", None
     try:
-        return "ok", json.loads(path.read_text(encoding="utf-8"))
+        parsed = json.loads(path.read_text(encoding="utf-8"))
+        if not _check_finite_values(parsed):
+            return "invalid_json", "non-finite values found in JSON"
+        return "ok", parsed
     except ValueError as exc:  # JSONDecodeError and UnicodeDecodeError
         return "invalid_json", str(exc)
 
