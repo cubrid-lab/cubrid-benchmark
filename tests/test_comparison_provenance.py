@@ -632,6 +632,109 @@ class TestSerialization:
         assert compare_runs._parse_run_yaml(path) == {"a": 'x "#1" y', "b": "plain", "c": "q # r"}
 
 
+def _insert_after(text: str, anchor: str, extra: str) -> str:
+    """Insert ``extra`` lines right after the first line that starts with ``anchor``."""
+    lines = text.splitlines()
+    index = next(i for i, line in enumerate(lines) if line.startswith(anchor)) + 1
+    return "\n".join(lines[:index] + extra.splitlines() + lines[index:]) + "\n"
+
+
+class TestDuplicateKeys:
+    """A run.yaml key repeated in one mapping is rejected, never resolved to its last value."""
+
+    @pytest.mark.parametrize(
+        ("anchor", "extra", "key"),
+        [
+            ("arm: baseline", "arm: candidate", "arm"),
+            ("compares_to: null", 'comparable_group: "copied-group"', "comparable_group"),
+            ("notes:", "comparison_identity:\n  python: CPython 3.11.9", "comparison_identity"),
+            ("  python:", '  python: "CPython 3.11.9"', "comparison_identity.python"),
+            ("    pycubrid:", '    pycubrid: "1.13.0"', "software_under_test.packages.pycubrid"),
+        ],
+    )
+    def test_duplicate_root_and_nested_keys_are_rejected(
+        self, tmp_path: Path, anchor: str, extra: str, key: str
+    ) -> None:
+        run = _write_run(tmp_path / "b", role="baseline", identity=_identity(), ops=OPS)
+        path = run / "run.yaml"
+        path.write_text(_insert_after(path.read_text(), anchor, extra), encoding="utf-8")
+
+        with pytest.raises(ValueError, match="duplicate key") as excinfo:
+            compare_runs._parse_run_yaml(path)
+
+        message = str(excinfo.value)
+        assert str(path) in message
+        assert f"duplicate key {key!r}" in message
+        assert "first set on line" in message
+
+    def test_generated_metadata_with_repeated_names_in_distinct_mappings_parses(
+        self, tmp_path: Path
+    ) -> None:
+        run = _write_run(tmp_path / "b", role="baseline", identity=_identity(), ops=OPS)
+        path = run / "run.yaml"
+        # "python" is both an identity field and a software field; list items repeat their keys.
+        text = _insert_after(
+            path.read_text(), "software_under_test:", '  python: "CPython 3.12.13"'
+        )
+        text += (
+            "targets:\n  - name: a\n    driver: pycubrid\n  - name: b\n    driver: cubriddb\n"
+            "summary: >\n  Note: first line.\n  Note: second line.\n"
+        )
+        path.write_text(text, encoding="utf-8")
+
+        meta = compare_runs._parse_run_yaml(path)
+
+        assert meta["comparison_identity"]["python"] == "CPython 3.12.13"
+        assert meta["software_under_test"]["python"] == "CPython 3.12.13"
+        assert meta["arm"] == "baseline"
+        assert "Note" not in meta
+        assert meta["comparable_group"] == compare_runs.derive_comparable_group(
+            meta["comparison_identity"]
+        )
+
+    def test_every_committed_run_yaml_still_parses(self) -> None:
+        paths = sorted((ROOT / "experiments").rglob("run.yaml"))
+
+        assert paths
+        for path in paths:
+            assert isinstance(compare_runs._parse_run_yaml(path), dict)
+
+    def test_comparison_of_run_with_duplicate_identity_key_is_an_error(
+        self, tmp_path: Path
+    ) -> None:
+        baseline = _write_run(tmp_path / "b", role="baseline", identity=_identity(), ops=OPS)
+        candidate = _write_run(tmp_path / "c", role="candidate", identity=_identity(), ops=OPS)
+        path = candidate / "run.yaml"
+        extra = '  cubrid_image: "cubrid/cubrid:11.2"'
+        path.write_text(_insert_after(path.read_text(), "  cubrid_image:", extra), encoding="utf-8")
+
+        with pytest.raises(ValueError, match="duplicate key 'comparison_identity.cubrid_image'"):
+            _compare(baseline, candidate)
+
+    def test_cli_reports_duplicate_key_as_invalid_input(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        baseline = _write_run(tmp_path / "b", role="baseline", identity=_identity(), ops=OPS)
+        candidate = _write_run(tmp_path / "c", role="candidate", identity=_identity(), ops=OPS)
+        path = candidate / "run.yaml"
+        path.write_text(
+            _insert_after(path.read_text(), "arm: candidate", "arm: baseline"), encoding="utf-8"
+        )
+        out = tmp_path / "report.json"
+        argv = ["compare_runs.py", "--baseline-dir", str(baseline), "--candidate-dir"]
+        argv += [str(candidate), "--output", str(out)]
+        monkeypatch.setattr(sys, "argv", argv)
+
+        assert compare_runs.main() == compare_runs.EXIT_ERROR
+        assert not out.exists()
+        stderr = capsys.readouterr().err
+        assert "ERROR:" in stderr
+        assert f"{path}: duplicate key 'arm'" in stderr
+
+
 class TestUnmeasuredFields:
     @pytest.mark.parametrize("missing", ["RUNNER_ENVIRONMENT", "ImageOS", "ImageVersion"])
     def test_partly_measured_runner_class_is_unknown(self, missing: str) -> None:
