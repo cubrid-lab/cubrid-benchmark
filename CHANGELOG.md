@@ -91,6 +91,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   decision, not a claim about MySQL or PyMySQL performance.
 
 ### Fixed
+- `run.yaml` files with a key repeated in the same mapping (for example two `arm`,
+  `comparable_group` or `comparison_identity` keys, or two `comparison_identity.python` fields)
+  are now rejected with the file, key path and line numbers instead of silently keeping the last
+  value; `compare_runs.py` exits with the error code. The same key in different mappings or list
+  items is still accepted, and the text lines of a `>` or `|` block such as `notes:` are no longer
+  read as keys. Every committed `run.yaml` still parses to the same metadata, apart from those
+  stray note lines.
 - An explicit `arm: null` (or empty `arm`) in `run.yaml` is now rejected as not comparable, and
   such a run is never selected as a baseline. Only a run without an `arm` key falls back to its
   `role` (`compare_runs.run_arm()`). Every stored run resolves to the same arm as before.
