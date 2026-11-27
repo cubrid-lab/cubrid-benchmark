@@ -92,16 +92,33 @@ def _strip_comment(value: str) -> str:
     return value.split("#", 1)[0].rstrip()
 
 
-def _parse_run_yaml(path: Path) -> dict[str, object]:
-    root: dict[str, object] = {}
-    stack: list[tuple[int, dict[str, object]]] = [(-1, root)]
+_BLOCK_SCALAR = re.compile(r"[|>][-+0-9]*")
 
-    for raw_line in path.read_text(encoding="utf-8").splitlines():
+
+def _parse_run_yaml(path: Path) -> dict[str, object]:
+    """Parse the run.yaml subset written by ``run_provenance.py`` and the run templates.
+
+    A key repeated in the same mapping is rejected with the file, key path and lines: YAML
+    forbids it, and keeping the last value would let a second ``arm``, ``comparable_group`` or
+    ``comparison_identity`` silently replace the first. The same key in different mappings
+    (``comparison_identity.python`` and ``software_under_test.python``, or two list items) is
+    fine, and the text lines of a ``>`` or ``|`` block scalar are not keys.
+    """
+    root: dict[str, object] = {}
+    # (indent, mapping, dotted key path, line on which each key of this scope was first set)
+    stack: list[tuple[int, dict[str, object], str, dict[str, int]]] = [(-1, root, "", {})]
+    block_indent: int | None = None
+
+    for line_number, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         line = raw_line.rstrip()
+        indent = len(line) - len(line.lstrip(" "))
+        if block_indent is not None:
+            if not line or indent > block_indent:
+                continue
+            block_indent = None
         if not line or line.lstrip().startswith("#"):
             continue
 
-        indent = len(line) - len(line.lstrip(" "))
         stripped = line.strip()
         if ":" not in stripped:
             continue
@@ -112,14 +129,31 @@ def _parse_run_yaml(path: Path) -> dict[str, object]:
         while stack and indent <= stack[-1][0]:
             stack.pop()
 
-        current = stack[-1][1]
+        _, current, parent_path, seen = stack[-1]
+        name = key
+        if stripped.startswith("- "):
+            # A list item starts a new scope, so its keys may repeat those of other items.
+            seen = {}
+            stack.append((indent, current, parent_path, seen))
+            name = key[2:].strip()
+        dotted = f"{parent_path}.{name}" if parent_path else name
+        if name in seen:
+            raise ValueError(
+                f"{path}: duplicate key {dotted!r} on line {line_number} "
+                f"(first set on line {seen[name]}); a key may appear only once per mapping"
+            )
+        seen[name] = line_number
+
         if not value:
             child: dict[str, object] = {}
             current[key] = child
-            stack.append((indent, child))
+            stack.append((indent, child, dotted, {}))
             continue
 
-        current[key] = _parse_scalar(_strip_comment(value))
+        scalar = _strip_comment(value)
+        if _BLOCK_SCALAR.fullmatch(scalar):
+            block_indent = indent
+        current[key] = _parse_scalar(scalar)
 
     return root
 
